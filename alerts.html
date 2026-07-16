@@ -69,21 +69,34 @@ const cv=$('confetti'),cx=cv.getContext('2d');
 let parts=[];
 function sizeCanvas(){cv.width=innerWidth;cv.height=innerHeight;}
 sizeCanvas(); addEventListener('resize',sizeCanvas);
-function burst(n){
-  const colors=['#ffb320','#ffc95e','#c31f2f','#f6e7c9'];
-  for(let i=0;i<n;i++)parts.push({
-    x:cv.width/2+(Math.random()-.5)*cv.width*.5, y:cv.height*.12,
-    vx:(Math.random()-.5)*7, vy:Math.random()*-6-2,
+const COLORS=['#ffb320','#ffc95e','#c31f2f','#f6e7c9'];
+function spawnOne(){
+  parts.push({
+    x:Math.random()*cv.width, y:-20,
+    vx:(Math.random()-.5)*1.6, vy:1.2+Math.random()*2.2,
     w:6+Math.random()*7, h:9+Math.random()*9,
-    r:Math.random()*Math.PI, vr:(Math.random()-.5)*.3,
-    c:colors[Math.floor(Math.random()*colors.length)], life:1
+    r:Math.random()*Math.PI, vr:(Math.random()-.5)*.25,
+    ph:Math.random()*100, sw:0.6+Math.random()*1.2,
+    c:COLORS[Math.floor(Math.random()*COLORS.length)], life:1
   });
+}
+// Emit n pieces spread across dur ms — a sustained confetti rain, not a blink.
+function burst(n,dur){
+  const start=performance.now(); let spawned=0;
+  (function emit(){
+    const frac=Math.min(1,(performance.now()-start)/dur);
+    const want=Math.floor(frac*n);
+    while(spawned<want){ spawnOne(); spawned++; }
+    if(spawned<n) requestAnimationFrame(emit);
+  })();
 }
 (function loop(){
   cx.clearRect(0,0,cv.width,cv.height);
   parts=parts.filter(p=>p.life>0&&p.y<cv.height+30);
   parts.forEach(p=>{
-    p.x+=p.vx; p.vy+=0.18; p.y+=p.vy; p.r+=p.vr; p.life-=0.004;
+    p.vy+=0.045; p.y+=p.vy;
+    p.x+=p.vx+Math.sin((p.y+p.ph)/26)*p.sw;  // flutter
+    p.r+=p.vr; p.life-=0.0022;
     cx.save(); cx.translate(p.x,p.y); cx.rotate(p.r);
     cx.globalAlpha=Math.max(0,p.life);
     cx.fillStyle=p.c; cx.fillRect(-p.w/2,-p.h/2,p.w,p.h); cx.restore();
@@ -144,7 +157,8 @@ function pump(){
   const el=$('alert');
   el.classList.remove('show','shake'); void el.offsetWidth;
   el.classList.add('show'); if(a.big) el.classList.add('shake');
-  burst(a.big?160:70); playSound(a.big);
+  burst(a.big?320:160, a.big?Math.max(6000,HOLD*0.9):Math.max(4000,HOLD*0.6));
+  playSound(a.big);
   setTimeout(()=>{ el.classList.remove('show');
     setTimeout(()=>{ showing=false; pump(); },700);
   },HOLD);
