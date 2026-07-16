@@ -84,6 +84,19 @@
   .section.active .herebadge{display:inline-block;background:var(--accent);color:#160a24;
     font-size:10.5px;font-weight:800;letter-spacing:.6px;padding:3px 8px;border-radius:20px;
     text-transform:uppercase;margin-left:auto}
+  .donebadge{display:none}
+  .section.marked .donebadge{display:inline-block;background:#3fb95022;color:var(--green);
+    border:1px solid #3fb95066;font-size:10.5px;font-weight:800;letter-spacing:.5px;
+    padding:3px 8px;border-radius:20px;text-transform:uppercase;margin-left:6px}
+  .section.marked{border-color:#3fb95055}
+  .section.active.marked{border-color:var(--accent)}
+  .markrow{margin-top:12px;display:flex}
+  .markbtn{flex:1;border:1px solid var(--line);background:var(--panel2);color:var(--dim);
+    border-radius:9px;padding:11px 14px;font-weight:800;font-size:13px;cursor:pointer}
+  .markbtn:hover{filter:brightness(1.1)}
+  .markbtn.done{background:#3fb95022;color:var(--green);border-color:#3fb95066}
+  .markbtn:focus-visible{outline:2px solid var(--accent2);outline-offset:2px}
+  .chip .chk{color:var(--green);font-weight:900}
   .sechead{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:4px;cursor:pointer}
   .time{font-size:16px;font-weight:800}
   .label{color:var(--dim);font-size:13px}
@@ -137,6 +150,7 @@
     <div class="row"><span class="n">1</span><span>The board <b>auto-follows Central Time</b> and jumps to the class happening now. It lights up as "You are here."</span></div>
     <div class="row"><span class="n">2</span><span><b>Copy the commands in order 1 → 2 → 3</b> into Fossabot. They turn green as you go, so you never miss one.</span></div>
     <div class="row"><span class="n">3</span><span>Tapping anything <b>pauses auto-follow</b>. Hit <b>🔴 Go live</b> in the bar to snap back to the current class.</span></div>
+    <div class="row"><span class="n">✓</span><span><b>Mark this class done</b> at the bottom of a card flags it as handled (green ✓ on its chip). Note: saved on <b>this device only</b> for now.</span></div>
   </div>
   <div class="legend">
     <span style="color:var(--blue)">● pre-stream</span>
@@ -351,6 +365,7 @@ function load(){
     tab: typeof s.tab==='number'?s.tab:1,
     active: s.active||{thu:0,fri:0,sat:0,sun:0},
     copied: s.copied||{},
+    marked: s.marked||{},
     auto: s.auto!==false
   };
 }
@@ -369,6 +384,17 @@ function ctClockString(){
   const f=new Intl.DateTimeFormat('en-US',{timeZone:'America/Chicago',
     weekday:'short',hour:'numeric',minute:'2-digit',hour12:true});
   return f.format(new Date());
+}
+function ctStamp(){
+  const f=new Intl.DateTimeFormat('en-US',{timeZone:'America/Chicago',
+    hour:'numeric',minute:'2-digit',hour12:true});
+  return f.format(new Date());
+}
+function toggleMark(dayId,si){
+  const k=dayId+':'+si;
+  if(state.marked[k]) delete state.marked[k]; else state.marked[k]={at:ctStamp()};
+  save();
+  renderDay(DATA.days.find(d=>d.id===dayId));
 }
 function computeLive(){
   const t=ctParts();
@@ -431,8 +457,9 @@ function renderItem(dayId,si,ii,it,num){
   return row;
 }
 function renderSection(dayId,sec,si,activeIdx){
+  const mk=state.marked[dayId+':'+si];
   const el=document.createElement('div');
-  el.className='section '+(si===activeIdx?'active':'dim');
+  el.className='section '+(si===activeIdx?'active':'dim')+(mk?' marked':'');
   el.id=dayId+'-sec-'+si;
   const head=document.createElement('div'); head.className='sechead';
   head.addEventListener('click',()=>selectStep(dayId,si));
@@ -440,11 +467,17 @@ function renderSection(dayId,sec,si,activeIdx){
   const tag=document.createElement('span'); tag.className='tag t-'+sec.tag; tag.textContent=TAGNAME[sec.tag];
   const label=document.createElement('span'); label.className='label'; label.textContent=sec.label;
   const here=document.createElement('span'); here.className='herebadge'; here.textContent='▶ You are here';
-  head.append(time,tag,label,here);
+  const done=document.createElement('span'); done.className='donebadge'; done.textContent='✅ Done '+(mk?mk.at:'');
+  head.append(time,tag,label,here,done);
   el.append(head);
   if(sec.note){const n=document.createElement('div');n.className='note';n.textContent='⚠ '+sec.note;el.append(n);}
   let num=0;
   sec.items.forEach((it,ii)=>{ if(!it.chat) num++; el.append(renderItem(dayId,si,ii,it,num)); });
+  const mr=document.createElement('div'); mr.className='markrow';
+  const mb=document.createElement('button'); mb.className='markbtn'+(mk?' done':'');
+  mb.textContent = mk ? ('✅ Done '+mk.at+' · tap to undo') : '☐ Mark this class done';
+  mb.addEventListener('click',e=>{e.stopPropagation();toggleMark(dayId,si);});
+  mr.append(mb); el.append(mr);
   return el;
 }
 
@@ -453,7 +486,8 @@ function refreshChrome(dayId){
   const day=DATA.days.find(d=>d.id===dayId);
   const ai=state.active[dayId];
   chromeRefs.chips && chromeRefs.chips.forEach((chip,i)=>{
-    chip.classList.toggle('done', sectionDone(dayId,i,day.sections[i]));
+    const mk=state.marked[dayId+':'+i];
+    chip.classList.toggle('done', !!mk || sectionDone(dayId,i,day.sections[i]));
     chip.classList.toggle('active', i===ai);
   });
   if(chromeRefs.next){
@@ -494,10 +528,12 @@ function renderDay(day){
   const stepper=document.createElement('div'); stepper.className='stepper';
   chromeRefs.chips=[];
   day.sections.forEach((sec,i)=>{
-    const chip=document.createElement('div'); chip.className='chip'+(i===ai?' active':'')+(sectionDone(day.id,i,sec)?' done':'');
+    const mk=state.marked[day.id+':'+i];
+    const chip=document.createElement('div'); chip.className='chip'+(i===ai?' active':'')+((mk||sectionDone(day.id,i,sec))?' done':'');
     const dot=document.createElement('span'); dot.className='dot';
     const t=document.createElement('span'); t.textContent=sec.short;
     chip.append(dot,t);
+    if(mk){const c=document.createElement('span');c.className='chk';c.textContent='✓';chip.append(c);}
     chip.addEventListener('click',()=>selectStep(day.id,i));
     stepper.append(chip); chromeRefs.chips.push(chip);
   });
