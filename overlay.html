@@ -6,50 +6,59 @@
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E🎓%3C/text%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Archivo:wght@500;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Graduate&family=Archivo:wght@600;700;800&display=swap" rel="stylesheet">
 <style>
   :root{
-    --red:#e8283c; --amber:#ffb02e; --blue:#4a8cff; --grey:#9aa0b4;
-    --text:#ffffff; --dim:#c9c4d8;
+    --maroon:#6b1d29; --maroon-deep:#4e131d; --maroon-line:#7d2433;
+    --gold:#ffb320; --gold-soft:#ffc95e; --red:#c31f2f; --red-deep:#8f1622;
+    --cream:#f6e7c9; --cream-dim:#dcc9a4;
   }
   html,body{margin:0;padding:0;background:transparent;overflow:hidden}
   body{font-family:'Archivo',-apple-system,'Segoe UI',Roboto,sans-serif;-webkit-font-smoothing:antialiased}
   #card{
-    display:inline-block;min-width:460px;max-width:860px;
+    display:inline-block;min-width:470px;max-width:880px;
     position:fixed;top:14px;left:14px;
-    background:linear-gradient(135deg,rgba(26,8,14,.92),rgba(12,8,18,.90));
-    border-left:5px solid var(--red);border-radius:16px;
-    padding:16px 24px 14px 20px;color:var(--text);
-    box-shadow:0 12px 40px -8px rgba(0,0,0,.65);
+    background:linear-gradient(160deg,var(--maroon) 0%,var(--maroon-deep) 100%);
+    border:3px solid var(--gold);
+    box-shadow:0 14px 40px -8px rgba(0,0,0,.6),
+               inset 0 0 0 3px var(--maroon-deep),
+               inset 0 0 0 5px var(--red);
+    border-radius:18px;
+    padding:15px 24px 13px 22px;color:var(--cream);
   }
-  .eyebrow{font-size:12px;font-weight:800;letter-spacing:3.5px;color:var(--dim);
-    text-transform:uppercase;display:flex;align-items:center;gap:8px}
-  .eyebrow b{color:var(--red);letter-spacing:3.5px}
-  .mainrow{display:flex;align-items:center;gap:12px;margin-top:8px;flex-wrap:wrap}
-  .pill{flex-shrink:0;font-size:12.5px;font-weight:800;letter-spacing:1.2px;
-    text-transform:uppercase;padding:5px 12px;border-radius:20px;display:flex;align-items:center;gap:7px}
+  .eyebrow{font-family:'Graduate',serif;font-size:13px;letter-spacing:2.5px;
+    color:var(--gold);display:flex;align-items:center;gap:9px;
+    text-shadow:1px 1px 0 var(--red-deep)}
+  .eyebrow .star{color:var(--red);text-shadow:none;font-size:11px}
+  .eyebrow .yr{color:var(--cream-dim);letter-spacing:2px}
+  .mainrow{display:flex;align-items:center;gap:14px;margin-top:9px;flex-wrap:wrap}
+  .pill{flex-shrink:0;font-family:'Graduate',serif;font-size:12px;letter-spacing:1.5px;
+    padding:6px 13px 5px;border-radius:8px;display:flex;align-items:center;gap:8px;
+    text-transform:uppercase}
   .pill .d{width:8px;height:8px;border-radius:50%}
-  .pill.live{background:rgba(232,40,60,.18);color:#ff6b7d;border:1px solid rgba(232,40,60,.5)}
+  .pill.live{background:var(--gold);color:var(--maroon-deep);
+    box-shadow:0 2px 0 var(--red-deep)}
   .pill.live .d{background:var(--red);animation:pulse 1.4s ease-in-out infinite}
-  .pill.break{background:rgba(255,176,46,.14);color:var(--amber);border:1px solid rgba(255,176,46,.45)}
-  .pill.break .d{background:var(--amber)}
-  .pill.soon{background:rgba(74,140,255,.14);color:#7fb0ff;border:1px solid rgba(74,140,255,.45)}
-  .pill.soon .d{background:var(--blue)}
-  .pill.done{background:rgba(154,160,180,.14);color:var(--grey);border:1px solid rgba(154,160,180,.4)}
-  .pill.done .d{background:var(--grey)}
-  @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.45;transform:scale(.8)}}
-  #title{font-family:'Archivo Black','Archivo',sans-serif;font-size:34px;line-height:1.08;
-    letter-spacing:.2px}
-  #sub{margin-top:5px;font-size:16.5px;font-weight:700;color:var(--dim)}
-  #sub b{color:var(--text)}
-  .nextrow{display:flex;align-items:baseline;gap:10px;margin-top:12px;padding-top:11px;
-    border-top:1px solid rgba(255,255,255,.12);font-size:15px;font-weight:700;flex-wrap:wrap}
-  .nx{font-size:11.5px;font-weight:800;letter-spacing:2.5px;color:var(--red);text-transform:uppercase}
-  #nextlabel{color:var(--dim)}
-  #nextlabel b{color:var(--text)}
-  #count{margin-left:auto;font-weight:800;color:var(--amber);
+  .pill.break{background:transparent;color:var(--gold);border:2px solid var(--gold)}
+  .pill.break .d{background:var(--gold)}
+  .pill.soon{background:transparent;color:var(--gold);border:2px solid var(--gold)}
+  .pill.soon .d{background:var(--gold);animation:pulse 1.4s ease-in-out infinite}
+  .pill.done{background:transparent;color:var(--cream-dim);border:2px solid var(--cream-dim)}
+  .pill.done .d{background:var(--cream-dim)}
+  @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.8)}}
+  #title{font-family:'Graduate',serif;font-size:33px;line-height:1.12;color:var(--gold);
+    text-shadow:2px 2px 0 var(--red-deep),3px 3px 0 rgba(0,0,0,.35)}
+  #sub{margin-top:6px;font-size:16px;font-weight:700;color:var(--cream-dim);letter-spacing:.3px}
+  #sub b{color:var(--cream)}
+  .nextrow{display:flex;align-items:baseline;gap:11px;margin-top:12px;padding-top:11px;
+    border-top:2px solid rgba(255,179,32,.3);font-size:15px;font-weight:700;flex-wrap:wrap}
+  .nx{font-family:'Graduate',serif;font-size:11.5px;letter-spacing:2px;color:var(--gold);
+    text-transform:uppercase}
+  #nextlabel{color:var(--cream-dim)}
+  #nextlabel b{color:var(--cream)}
+  #count{margin-left:auto;font-weight:800;color:var(--gold-soft);
     font-variant-numeric:tabular-nums;font-size:17px}
-  #count.hot{color:#ff5d5d;animation:pulse 1.2s ease-in-out infinite}
+  #count.hot{color:#fff;animation:pulse 1.2s ease-in-out infinite}
   .swap{animation:swap .5s ease}
   @keyframes swap{0%{opacity:0;transform:translateY(8px)}100%{opacity:1;transform:none}}
   #card.hide{opacity:0}
@@ -58,7 +67,7 @@
 </head>
 <body>
 <div id="card" class="hide">
-  <div class="eyebrow">🎓 Streamer University <b>2026</b> <span style="letter-spacing:1px;color:#7d7690">· FTGIOO</span></div>
+  <div class="eyebrow">Streamer University <span class="star">★</span> <span class="yr">2026 · FTGIOO</span></div>
   <div class="mainrow">
     <span id="pill" class="pill live"><span class="d"></span><span id="pilltext">In session</span></span>
     <span id="title">Loading…</span>
@@ -100,7 +109,7 @@ const $=id=>document.getElementById(id);
 function isClass(sec){ return !!(sec&&sec.current&&sec.current.indexOf('🔔')===0); }
 function profOf(sec){
   if(!sec||!sec.professor) return '';
-  const m=sec.professor.match(/(?:teaching|Counselor):\s*([^(]+?)\s*\(/) || sec.professor.match(/Now teaching:\s*([^(]+?)\s*\(/);
+  const m=sec.professor.match(/Now teaching:\s*([^(]+?)\s*\(/);
   return m?m[1].trim():'';
 }
 function fmtTime(min){
