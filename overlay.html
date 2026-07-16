@@ -15,7 +15,8 @@
   html,body{margin:0;padding:0;background:transparent;overflow:hidden}
   body{font-family:'Archivo',-apple-system,'Segoe UI',Roboto,sans-serif;-webkit-font-smoothing:antialiased}
   #card{
-    display:inline-block;min-width:460px;max-width:860px;margin:14px;
+    display:inline-block;min-width:460px;max-width:860px;
+    position:fixed;top:14px;left:14px;
     background:linear-gradient(135deg,rgba(26,8,14,.92),rgba(12,8,18,.90));
     border-left:5px solid var(--red);border-radius:16px;
     padding:16px 24px 14px 20px;color:var(--text);
@@ -71,8 +72,29 @@
 </div>
 
 <script>
-const API=(new URLSearchParams(location.search).get('api'))||'https://ftgioo-su2026-api-production.up.railway.app';
+const Q=new URLSearchParams(location.search);
+const API=Q.get('api')||'https://ftgioo-su2026-api-production.up.railway.app';
 let SCHED=null, eff=null, target=null, lastKey='';
+
+// URL params: ?pos=tl|tr|bl|br|bc  ?scale=1.4  ?bg=00ff00 (chroma key) or ?bg=green
+(function(){
+  const bg=Q.get('bg');
+  if(bg) document.body.style.background=/^[0-9a-fA-F]{6}$/.test(bg)?('#'+bg):bg;
+  const card=document.getElementById('card');
+  const pos=(Q.get('pos')||'tl').toLowerCase();
+  const s=parseFloat(Q.get('scale')||'1')||1;
+  const off='14px';
+  const P={tl:{top:off,left:off,o:'top left'},
+           tr:{top:off,right:off,o:'top right'},
+           bl:{bottom:off,left:off,o:'bottom left'},
+           br:{bottom:off,right:off,o:'bottom right'},
+           bc:{bottom:off,left:'50%',o:'bottom center',x:true}};
+  const p=P[pos]||P.tl;
+  card.style.top=card.style.left=card.style.right=card.style.bottom='';
+  ['top','left','right','bottom'].forEach(k=>{if(p[k])card.style[k]=p[k];});
+  card.style.transformOrigin=p.o;
+  card.style.transform=(p.x?'translateX(-50%) ':'')+(s!==1?('scale('+s+')'):'');
+})();
 
 const $=id=>document.getElementById(id);
 function isClass(sec){ return !!(sec&&sec.current&&sec.current.indexOf('🔔')===0); }
