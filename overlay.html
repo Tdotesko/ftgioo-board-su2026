@@ -16,7 +16,8 @@
   html,body{margin:0;padding:0;background:transparent;overflow:hidden}
   body{font-family:'Archivo',-apple-system,'Segoe UI',Roboto,sans-serif;-webkit-font-smoothing:antialiased}
   #card{
-    display:inline-block;min-width:470px;max-width:880px;
+    display:flex;align-items:center;gap:18px;
+    min-width:520px;max-width:920px;
     position:fixed;top:14px;left:14px;
     background:linear-gradient(160deg,var(--maroon) 0%,var(--maroon-deep) 100%);
     border:3px solid var(--gold);
@@ -24,8 +25,11 @@
                inset 0 0 0 3px var(--maroon-deep),
                inset 0 0 0 5px var(--red);
     border-radius:18px;
-    padding:15px 24px 13px 22px;color:var(--cream);
+    padding:14px 24px 13px 18px;color:var(--cream);
   }
+  .crest{width:104px;height:104px;flex-shrink:0;object-fit:contain;
+    filter:drop-shadow(0 4px 8px rgba(0,0,0,.4))}
+  .cwrap{flex:1;min-width:0}
   .eyebrow{font-family:'Graduate',serif;font-size:13px;letter-spacing:2.5px;
     color:var(--gold);display:flex;align-items:center;gap:9px;
     text-shadow:1px 1px 0 var(--red-deep)}
@@ -67,16 +71,19 @@
 </head>
 <body>
 <div id="card" class="hide">
-  <div class="eyebrow">Streamer University <span class="star">★</span> <span class="yr">2026 · FTGIOO</span></div>
-  <div class="mainrow">
-    <span id="pill" class="pill live"><span class="d"></span><span id="pilltext">In session</span></span>
-    <span id="title">Loading…</span>
-  </div>
-  <div id="sub"></div>
-  <div class="nextrow" id="nextrow">
-    <span class="nx" id="nx">Up next</span>
-    <span id="nextlabel"></span>
-    <span id="count"></span>
+  <img class="crest" src="crest.png" alt="">
+  <div class="cwrap">
+    <div class="eyebrow">Streamer University <span class="star">★</span> <span class="yr">2026 · FTGIOO</span></div>
+    <div class="mainrow">
+      <span id="pill" class="pill live"><span class="d"></span><span id="pilltext">In class</span></span>
+      <span id="title">Loading…</span>
+    </div>
+    <div id="sub"></div>
+    <div class="nextrow" id="nextrow">
+      <span class="nx" id="nx">Up next</span>
+      <span id="nextlabel"></span>
+      <span id="count"></span>
+    </div>
   </div>
 </div>
 
@@ -150,7 +157,7 @@ function render(){
         nrow=$('nextrow'), nl=$('nextlabel'), nx=$('nx');
 
   if(isClass(sec)){
-    pill.className='pill live'; pt.textContent='In session';
+    pill.className='pill live'; pt.textContent='In class';
     title.textContent=sec.label;
     const p=profOf(sec);
     sub.innerHTML=p?('Professor · <b>'+p+'</b>'):'';
