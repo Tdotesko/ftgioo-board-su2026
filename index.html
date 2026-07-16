@@ -167,6 +167,8 @@
   .lpset{flex:1;background:var(--accent);color:#160a24;border:none;border-radius:8px;padding:9px;font-weight:800;font-size:12.5px;cursor:pointer}
   .lpauto{background:var(--panel2);border:1px solid var(--line);color:var(--dim);border-radius:8px;padding:9px 12px;font-weight:700;font-size:12.5px;cursor:pointer}
   .lphint{font-size:11px;color:var(--dim);margin-top:8px;line-height:1.4}
+  .lpnum{flex:1;min-width:0;background:var(--panel2);border:1px solid var(--line);
+    color:var(--text);border-radius:8px;padding:9px 10px;font-size:13px}
   .actlist{padding:6px 0 2px}
   .actrow{font-size:12px;color:var(--dim);padding:5px 0;border-top:1px solid var(--line)}
   .actrow:first-child{border-top:none}
@@ -426,7 +428,7 @@ function save(){try{localStorage.setItem(KEY,JSON.stringify(state));}catch(e){}}
 const DEFAULT_API='https://ftgioo-su2026-api-production.up.railway.app';
 const SKEY='ftgioo_su2026_sync';
 let sync=loadSync();
-let serverControl=null, syncHealthy=false, lastSig=null, lastActiveKey=null, liveCmds=null, lpBuilt=false, actLogs=null;
+let serverControl=null, syncHealthy=false, lastSig=null, lastActiveKey=null, liveCmds=null, lpBuilt=false, actLogs=null, liveSubs=null;
 const lpRefs={};
 function loadSync(){ try{return JSON.parse(localStorage.getItem(SKEY))||{};}catch(e){return {};} }
 function saveSync(){ try{localStorage.setItem(SKEY,JSON.stringify(sync));}catch(e){} }
@@ -481,6 +483,7 @@ async function pollSync(force){
     }
     liveCmds=s.commands||null;
     actLogs=s.logs||null;
+    liveSubs=s.subs||null;
     updateLivePanel();
     updateSyncBadge(s);
   }catch(e){
@@ -543,8 +546,33 @@ function initLivePanel(){
     d.append(row);
     lpRefs[f]={ta,src,autob};
   });
+  // Subs row: mods keep the sub count + goal current (drives the subs overlay)
+  const srow=document.createElement('div'); srow.className='lprow';
+  const stop=document.createElement('div'); stop.className='lptop';
+  const sname=document.createElement('span'); sname.className='lpname'; sname.textContent='SUBS';
+  const ssrc=document.createElement('span'); ssrc.className='lpsrc'; ssrc.textContent='';
+  stop.append(sname,ssrc);
+  const sflex=document.createElement('div'); sflex.className='lpbtns';
+  const cin=document.createElement('input'); cin.className='lpnum'; cin.type='number'; cin.min='0'; cin.placeholder='count';
+  const gin=document.createElement('input'); gin.className='lpnum'; gin.type='number'; gin.min='0'; gin.placeholder='goal (0 = off)';
+  const sset=document.createElement('button'); sset.className='lpset'; sset.textContent='Set subs';
+  sset.addEventListener('click',()=>{
+    const body={by:(sync.name||'a mod')};
+    if(cin.value!=='') body.count=parseInt(cin.value,10);
+    if(gin.value!=='') body.goal=parseInt(gin.value,10);
+    if(body.count===undefined&&body.goal===undefined){toast('Enter a count and/or goal',true);return;}
+    sset.textContent='Setting…';
+    apiPost('/api/subs',body)
+      .then(()=>{lastSig=null;toast('Sub count updated on the overlay');return pollSync(true);})
+      .catch(e=>toast('Subs failed: '+e.message,true))
+      .finally(()=>{sset.textContent='Set subs';});
+  });
+  sflex.append(cin,gin,sset);
+  srow.append(stop,sflex);
+  d.append(srow);
+  lpRefs.__subs={cin,gin,src:ssrc};
   const hint=document.createElement('div'); hint.className='lphint';
-  hint.textContent='Type to edit, then Set live — the Fossabot command changes instantly for chat. Auto = follow the schedule by Central Time. Or press Set on any schedule line below, or tap a class to set all four at once.';
+  hint.textContent='Type to edit, then Set live — the Fossabot command changes instantly for chat. Auto = follow the schedule by Central Time. Or press Set on any schedule line below, or tap a class to set all four at once. SUBS drives the sub-count stream overlay.';
   d.append(hint);
   const act=document.createElement('details'); act.className='lp'; act.style.marginTop='8px';
   const asum=document.createElement('summary'); asum.textContent='📋 Mod activity (who did what)';
@@ -572,6 +600,18 @@ function updateLivePanel(){
     }
     if(f==='next'&&c.suffix&&c.source!=='manual'){ ref.src.textContent+=' · chat sees: '+c.suffix; }
   });
+  if(lpRefs.__subs&&liveSubs){
+    const r=lpRefs.__subs;
+    if(document.activeElement!==r.cin) r.cin.value=(liveSubs.count==null?'':liveSubs.count);
+    if(document.activeElement!==r.gin) r.gin.value=(liveSubs.goal==null?'':liveSubs.goal);
+    if(liveSubs.source==='twitch'){
+      r.src.textContent='🟢 auto from Twitch'+(liveSubs.at?(' · '+liveSubs.at):''); r.src.className='lpsrc';
+    }else{
+      r.src.textContent=liveSubs.count==null?'not set yet':
+        ('✏️ manual'+(liveSubs.by?(' by '+liveSubs.by):'')+(liveSubs.at?(' · '+liveSubs.at):''));
+      r.src.className='lpsrc manual';
+    }
+  }
   const list=document.getElementById('actlist');
   if(list&&actLogs){
     list.innerHTML='';

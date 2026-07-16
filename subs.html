@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>FTGIOO Subs</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E🎓%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Graduate&family=Archivo:wght@700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --maroon:#6b1d29; --maroon-deep:#4e131d;
+    --gold:#ffb320; --gold-soft:#ffc95e; --red:#c31f2f; --red-deep:#8f1622;
+    --cream:#f6e7c9; --cream-dim:#dcc9a4;
+  }
+  html,body{margin:0;padding:0;background:transparent;overflow:hidden}
+  body{font-family:'Archivo',-apple-system,'Segoe UI',Roboto,sans-serif;-webkit-font-smoothing:antialiased}
+  #card{
+    display:flex;align-items:center;gap:16px;
+    position:fixed;top:14px;left:14px;
+    background:linear-gradient(160deg,var(--maroon) 0%,var(--maroon-deep) 100%);
+    border:3px solid var(--gold);
+    box-shadow:0 12px 36px -8px rgba(0,0,0,.6),
+               inset 0 0 0 3px var(--maroon-deep),
+               inset 0 0 0 5px var(--red);
+    border-radius:16px;
+    padding:12px 22px 12px 14px;color:var(--cream);
+  }
+  .crest{width:64px;height:64px;flex-shrink:0;object-fit:contain;
+    filter:drop-shadow(0 3px 6px rgba(0,0,0,.4))}
+  .cwrap{display:flex;flex-direction:column;gap:3px;min-width:210px}
+  .lbl{font-family:'Graduate',serif;font-size:13px;letter-spacing:2.5px;color:var(--gold);
+    text-shadow:1px 1px 0 var(--red-deep);text-transform:uppercase}
+  .row{display:flex;align-items:baseline;gap:10px}
+  #num{font-family:'Graduate',serif;font-size:42px;line-height:1;color:var(--gold);
+    text-shadow:2px 2px 0 var(--red-deep),3px 3px 0 rgba(0,0,0,.35);
+    font-variant-numeric:tabular-nums}
+  #goaltxt{font-weight:800;font-size:16px;color:var(--cream-dim)}
+  #goaltxt b{color:var(--cream)}
+  .barwrap{margin-top:6px;height:14px;border-radius:8px;background:var(--maroon-deep);
+    border:1.5px solid var(--red);overflow:hidden;display:none}
+  .barfill{height:100%;width:0%;border-radius:6px;
+    background:linear-gradient(90deg,var(--gold) 0%,var(--gold-soft) 100%);
+    transition:width 1s ease}
+  .pop{animation:pop .6s ease}
+  @keyframes pop{0%{transform:scale(1)}40%{transform:scale(1.18)}100%{transform:scale(1)}}
+  #card.hide{opacity:0}
+  #card{transition:opacity .4s}
+</style>
+</head>
+<body>
+<div id="card" class="hide">
+  <img class="crest" src="crest.png" alt="">
+  <div class="cwrap">
+    <div class="lbl" id="lbl">Sub Count</div>
+    <div class="row"><span id="num">—</span><span id="goaltxt"></span></div>
+    <div class="barwrap" id="barwrap"><div class="barfill" id="barfill"></div></div>
+  </div>
+</div>
+
+<script>
+const Q=new URLSearchParams(location.search);
+const API=Q.get('api')||'https://ftgioo-su2026-api-production.up.railway.app';
+if(Q.get('label')) document.getElementById('lbl').textContent=Q.get('label');
+
+let shown=null;
+function setNum(n){
+  const el=document.getElementById('num');
+  if(n==null){ el.textContent='—'; shown=null; return; }
+  if(shown===n) return;
+  // quick count-up animation from previous value
+  const from=(shown==null||Math.abs(n-shown)>200)?n:shown;
+  shown=n;
+  el.classList.remove('pop'); void el.offsetWidth; el.classList.add('pop');
+  if(from===n){ el.textContent=n.toLocaleString(); return; }
+  const steps=Math.min(30,Math.abs(n-from)), dir=n>from?1:-1;
+  let cur=from,i=0;
+  const iv=setInterval(()=>{ i++; cur+=dir*Math.ceil(Math.abs(n-from)/steps);
+    if((dir>0&&cur>=n)||(dir<0&&cur<=n)||i>steps){cur=n;clearInterval(iv);}
+    el.textContent=cur.toLocaleString();
+  },40);
+}
+async function poll(){
+  try{
+    const r=await fetch(API+'/api/subs',{cache:'no-store'});
+    const j=await r.json();
+    if(!j.ok) return;
+    setNum(typeof j.count==='number'?j.count:null);
+    const gt=document.getElementById('goaltxt'),
+          bw=document.getElementById('barwrap'),
+          bf=document.getElementById('barfill');
+    if(j.goal && typeof j.count==='number'){
+      const pct=Math.min(100,(j.count/j.goal)*100);
+      gt.innerHTML='/ <b>'+j.goal.toLocaleString()+'</b>'+(j.count>=j.goal?' 🎉':'');
+      bw.style.display=''; bf.style.width=pct+'%';
+    }else if(j.goal){
+      gt.innerHTML='/ <b>'+j.goal.toLocaleString()+'</b>'; bw.style.display='none';
+    }else{ gt.textContent=''; bw.style.display='none'; }
+    document.getElementById('card').classList.remove('hide');
+  }catch(e){/* keep last */}
+}
+poll(); setInterval(poll,15000);
+
+// URL params: ?pos=tl|tr|bl|br|bc|tc  ?scale=1.4  ?bg=00ff00  ?label=Sub+Goal
+(function(){
+  const el=document.getElementById('card');
+  const bg=Q.get('bg');
+  if(bg) document.body.style.background=/^[0-9a-fA-F]{6}$/.test(bg)?('#'+bg):bg;
+  const pos=(Q.get('pos')||'tl').toLowerCase();
+  const s=parseFloat(Q.get('scale')||'1')||1;
+  const off='14px';
+  const P={tl:{top:off,left:off,o:'top left'},tr:{top:off,right:off,o:'top right'},
+           bl:{bottom:off,left:off,o:'bottom left'},br:{bottom:off,right:off,o:'bottom right'},
+           bc:{bottom:off,left:'50%',o:'bottom center',x:true},tc:{top:off,left:'50%',o:'top center',x:true}};
+  const p=P[pos]||P.tl;
+  el.style.top=el.style.left=el.style.right=el.style.bottom='';
+  ['top','left','right','bottom'].forEach(k=>{if(p[k])el.style[k]=p[k];});
+  el.style.transformOrigin=p.o;
+  el.style.transform=(p.x?'translateX(-50%) ':'')+(s!==1?('scale('+s+')'):'');
+})();
+
+// Free positioning (?px=..&py=..) + drag/resize editor (?edit=1)
+(function(){
+  const el=document.getElementById('card');
+  let s=parseFloat(Q.get('scale')||'1')||1;
+  if(Q.has('px')||Q.has('py')){
+    el.style.left=(parseFloat(Q.get('px'))||0)+'%';
+    el.style.top=(parseFloat(Q.get('py'))||0)+'%';
+    el.style.right='';el.style.bottom='';
+    el.style.transformOrigin='top left';
+    el.style.transform=s!==1?('scale('+s+')'):'';
+  }
+  if(Q.get('edit')!=='1') return;
+  const css=document.createElement('style');
+  css.textContent='#edittb{position:fixed;top:8px;left:50%;transform:translateX(-50%);z-index:99;display:flex;gap:6px;align-items:center;background:#1b1016;border:2px solid #ffb320;border-radius:10px;padding:8px 10px;font-family:Archivo,sans-serif;max-width:96vw;flex-wrap:wrap;justify-content:center}#edittb button{background:#ffb320;border:none;border-radius:6px;font-weight:800;font-size:15px;width:32px;height:32px;cursor:pointer}#edittb .cp{width:auto;padding:0 12px;font-size:12px}#edittb input{width:min(340px,50vw);font-size:11px;padding:7px;border-radius:6px;border:1px solid #7d2433;background:#2a161d;color:#f6e7c9}#edittb span{color:#ffb320;font-weight:800;font-size:13px;min-width:46px;text-align:center}';
+  document.head.appendChild(css);
+  const tb=document.createElement('div'); tb.id='edittb';
+  tb.innerHTML='<button id="eMinus">−</button><span id="eScale"></span><button id="ePlus">+</button><input id="eUrl" readonly><button id="eCopy" class="cp">Copy URL</button>';
+  document.body.appendChild(tb);
+  el.style.cursor='move'; el.style.touchAction='none';
+  function fixPos(){const r=el.getBoundingClientRect();
+    el.style.left=r.left+'px'; el.style.top=r.top+'px';
+    el.style.right='';el.style.bottom='';
+    el.style.transformOrigin='top left';
+    el.style.transform=s!==1?('scale('+s+')'):'';}
+  function urlNow(){const q=new URLSearchParams(location.search);
+    q.delete('edit');q.delete('pos');
+    if(s!==1)q.set('scale',s.toFixed(2));else q.delete('scale');
+    const r=el.getBoundingClientRect();
+    q.set('px',(r.left/innerWidth*100).toFixed(2));
+    q.set('py',(r.top/innerHeight*100).toFixed(2));
+    return location.origin+location.pathname+'?'+q.toString();}
+  function refresh(){document.getElementById('eScale').textContent=s.toFixed(2)+'×';
+    el.style.transform=s!==1?('scale('+s+')'):'';
+    document.getElementById('eUrl').value=urlNow();}
+  document.getElementById('ePlus').onclick=()=>{s=Math.min(3,s+0.05);refresh();};
+  document.getElementById('eMinus').onclick=()=>{s=Math.max(0.4,s-0.05);refresh();};
+  document.getElementById('eCopy').onclick=()=>{
+    const i=document.getElementById('eUrl');
+    if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(i.value);
+    else{i.select();try{document.execCommand('copy')}catch(e){}}
+    const b=document.getElementById('eCopy');b.textContent='Copied!';setTimeout(()=>b.textContent='Copy URL',1200);};
+  let drag=null;
+  el.addEventListener('pointerdown',e=>{fixPos();
+    const r=el.getBoundingClientRect();
+    drag={dx:e.clientX-r.left,dy:e.clientY-r.top};
+    el.setPointerCapture(e.pointerId);e.preventDefault();});
+  el.addEventListener('pointermove',e=>{if(!drag)return;
+    el.style.left=(e.clientX-drag.dx)+'px';
+    el.style.top=(e.clientY-drag.dy)+'px';refresh();});
+  el.addEventListener('pointerup',()=>{drag=null;refresh();});
+  fixPos();refresh();
+})();
+</script>
+</body>
+</html>
