@@ -91,22 +91,43 @@ function burst(n){
   requestAnimationFrame(loop);
 })();
 
-/* ---------- fanfare ---------- */
-function fanfare(big){
+/* ---------- sounds ----------
+   Pick with ?snd=chime|bell|coin|sparkle|tada|pop|fanfare  (default: chime)
+   Volume with ?vol=0.5 (0 to 2). Or use any audio file: ?sndurl=yourfile.mp3 */
+let SND=(Q.get('snd')||'chime').toLowerCase();
+const VOL=Math.max(0,Math.min(2,parseFloat(Q.get('vol')||'1')||1));
+const SNDURL=Q.get('sndurl')||'';
+function tone(a,t,f,type,peak,dur){
+  const o=a.createOscillator(),g=a.createGain();
+  o.type=type; o.frequency.value=f;
+  o.connect(g); g.connect(a.destination);
+  g.gain.setValueAtTime(0.0001,t);
+  g.gain.exponentialRampToValueAtTime(Math.max(0.001,peak*VOL),t+0.02);
+  g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
+  o.start(t); o.stop(t+dur+0.1);
+}
+const SYNTHS={
+  chime:(a,t,big)=>{ tone(a,t,880,'sine',0.12,1.3); tone(a,t+0.22,1174.7,'sine',0.10,1.3);
+    if(big) tone(a,t+0.44,1568,'sine',0.09,1.4); },
+  bell:(a,t,big)=>{ const f=big?523.25:659.25;
+    tone(a,t,f,'sine',0.14,2.0); tone(a,t,f*2.76,'sine',0.04,1.2); tone(a,t,f*5.4,'sine',0.015,0.6); },
+  coin:(a,t,big)=>{ tone(a,t,987.77,'square',0.05,0.09); tone(a,t+0.09,1318.5,'square',0.05,0.42);
+    if(big){ tone(a,t+0.3,987.77,'square',0.05,0.09); tone(a,t+0.39,1568,'square',0.05,0.5);} },
+  sparkle:(a,t,big)=>{ const n=big?9:6;
+    for(let i=0;i<n;i++) tone(a,t+i*0.055,800+i*220,'sine',0.06,0.5); },
+  tada:(a,t,big)=>{ [523.25,659.25,784].forEach(f=>tone(a,t,f,'triangle',0.07,1.1));
+    if(big) tone(a,t+0.12,1046.5,'triangle',0.07,1.3); },
+  pop:(a,t,big)=>{ tone(a,t,440,'sine',0.12,0.28); tone(a,t+0.14,587.33,'sine',0.12,0.4);
+    if(big) tone(a,t+0.28,880,'sine',0.10,0.5); },
+  fanfare:(a,t,big)=>{ (big?[523.25,659.25,784,1046.5]:[523.25,659.25,784])
+    .forEach((f,i)=>tone(a,t+i*0.13,f,'triangle',0.11,0.9)); }
+};
+function playSound(big){
   if(!SOUND) return;
+  if(SNDURL){ try{ const au=new Audio(SNDURL); au.volume=Math.min(1,VOL); au.play(); }catch(e){} return; }
   try{
-    const a=new (window.AudioContext||window.webkitAudioContext)(); const t0=a.currentTime;
-    const notes=big?[523.25,659.25,784,1046.5]:[523.25,659.25,784];
-    notes.forEach((f,i)=>{
-      const o=a.createOscillator(),g=a.createGain();
-      o.type='triangle'; o.frequency.value=f;
-      o.connect(g); g.connect(a.destination);
-      const t=t0+i*0.13;
-      g.gain.setValueAtTime(0.0001,t);
-      g.gain.exponentialRampToValueAtTime(0.11,t+0.03);
-      g.gain.exponentialRampToValueAtTime(0.0001,t+0.9);
-      o.start(t); o.stop(t+1);
-    });
+    const a=new (window.AudioContext||window.webkitAudioContext)();
+    (SYNTHS[SND]||SYNTHS.chime)(a,a.currentTime,!!big);
   }catch(e){}
 }
 
@@ -123,7 +144,7 @@ function pump(){
   const el=$('alert');
   el.classList.remove('show','shake'); void el.offsetWidth;
   el.classList.add('show'); if(a.big) el.classList.add('shake');
-  burst(a.big?160:70); fanfare(a.big);
+  burst(a.big?160:70); playSound(a.big);
   setTimeout(()=>{ el.classList.remove('show');
     setTimeout(()=>{ showing=false; pump(); },700);
   },HOLD);
@@ -182,6 +203,29 @@ connect();
 
 /* ---------- test + edit modes ---------- */
 if(Q.get('test')==='1'){
+  // sound picker: tap to audition, the URL to use updates below
+  const sp=document.createElement('div');
+  sp.style.cssText='position:fixed;bottom:12px;left:50%;transform:translateX(-50%);z-index:99;display:flex;gap:6px;align-items:center;flex-wrap:wrap;justify-content:center;background:#1b1016;border:2px solid #ffb320;border-radius:10px;padding:9px 12px;font-family:Archivo,sans-serif;max-width:96vw';
+  const lbl=document.createElement('div');
+  lbl.style.cssText='width:100%;text-align:center;color:#dcc9a4;font-size:11px;font-weight:700;margin-bottom:2px';
+  lbl.textContent='Tap a sound to hear it — then add that ?snd= to your TVU Go URL';
+  sp.appendChild(lbl);
+  Object.keys(SYNTHS).forEach(name=>{
+    const b=document.createElement('button');
+    b.textContent=name;
+    b.style.cssText='background:'+(name===SND?'#ffb320':'#2a161d')+';color:'+(name===SND?'#160a24':'#f6e7c9')+';border:1px solid #7d2433;border-radius:7px;padding:7px 12px;font-weight:800;font-size:12px;cursor:pointer';
+    b.onclick=()=>{ SND=name;
+      [...sp.querySelectorAll('button')].forEach(x=>{x.style.background='#2a161d';x.style.color='#f6e7c9';});
+      b.style.background='#ffb320'; b.style.color='#160a24';
+      playSound(false); url.textContent=location.origin+location.pathname+'?snd='+name;
+    };
+    sp.appendChild(b);
+  });
+  const url=document.createElement('div');
+  url.style.cssText='width:100%;text-align:center;color:#ffb320;font-size:11px;font-weight:700;margin-top:3px;user-select:all';
+  url.textContent=location.origin+location.pathname+'?snd='+SND;
+  sp.appendChild(url);
+  document.body.appendChild(sp);
   const demo=[
     {label:'💜 <span class="hl">New Sub</span>',name:'PixelPanda',detail:'just subscribed! · <b>Tier 1</b>'},
     {label:'🎁 <span class="hl">Gifted Sub</span>',name:'Kaya',detail:'gifted a sub to <b>StreamerJoe</b>!'},
