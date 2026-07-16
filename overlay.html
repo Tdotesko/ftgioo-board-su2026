@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>SU2026 Overlay</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E🎓%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Archivo:wght@500;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --red:#e8283c; --amber:#ffb02e; --blue:#4a8cff; --grey:#9aa0b4;
+    --text:#ffffff; --dim:#c9c4d8;
+  }
+  html,body{margin:0;padding:0;background:transparent;overflow:hidden}
+  body{font-family:'Archivo',-apple-system,'Segoe UI',Roboto,sans-serif;-webkit-font-smoothing:antialiased}
+  #card{
+    display:inline-block;min-width:460px;max-width:860px;margin:14px;
+    background:linear-gradient(135deg,rgba(26,8,14,.92),rgba(12,8,18,.90));
+    border-left:5px solid var(--red);border-radius:16px;
+    padding:16px 24px 14px 20px;color:var(--text);
+    box-shadow:0 12px 40px -8px rgba(0,0,0,.65);
+  }
+  .eyebrow{font-size:12px;font-weight:800;letter-spacing:3.5px;color:var(--dim);
+    text-transform:uppercase;display:flex;align-items:center;gap:8px}
+  .eyebrow b{color:var(--red);letter-spacing:3.5px}
+  .mainrow{display:flex;align-items:center;gap:12px;margin-top:8px;flex-wrap:wrap}
+  .pill{flex-shrink:0;font-size:12.5px;font-weight:800;letter-spacing:1.2px;
+    text-transform:uppercase;padding:5px 12px;border-radius:20px;display:flex;align-items:center;gap:7px}
+  .pill .d{width:8px;height:8px;border-radius:50%}
+  .pill.live{background:rgba(232,40,60,.18);color:#ff6b7d;border:1px solid rgba(232,40,60,.5)}
+  .pill.live .d{background:var(--red);animation:pulse 1.4s ease-in-out infinite}
+  .pill.break{background:rgba(255,176,46,.14);color:var(--amber);border:1px solid rgba(255,176,46,.45)}
+  .pill.break .d{background:var(--amber)}
+  .pill.soon{background:rgba(74,140,255,.14);color:#7fb0ff;border:1px solid rgba(74,140,255,.45)}
+  .pill.soon .d{background:var(--blue)}
+  .pill.done{background:rgba(154,160,180,.14);color:var(--grey);border:1px solid rgba(154,160,180,.4)}
+  .pill.done .d{background:var(--grey)}
+  @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.45;transform:scale(.8)}}
+  #title{font-family:'Archivo Black','Archivo',sans-serif;font-size:34px;line-height:1.08;
+    letter-spacing:.2px}
+  #sub{margin-top:5px;font-size:16.5px;font-weight:700;color:var(--dim)}
+  #sub b{color:var(--text)}
+  .nextrow{display:flex;align-items:baseline;gap:10px;margin-top:12px;padding-top:11px;
+    border-top:1px solid rgba(255,255,255,.12);font-size:15px;font-weight:700;flex-wrap:wrap}
+  .nx{font-size:11.5px;font-weight:800;letter-spacing:2.5px;color:var(--red);text-transform:uppercase}
+  #nextlabel{color:var(--dim)}
+  #nextlabel b{color:var(--text)}
+  #count{margin-left:auto;font-weight:800;color:var(--amber);
+    font-variant-numeric:tabular-nums;font-size:17px}
+  #count.hot{color:#ff5d5d;animation:pulse 1.2s ease-in-out infinite}
+  .swap{animation:swap .5s ease}
+  @keyframes swap{0%{opacity:0;transform:translateY(8px)}100%{opacity:1;transform:none}}
+  #card.hide{opacity:0}
+  #card{transition:opacity .4s}
+</style>
+</head>
+<body>
+<div id="card" class="hide">
+  <div class="eyebrow">🎓 Streamer University <b>2026</b> <span style="letter-spacing:1px;color:#7d7690">· FTGIOO</span></div>
+  <div class="mainrow">
+    <span id="pill" class="pill live"><span class="d"></span><span id="pilltext">In session</span></span>
+    <span id="title">Loading…</span>
+  </div>
+  <div id="sub"></div>
+  <div class="nextrow" id="nextrow">
+    <span class="nx" id="nx">Up next</span>
+    <span id="nextlabel"></span>
+    <span id="count"></span>
+  </div>
+</div>
+
+<script>
+const API=(new URLSearchParams(location.search).get('api'))||'https://ftgioo-su2026-api-production.up.railway.app';
+let SCHED=null, eff=null, target=null, lastKey='';
+
+const $=id=>document.getElementById(id);
+function isClass(sec){ return !!(sec&&sec.current&&sec.current.indexOf('🔔')===0); }
+function profOf(sec){
+  if(!sec||!sec.professor) return '';
+  const m=sec.professor.match(/(?:teaching|Counselor):\s*([^(]+?)\s*\(/) || sec.professor.match(/Now teaching:\s*([^(]+?)\s*\(/);
+  return m?m[1].trim():'';
+}
+function fmtTime(min){
+  let h=Math.floor(min/60), m=min%60, ap=h>=12?'PM':'AM';
+  h=h%12; if(h===0)h=12;
+  return h+(m?(':'+String(m).padStart(2,'0')):':00')+' '+ap;
+}
+function nextClassAfter(dayId,si){
+  const di=SCHED.days.findIndex(d=>d.id===dayId); if(di<0)return null;
+  for(let i=si+1;i<SCHED.days[di].sections.length;i++){
+    const s=SCHED.days[di].sections[i];
+    if(isClass(s)) return {date:SCHED.days[di].date,min:s.min,label:s.label,prof:profOf(s)};
+  }
+  for(let d=di+1;d<SCHED.days.length;d++)
+    for(const s of SCHED.days[d].sections)
+      if(isClass(s)) return {date:SCHED.days[d].date,min:s.min,label:s.label,prof:profOf(s)};
+  return null;
+}
+function ctNowSec(){
+  const f=new Intl.DateTimeFormat('en-US',{timeZone:'America/Chicago',
+    day:'numeric',hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false});
+  const o={}; f.formatToParts(new Date()).forEach(p=>o[p.type]=p.value);
+  let h=parseInt(o.hour,10); if(h===24)h=0;
+  return (+o.day)*86400 + h*3600 + (+o.minute)*60 + (+o.second);
+}
+
+function render(){
+  if(!SCHED||!eff) return;
+  const day=SCHED.days.find(d=>d.id===eff.day); if(!day) return;
+  const sec=day.sections[Math.min(eff.section,day.sections.length-1)];
+  const nxt=nextClassAfter(eff.day,eff.section);
+  target = nxt ? {abs:nxt.date*86400+nxt.min*60} : null;
+
+  const key=eff.day+':'+eff.section;
+  const changed=key!==lastKey; lastKey=key;
+
+  const pill=$('pill'), pt=$('pilltext'), title=$('title'), sub=$('sub'),
+        nrow=$('nextrow'), nl=$('nextlabel'), nx=$('nx');
+
+  if(isClass(sec)){
+    pill.className='pill live'; pt.textContent='In session';
+    title.textContent=sec.label;
+    const p=profOf(sec);
+    sub.innerHTML=p?('Professor · <b>'+p+'</b>'):'';
+    sub.style.display=p?'':'none';
+    if(nxt){ nx.textContent='Up next';
+      nl.innerHTML='<b>'+nxt.label+'</b> · '+fmtTime(nxt.min); nrow.style.display=''; }
+    else nrow.style.display='none';
+  }else if(nxt){
+    const isSetup=sec.label&&sec.label.toLowerCase().indexOf('setup')>=0;
+    const isEnd=sec.label&&/wrap|graduation/i.test(sec.label);
+    pill.className='pill '+(isSetup?'soon':(isEnd?'done':'break'));
+    pt.textContent=isSetup?'Starting soon':(isEnd?'Done for today':'On break');
+    title.textContent=nxt.label;
+    sub.innerHTML='Professor · <b>'+nxt.prof+'</b>';
+    sub.style.display='';
+    nx.textContent='Starts';
+    nl.innerHTML='<b>'+fmtTime(nxt.min)+'</b> Central';
+    nrow.style.display='';
+  }else{
+    pill.className='pill done'; pt.textContent='Semester complete';
+    title.textContent='That’s a wrap! 🎓';
+    sub.textContent='Thank you for an incredible weekend of Streamer University.';
+    sub.style.display='';
+    nrow.style.display='none';
+  }
+  if(changed){ title.classList.remove('swap'); void title.offsetWidth; title.classList.add('swap'); }
+  $('card').classList.remove('hide');
+}
+
+function tick(){
+  const c=$('count');
+  if(!target){ c.textContent=''; return; }
+  const diff=target.abs-ctNowSec();
+  if(diff<=0){ c.textContent='starting now!'; c.className='hot'; return; }
+  const h=Math.floor(diff/3600), m=Math.floor((diff%3600)/60), s=diff%60;
+  c.textContent='in '+(h?h+':'+String(m).padStart(2,'0'):m)+':'+String(s).padStart(2,'0');
+  c.className=diff<300?'hot':'';
+}
+
+async function poll(){
+  try{
+    const r=await fetch(API+'/api/state',{cache:'no-store'});
+    const j=await r.json();
+    if(j.ok){ eff=j.effective; render(); }
+  }catch(e){/* keep last */}
+}
+async function boot(){
+  for(let i=0;i<20&&!SCHED;i++){
+    try{ const r=await fetch(API+'/api/schedule',{cache:'no-store'}); SCHED=await r.json(); }
+    catch(e){ await new Promise(res=>setTimeout(res,3000)); }
+  }
+  await poll();
+  setInterval(poll,10000);
+  setInterval(tick,500);
+}
+boot();
+</script>
+</body>
+</html>
