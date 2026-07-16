@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>SU2026 Alerts</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E🎓%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Graduate&family=Archivo:wght@700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --maroon:#6b1d29; --maroon-deep:#4e131d;
+    --gold:#ffb320; --gold-soft:#ffc95e; --red:#c31f2f; --red-deep:#8f1622;
+    --cream:#f6e7c9; --cream-dim:#dcc9a4;
+  }
+  html,body{margin:0;padding:0;background:transparent;overflow:hidden}
+  body{font-family:'Archivo',-apple-system,'Segoe UI',Roboto,sans-serif;-webkit-font-smoothing:antialiased}
+  #confetti{position:fixed;inset:0;pointer-events:none}
+  #alert{
+    position:fixed;top:8%;left:50%;
+    display:flex;align-items:center;gap:20px;text-align:left;
+    background:linear-gradient(160deg,var(--maroon) 0%,var(--maroon-deep) 100%);
+    border:4px solid var(--gold);border-radius:22px;
+    box-shadow:0 24px 70px -10px rgba(0,0,0,.7),
+               inset 0 0 0 4px var(--maroon-deep),
+               inset 0 0 0 7px var(--red);
+    padding:20px 38px 20px 22px;
+    opacity:0;transform:translateX(-50%) scale(.6);pointer-events:none;
+    transition:opacity .45s,transform .45s cubic-bezier(.2,1.5,.4,1);
+  }
+  #alert.show{opacity:1;transform:translateX(-50%) scale(1)}
+  #alert.shake img,#alert.shake>div{animation:shake .55s ease .5s}
+  @keyframes shake{0%,100%{transform:rotate(0)}
+    25%{transform:rotate(-1.6deg) scale(1.03)}
+    75%{transform:rotate(1.6deg) scale(1.03)}}
+  #alert img{width:110px;height:110px;object-fit:contain;
+    filter:drop-shadow(0 5px 10px rgba(0,0,0,.45))}
+  .a1{font-family:'Graduate',serif;font-size:16px;letter-spacing:4px;color:var(--cream);
+    text-transform:uppercase}
+  .a1 .hl{color:var(--red);background:var(--gold);border-radius:6px;padding:2px 8px;
+    letter-spacing:2px;text-shadow:none}
+  .a2{font-family:'Graduate',serif;font-size:40px;color:var(--gold);margin-top:6px;line-height:1.08;
+    text-shadow:3px 3px 0 var(--red-deep),4px 4px 0 rgba(0,0,0,.35);max-width:640px;
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .a3{font-weight:800;font-size:19px;color:var(--cream-dim);margin-top:8px}
+  .a3 b{color:var(--cream)}
+</style>
+</head>
+<body>
+<canvas id="confetti"></canvas>
+<div id="alert">
+  <img src="crest.png" alt="">
+  <div>
+    <div class="a1" id="a1">🎓 New Enrollment</div>
+    <div class="a2" id="a2"></div>
+    <div class="a3" id="a3"></div>
+  </div>
+</div>
+
+<script>
+const Q=new URLSearchParams(location.search);
+const CHANNEL=(Q.get('channel')||'ftgioo').toLowerCase();
+const SOUND=Q.get('sound')!=='0';
+const HOLD=Math.max(3,parseFloat(Q.get('hold')||'7'))*1000;
+const $=id=>document.getElementById(id);
+
+/* ---------- confetti ---------- */
+const cv=$('confetti'),cx=cv.getContext('2d');
+let parts=[];
+function sizeCanvas(){cv.width=innerWidth;cv.height=innerHeight;}
+sizeCanvas(); addEventListener('resize',sizeCanvas);
+function burst(n){
+  const colors=['#ffb320','#ffc95e','#c31f2f','#f6e7c9'];
+  for(let i=0;i<n;i++)parts.push({
+    x:cv.width/2+(Math.random()-.5)*cv.width*.5, y:cv.height*.12,
+    vx:(Math.random()-.5)*7, vy:Math.random()*-6-2,
+    w:6+Math.random()*7, h:9+Math.random()*9,
+    r:Math.random()*Math.PI, vr:(Math.random()-.5)*.3,
+    c:colors[Math.floor(Math.random()*colors.length)], life:1
+  });
+}
+(function loop(){
+  cx.clearRect(0,0,cv.width,cv.height);
+  parts=parts.filter(p=>p.life>0&&p.y<cv.height+30);
+  parts.forEach(p=>{
+    p.x+=p.vx; p.vy+=0.18; p.y+=p.vy; p.r+=p.vr; p.life-=0.004;
+    cx.save(); cx.translate(p.x,p.y); cx.rotate(p.r);
+    cx.globalAlpha=Math.max(0,p.life);
+    cx.fillStyle=p.c; cx.fillRect(-p.w/2,-p.h/2,p.w,p.h); cx.restore();
+  });
+  requestAnimationFrame(loop);
+})();
+
+/* ---------- fanfare ---------- */
+function fanfare(big){
+  if(!SOUND) return;
+  try{
+    const a=new (window.AudioContext||window.webkitAudioContext)(); const t0=a.currentTime;
+    const notes=big?[523.25,659.25,784,1046.5]:[523.25,659.25,784];
+    notes.forEach((f,i)=>{
+      const o=a.createOscillator(),g=a.createGain();
+      o.type='triangle'; o.frequency.value=f;
+      o.connect(g); g.connect(a.destination);
+      const t=t0+i*0.13;
+      g.gain.setValueAtTime(0.0001,t);
+      g.gain.exponentialRampToValueAtTime(0.22,t+0.03);
+      g.gain.exponentialRampToValueAtTime(0.0001,t+0.9);
+      o.start(t); o.stop(t+1);
+    });
+  }catch(e){}
+}
+
+/* ---------- alert queue ---------- */
+let queue=[],showing=false;
+function enqueue(a){ queue.push(a); pump(); }
+function pump(){
+  if(showing||!queue.length) return;
+  showing=true;
+  const a=queue.shift();
+  $('a1').innerHTML=a.label;
+  $('a2').textContent=a.name;
+  $('a3').innerHTML=a.detail||'';
+  const el=$('alert');
+  el.classList.remove('show','shake'); void el.offsetWidth;
+  el.classList.add('show'); if(a.big) el.classList.add('shake');
+  burst(a.big?160:70); fanfare(a.big);
+  setTimeout(()=>{ el.classList.remove('show');
+    setTimeout(()=>{ showing=false; pump(); },700);
+  },HOLD);
+}
+
+/* ---------- Twitch chat (anonymous) ---------- */
+function unesc(v){return (v||'').replace(/\\s/g,' ').replace(/\\:/g,';').replace(/\\\\/g,'\\').replace(/\\r|\\n/g,' ');}
+function parseTags(s){const o={};s.split(';').forEach(kv=>{const i=kv.indexOf('=');o[kv.slice(0,i)]=unesc(kv.slice(i+1));});return o;}
+function tierOf(p){return p==='Prime'?'Prime':p==='2000'?'Tier 2':p==='3000'?'Tier 3':'Tier 1';}
+const suppress={}; // swallow individual gifts that follow a gift bomb
+let sock=null;
+function connect(){
+  try{ sock=new WebSocket('wss://irc-ws.chat.twitch.tv:443'); }catch(e){ setTimeout(connect,5000); return; }
+  sock.onopen=()=>{
+    sock.send('CAP REQ :twitch.tv/tags twitch.tv/commands');
+    sock.send('NICK justinfan'+(1000+Math.floor(Math.random()*80000)));
+    sock.send('JOIN #'+CHANNEL);
+  };
+  sock.onmessage=e=>String(e.data).split('\r\n').forEach(handle);
+  sock.onclose=()=>setTimeout(connect,3000);
+  sock.onerror=()=>{try{sock.close();}catch(e){}};
+}
+function handle(line){
+  if(!line) return;
+  if(line.indexOf('PING')===0){ sock.send('PONG :tmi.twitch.tv'); return; }
+  const m=line.match(/^@([^ ]+) :tmi\.twitch\.tv USERNOTICE #(\w+)/);
+  if(!m||m[2].toLowerCase()!==CHANNEL) return;
+  const t=parseTags(m[1]);
+  const id=t['msg-id'];
+  const who=t['display-name']||t['login']||'Someone';
+  const anon=(t['login']||'')==='ananonymousgifter';
+  const name=anon?'A Mystery Donor':who;
+  if(id==='sub'){
+    enqueue({label:'🎓 <span class="hl">New Enrollment</span>',name:who,
+      detail:'just enrolled at Streamer University! · <b>'+tierOf(t['msg-param-sub-plan'])+'</b>'});
+  }else if(id==='resub'){
+    const mo=parseInt(t['msg-param-cumulative-months'],10)||0;
+    enqueue({label:'📚 <span class="hl">Re-Enrolled</span>',name:who,
+      detail:(mo?('<b>'+mo+' months</b> on campus! · '):'back on campus! · ')+'<b>'+tierOf(t['msg-param-sub-plan'])+'</b>'});
+  }else if(id==='submysterygift'){
+    const n=parseInt(t['msg-param-mass-gift-count'],10)||1;
+    suppress[t['login']]=(suppress[t['login']]||0)+n;
+    enqueue({label:'🎁 <span class="hl">Scholarship Shower</span>',name:name,
+      detail:'is handing out <b>'+n+' scholarship'+(n>1?'s':'')+'</b>!!',big:n>=5});
+  }else if(id==='subgift'){
+    if(suppress[t['login']]>0){ suppress[t['login']]--; return; }
+    enqueue({label:'🎁 <span class="hl">Scholarship</span>',name:name,
+      detail:'gifted a sub to <b>'+(t['msg-param-recipient-display-name']||'a student')+'</b>!'});
+  }else if(id==='raid'){
+    const n=parseInt(t['msg-param-viewerCount'],10)||0;
+    enqueue({label:'🚨 <span class="hl">Campus Visit</span>',name:t['msg-param-displayName']||who,
+      detail:'arrived with <b>'+n.toLocaleString()+' students</b>! Welcome to SU!',big:n>=50});
+  }
+}
+connect();
+
+/* ---------- test + edit modes ---------- */
+if(Q.get('test')==='1'){
+  const demo=[
+    {label:'🎓 <span class="hl">New Enrollment</span>',name:'PixelPanda',detail:'just enrolled at Streamer University! · <b>Tier 1</b>'},
+    {label:'🎁 <span class="hl">Scholarship</span>',name:'Kaya',detail:'gifted a sub to <b>StreamerJoe</b>!'},
+    {label:'🎁 <span class="hl">Scholarship Shower</span>',name:'BigDonor99',detail:'is handing out <b>20 scholarships</b>!!',big:true},
+    {label:'📚 <span class="hl">Re-Enrolled</span>',name:'LoyalViewer',detail:'<b>8 months</b> on campus! · <b>Tier 1</b>'},
+    {label:'🚨 <span class="hl">Campus Visit</span>',name:'Poudii',detail:'arrived with <b>1,200 students</b>! Welcome to SU!',big:true}
+  ];
+  let i=0; enqueue(demo[0]);
+  setInterval(()=>{ i=(i+1)%demo.length; enqueue(demo[i]); }, HOLD+3500);
+}
+
+// URL params: ?scale=1.3  ?y=8 (top offset %)  ?bg=00ff00  ?channel=  ?sound=0  ?hold=7  ?test=1
+(function(){
+  const el=$('alert');
+  const bg=Q.get('bg');
+  if(bg) document.body.style.background=/^[0-9a-fA-F]{6}$/.test(bg)?('#'+bg):bg;
+  const y=parseFloat(Q.get('y'));
+  if(!isNaN(y)) el.style.top=y+'%';
+  const s=parseFloat(Q.get('scale')||'1')||1;
+  if(s!==1){
+    el.style.transformOrigin='top center';
+    // keep the centering transform working with scale
+    const style=document.createElement('style');
+    style.textContent='#alert{transform:translateX(-50%) scale('+(s*.6)+')}#alert.show{transform:translateX(-50%) scale('+s+')}';
+    document.head.appendChild(style);
+  }
+})();
+</script>
+</body>
+</html>
