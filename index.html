@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Streamer University 2026 · FTGIOO Fossabot Board</title>
+<style>
+  :root{
+    --bg:#0e0b14; --panel:#171221; --panel2:#1f1830; --line:#2c2340;
+    --text:#ece7f5; --dim:#a99fc4; --accent:#a970ff; --accent2:#e0417a;
+    --green:#3fb950; --amber:#d99022; --grey:#6b6482; --blue:#4a8cff;
+    --chat:#c77dff;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    line-height:1.45;-webkit-font-smoothing:antialiased}
+  header{padding:20px 18px 14px;background:linear-gradient(135deg,#2a0f2f,#140b1e);
+    border-bottom:1px solid var(--line)}
+  h1{margin:0;font-size:20px;letter-spacing:.3px}
+  .sub{color:var(--dim);font-size:13px;margin-top:4px}
+  .rule{margin-top:10px;font-size:12.5px;color:var(--dim);background:#00000030;
+    border:1px solid var(--line);border-radius:8px;padding:8px 10px}
+  .rule b{color:var(--accent)}
+  .wrap{max-width:860px;margin:0 auto}
+  nav{position:sticky;top:0;z-index:20;display:flex;flex-wrap:wrap;gap:6px;
+    padding:10px 12px;background:#0e0b14ee;backdrop-filter:blur(8px);
+    border-bottom:1px solid var(--line)}
+  .tab{flex:1 1 auto;min-width:60px;text-align:center;padding:9px 8px;border-radius:9px;
+    background:var(--panel);border:1px solid var(--line);color:var(--dim);
+    font-weight:600;font-size:13px;cursor:pointer;user-select:none}
+  .tab.active{background:var(--accent);color:#160a24;border-color:var(--accent)}
+  main{padding:14px 12px 60px}
+  .section{background:var(--panel);border:1px solid var(--line);border-radius:12px;
+    padding:12px;margin-bottom:14px}
+  .sechead{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:4px}
+  .time{font-size:15px;font-weight:700}
+  .label{color:var(--dim);font-size:13px}
+  .tag{font-size:11px;font-weight:700;letter-spacing:.5px;padding:3px 8px;border-radius:20px;
+    text-transform:uppercase}
+  .t-set{background:#4a8cff22;color:var(--blue);border:1px solid #4a8cff55}
+  .t-session{background:#3fb95022;color:var(--green);border:1px solid #3fb95055}
+  .t-break{background:#d9902222;color:var(--amber);border:1px solid #d9902255}
+  .t-end{background:#6b648233;color:#b7afc9;border:1px solid #6b648255}
+  .note{font-size:12.5px;color:var(--dim);margin:6px 0 2px;font-style:italic}
+  .item{display:flex;align-items:stretch;gap:10px;margin-top:9px}
+  .cmd{flex-shrink:0;width:88px;font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+    font-size:12.5px;font-weight:700;color:var(--accent);padding-top:9px}
+  .cmd.chat{color:var(--chat);font-size:11px;line-height:1.2}
+  .body{flex:1;background:var(--panel2);border:1px solid var(--line);border-radius:9px;
+    padding:9px 11px;font-size:13.5px;word-break:break-word}
+  .copy{flex-shrink:0;align-self:center;background:var(--accent);color:#160a24;border:none;
+    border-radius:8px;padding:9px 12px;font-weight:700;font-size:12.5px;cursor:pointer;
+    min-width:66px}
+  .copy:hover{filter:brightness(1.08)}
+  .copy.done{background:var(--green);color:#06210a}
+  .item.chatrow .body{border-style:dashed;border-color:#c77dff55;background:#c77dff10}
+  .linktable{width:100%;border-collapse:collapse;font-size:13px;margin-top:4px}
+  .linktable td{padding:6px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+  .linktable td:first-child{font-weight:700;white-space:nowrap;color:var(--text)}
+  .linktable td:nth-child(2){color:var(--accent);font-family:ui-monospace,monospace;font-size:12.5px}
+  .linktable td:last-child{color:var(--dim);font-size:12px}
+  .warn{color:var(--accent2);font-weight:600}
+  .foot{color:var(--grey);font-size:12px;text-align:center;padding:10px}
+  .legend{display:flex;gap:6px;flex-wrap:wrap;font-size:11px;color:var(--dim);margin-top:8px}
+  .legend span{padding:2px 7px;border-radius:12px;border:1px solid var(--line)}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <h1>🎓 Streamer University 2026 · FTGIOO</h1>
+  <div class="sub">Lead Mod Fossabot Control Board · Jul 16 to 19</div>
+  <div class="rule">
+    <b>At each class change, copy these 3 in order:</b> !current → !professor → !next.
+    <b>!classes</b> = set once (Reference tab). <b>!today</b> = set once each morning.
+  </div>
+  <div class="legend">
+    <span style="color:var(--blue)">● pre-stream setup</span>
+    <span style="color:var(--green)">● in session</span>
+    <span style="color:var(--amber)">● break</span>
+    <span style="color:var(--grey)">● end</span>
+    <span style="color:var(--chat)">● manual chat drop</span>
+  </div>
+</header>
+<nav id="tabs"></nav>
+<main id="main"></main>
+<div class="foot">Click any Copy button, then paste into Fossabot. Tip: bookmark this file.</div>
+</div>
+
+<script id="data" type="application/json">
+{
+  "reference": {
+    "linkTable": [
+      ["ADAPT","twitch.tv/adapt",""],
+      ["Kaiya","youtube.com/@kaiyacenattv","Kai Cenat's twin sister, streams on YT"],
+      ["Lizzo","twitch.tv/lizzobetwitchin","app mislabels her as Member"],
+      ["agent00","twitch.tv/agent00",""],
+      ["Valkyrae","youtube.com/@Valkyrae","streams on YT"],
+      ["cinna","twitch.tv/cinna",""],
+      ["Cindy Gallop","none","WARN:NO chat link (adult site, Twitch TOS risk)"],
+      ["thesushidragon","twitch.tv/thesushidragon",""],
+      ["Ludwig","twitch.tv/ludwig","app mislabels him as Professor L"],
+      ["Poudii","twitch.tv/poudii",""],
+      ["yourragegaming","twitch.tv/yourragegaming",""]
+    ],
+    "classes": "🎓 Streamer University 2026 Full Lineup | THU: How To Adapt (ADAPT) 10A, Let Kaiya Cook (Kaiya) 11A, The Art of Self-Love (Lizzo) 3P | FRI: 0 to 1M Followers (agent00) 10A, Brand Elevation (Valkyrae) 11A, Networking 101 (cinna) 12P | SAT: Make Love Not Porn (Cindy Gallop) 10A, Stream Tech 101 (thesushidragon) 11A, How To Get Lucky (Ludwig) 12P | SUN: Clickbait & Trolling 101 (Poudii) 11A, Guidance & Understanding (yourragegaming) 3P"
+  },
+  "days": [
+    {
+      "id":"thu","name":"Thu 16",
+      "sections":[
+        {"time":"~9:45A","label":"Pre-stream setup","tag":"set",
+         "items":[
+           {"cmd":"!today","text":"🎓 Today (Thu, Jul 16): 10A How To Adapt (ADAPT) | 11A Let Kaiya Cook (Kaiya) | 3P The Art of Self-Love (Lizzo)"},
+           {"cmd":"!current","text":"⏳ No class live yet! First up 10A: How To Adapt with ADAPT. Type !next!"},
+           {"cmd":"!professor","text":"👨‍🏫 First professor today: ADAPT, How To Adapt at 10A. Channel: twitch.tv/adapt"},
+           {"cmd":"!next","text":"➡️ Up Next: How To Adapt with ADAPT at 10:00 AM"}
+         ]},
+        {"time":"10:00A","label":"How To Adapt","tag":"session",
+         "items":[
+           {"cmd":"!current","text":"🔔 CLASS IN SESSION: How To Adapt with ADAPT. Follow: twitch.tv/adapt"},
+           {"cmd":"!professor","text":"👨‍🏫 Now teaching: ADAPT (How To Adapt). Follow: twitch.tv/adapt"},
+           {"cmd":"!next","text":"➡️ Up Next: Let Kaiya Cook with Kaiya at 11:00 AM"},
+           {"cmd":"chat ~10:55A","chat":true,"text":"⏭️ 5 min out! Next: Let Kaiya Cook with Kaiya at 11:00 AM. youtube.com/@kaiyacenattv"}
+         ]},
+        {"time":"11:00A","label":"Let Kaiya Cook","tag":"session",
+         "items":[
+           {"cmd":"!current","text":"🔔 CLASS IN SESSION: Let Kaiya Cook with Kaiya. Follow: youtube.com/@kaiyacenattv"},
+           {"cmd":"!professor","text":"👩‍🏫 Now teaching: Kaiya (Let Kaiya Cook). Follow: youtube.com/@kaiyacenattv"},
+           {"cmd":"!next","text":"➡️ Up Next: The Art of Self-Love with Lizzo at 3:00 PM"}
+         ]},
+        {"time":"~12P to 3P","label":"Long break","tag":"break","note":"Paste after Kaiya ends; long gap until the 3P class.",
+         "items":[
+           {"cmd":"!current","text":"☕ Break time! No class live. Next 3P: The Art of Self-Love with Lizzo. Type !next!"},
+           {"cmd":"!professor","text":"☕ No professor teaching right now. Next up: Lizzo at 3:00 PM."},
+           {"cmd":"chat ~2:55P","chat":true,"text":"⏰ 5 min out! Final class: The Art of Self-Love with Lizzo at 3:00 PM."}
+         ]},
+        {"time":"3:00P","label":"The Art of Self-Love","tag":"session",
+         "items":[
+           {"cmd":"!current","text":"🔔 CLASS IN SESSION: The Art of Self-Love with Lizzo. Follow: twitch.tv/lizzobetwitchin"},
+           {"cmd":"!professor","text":"👩‍🏫 Now teaching: Lizzo (The Art of Self-Love). Follow: twitch.tv/lizzobetwitchin"},
+           {"cmd":"!next","text":"🎉 Last class today! Back tomorrow (Fri) 10A: 0 to 1M Followers with agent00"}
+         ]},
+        {"time":"End of day","label":"Wrap up","tag":"end",
+         "items":[
+           {"cmd":"!current","text":"🎉 Classes done for today! Back tomorrow! Type !today for Friday's lineup."},
+           {"cmd":"!professor","text":"🎓 No more professors today. Check back tomorrow!"}
+         ]}
+      ]
+    },
+    {
+      "id":"fri","name":"Fri 17",
+      "sections":[
+        {"time":"~9:45A","label":"Pre-stream setup","tag":"set",
+         "items":[
+           {"cmd":"!today","text":"🎓 Today (Fri, Jul 17): 10A 0 to 1,000,000 Followers in 12 Months (agent00) | 11A Brand Elevation Beyond Streaming (Valkyrae) | 12P Networking 101 (cinna)"},
+           {"cmd":"!current","text":"⏳ No class live yet! First up 10A: From 0 to 1,000,000 Followers with agent00. Type !next!"},
+           {"cmd":"!professor","text":"👨‍🏫 First professor today: agent00, 0 to 1M Followers at 10A. Channel: twitch.tv/agent00"},
+           {"cmd":"!next","text":"➡️ Up Next: From 0 to 1,000,000 Followers with agent00 at 10:00 AM"}
+         ]},
+        {"time":"10:00A","label":"0 to 1M Followers","tag":"session",
+         "items":[
+           {"cmd":"!current","text":"🔔 CLASS IN SESSION: From 0 to 1,000,000 Followers with agent00. Follow: twitch.tv/agent00"},
+           {"cmd":"!professor","text":"👨‍🏫 Now teaching: agent00 (0 to 1M Followers). Follow: twitch.tv/agent00"},
+           {"cmd":"!next","text":"➡️ Up Next: Brand Elevation Beyond Streaming with Valkyrae at 11:00 AM"},
+           {"cmd":"chat ~10:55A","chat":true,"text":"⏭️ 5 min out! Next: Brand Elevation with Valkyrae at 11:00 AM. youtube.com/@Valkyrae"}
+         ]},
+        {"time":"11:00A","label":"Brand Elevation","tag":"session",
+         "items":[
+           {"cmd":"!current","text":"🔔 CLASS IN SESSION: Brand Elevation Beyond Streaming with Valkyrae. Follow: youtube.com/@Valkyrae"},
+           {"cmd":"!professor","text":"👨‍🏫 Now teaching: Valkyrae (Brand Elevation). Follow: youtube.com/@Valkyrae"},
+           {"cmd":"!next","text":"➡️ Up Next: Networking 101 with cinna at 12:00 PM"},
+           {"cmd":"chat ~11:55A","chat":true,"text":"⏭️ 5 min out! Next: Networking 101 with cinna at 12:00 PM. twitch.tv/cinna"}
+         ]},
+        {"time":"12:00P","label":"Networking 101","tag":"session",
+         "items":[
+           {"cmd":"!current","text":"🔔 CLASS IN SESSION: Networking 101 with cinna. Follow: twitch.tv/cinna"},
+           {"cmd":"!professor","text":"👨‍🏫 Now teaching: cinna (Networking 101). Follow: twitch.tv/cinna"},
+           {"cmd":"!next","text":"🎉 Last class today! Back tomorrow (Sat) 10A: Make Love, Not Porn with Cindy Gallop"}
+         ]},
+        {"time":"Any gap","label":"Break filler","tag":"break",
+         "items":[
+           {"cmd":"!current","text":"☕ No class live right now! Type !next to see what's coming up!"},
+           {"cmd":"!professor","text":"☕ No professor teaching right now. Type !next for what's up."}
+         ]},
+        {"time":"End of day","label":"Wrap up","tag":"end",
+         "items":[
+           {"cmd":"!current","text":"🎉 Classes done for today! Back tomorrow! Type !today for Saturday's lineup."},
+           {"cmd":"!professor","text":"🎓 No more professors today. Check back tomorrow!"}
+         ]}
+      ]
+    },
+    {
+      "id":"sat","name":"Sat 18",
+      "sections":[
+        {"time":"~9:45A","label":"Pre-stream setup","tag":"set",
+         "items":[
+           {"cmd":"!today","text":"🎓 Today (Sat, Jul 18): 10A Make Love, Not Porn (Cindy Gallop) | 11A Stream Tech 101 (thesushidragon) | 12P How To Get Lucky (Ludwig)"},
+           {"cmd":"!current","text":"⏳ No class live yet! First up 10A: Make Love, Not Porn with Cindy Gallop. Type !next!"},
+           {"cmd":"!professor","text":"👨‍🏫 First professor today: Cindy Gallop, Make Love, Not Porn at 10A."},
+           {"cmd":"!next","text":"➡️ Up Next: Make Love, Not Porn with Cindy Gallop at 10:00 AM"}
+         ]},
+        {"time":"10:00A","label":"Make Love, Not Porn","tag":"session","note":"No follow link for Cindy Gallop; her site is adult content (Twitch TOS).",
+         "items":[
+           {"cmd":"!current","text":"🔔 CLASS IN SESSION: Make Love, Not Porn with Cindy Gallop"},
+           {"cmd":"!professor","text":"👨‍🏫 Now teaching: Cindy Gallop (Make Love, Not Porn)"},
+           {"cmd":"!next","text":"➡️ Up Next: Stream Tech 101 with thesushidragon at 11:00 AM"},
+           {"cmd":"chat ~10:55A","chat":true,"text":"⏭️ 5 min out! Next: Stream Tech 101 with thesushidragon at 11:00 AM. twitch.tv/thesushidragon"}
+         ]},
+        {"time":"11:00A","label":"Stream Tech 101","tag":"session",
+         "items":[
+           {"cmd":"!current","text":"🔔 CLASS IN SESSION: Stream Tech 101 with thesushidragon. Follow: twitch.tv/thesushidragon"},
+           {"cmd":"!professor","text":"👨‍🏫 Now teaching: thesushidragon (Stream Tech 101). Follow: twitch.tv/thesushidragon"},
+           {"cmd":"!next","text":"➡️ Up Next: How To Get Lucky with Ludwig at 12:00 PM"},
+           {"cmd":"chat ~11:55A","chat":true,"text":"⏭️ 5 min out! Next: How To Get Lucky with Ludwig at 12:00 PM"}
+         ]},
+        {"time":"12:00P","label":"How To Get Lucky","tag":"session",
+         "items":[
+           {"cmd":"!current","text":"🔔 CLASS IN SESSION: How To Get Lucky with Ludwig. Follow: twitch.tv/ludwig"},
+           {"cmd":"!professor","text":"👨‍🏫 Now teaching: Ludwig (How To Get Lucky). Follow: twitch.tv/ludwig"},
+           {"cmd":"!next","text":"🎉 Last class today! Back tomorrow (Sun) 11A: Clickbait & Trolling 101 with Poudii"}
+         ]},
+        {"time":"Any gap","label":"Break filler","tag":"break",
+         "items":[
+           {"cmd":"!current","text":"☕ No class live right now! Type !next to see what's coming up!"},
+           {"cmd":"!professor","text":"☕ No professor teaching right now. Type !next for what's up."}
+         ]},
+        {"time":"End of day","label":"Wrap up","tag":"end",
+         "items":[
+           {"cmd":"!current","text":"🎉 Classes done for today! Final day tomorrow! Type !today for Sunday's lineup."},
+           {"cmd":"!professor","text":"🎓 No more professors today. Check back tomorrow for the finale!"}
+         ]}
+      ]
+    },
+    {
+      "id":"sun","name":"Sun 19",
+      "sections":[
+        {"time":"~10:45A","label":"Pre-stream setup","tag":"set",
+         "items":[
+           {"cmd":"!today","text":"🎓 Today (Sun, Jul 19): 11A Clickbait & Trolling 101 (Poudii) | 3P Guidance & Understanding (yourragegaming)"},
+           {"cmd":"!current","text":"⏳ No class live yet! First up 11A: Clickbait & Trolling 101 with Poudii. Type !next!"},
+           {"cmd":"!professor","text":"👨‍🏫 First professor today: Poudii, Clickbait & Trolling 101 at 11A. Channel: twitch.tv/poudii"},
+           {"cmd":"!next","text":"➡️ Up Next: Clickbait & Trolling 101 with Poudii at 11:00 AM"}
+         ]},
+        {"time":"11:00A","label":"Clickbait & Trolling 101","tag":"session",
+         "items":[
+           {"cmd":"!current","text":"🔔 CLASS IN SESSION: Clickbait & Trolling 101 with Poudii. Follow: twitch.tv/poudii"},
+           {"cmd":"!professor","text":"👨‍🏫 Now teaching: Poudii (Clickbait & Trolling 101). Follow: twitch.tv/poudii"},
+           {"cmd":"!next","text":"➡️ Up Next: Guidance & Understanding with yourragegaming at 3:00 PM"}
+         ]},
+        {"time":"~12P to 3P","label":"Long break","tag":"break","note":"Paste after Clickbait ends; long gap until the final 3P class.",
+         "items":[
+           {"cmd":"!current","text":"☕ Break time! No class live. Final class 3P: Guidance & Understanding with yourragegaming. Type !next!"},
+           {"cmd":"!professor","text":"☕ No professor teaching right now. Final one up at 3P: yourragegaming."},
+           {"cmd":"chat ~2:55P","chat":true,"text":"⏰ 5 min out! FINAL class: Guidance & Understanding with yourragegaming at 3:00 PM. twitch.tv/yourragegaming"}
+         ]},
+        {"time":"3:00P","label":"Guidance & Understanding","tag":"session",
+         "items":[
+           {"cmd":"!current","text":"🔔 CLASS IN SESSION: Guidance & Understanding with yourragegaming. Follow: twitch.tv/yourragegaming"},
+           {"cmd":"!professor","text":"👨‍🏫 Now teaching: yourragegaming (Guidance & Understanding, Guidance Counselor). Follow: twitch.tv/yourragegaming"},
+           {"cmd":"!next","text":"🎓 That's a WRAP on Streamer University 2026! Huge love to every professor, guest & student. Type !classes to relive the lineup."}
+         ]},
+        {"time":"End of event","label":"Graduation","tag":"end",
+         "items":[
+           {"cmd":"!current","text":"🎓 Streamer University 2026 has GRADUATED! Thank you for an incredible weekend. Follow FTGIOO for what's next!"},
+           {"cmd":"!professor","text":"🎓 All professors have clocked out. Semester complete! Thanks for a great weekend."}
+         ]}
+      ]
+    }
+  ]
+}
+</script>
+
+<script>
+const DATA = JSON.parse(document.getElementById('data').textContent);
+const tabsEl = document.getElementById('tabs');
+const mainEl = document.getElementById('main');
+const TAGNAME = {set:"Pre-stream",session:"In session",break:"Break",end:"End"};
+
+function copyBtn(text){
+  const b=document.createElement('button');
+  b.className='copy'; b.textContent='Copy';
+  b.addEventListener('click',()=>{
+    const done=()=>{b.textContent='Copied!';b.classList.add('done');
+      setTimeout(()=>{b.textContent='Copy';b.classList.remove('done')},1200)};
+    if(navigator.clipboard&&navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).then(done).catch(fallback);
+    } else fallback();
+    function fallback(){const t=document.createElement('textarea');t.value=text;
+      document.body.appendChild(t);t.select();try{document.execCommand('copy')}catch(e){}
+      document.body.removeChild(t);done();}
+  });
+  return b;
+}
+
+function renderItem(it){
+  const row=document.createElement('div');
+  row.className='item'+(it.chat?' chatrow':'');
+  const cmd=document.createElement('div');
+  cmd.className='cmd'+(it.chat?' chat':'');
+  cmd.textContent=it.cmd;
+  const body=document.createElement('div');
+  body.className='body'; body.textContent=it.text;
+  row.append(cmd,body,copyBtn(it.text));
+  return row;
+}
+
+function renderSection(s){
+  const sec=document.createElement('div'); sec.className='section';
+  const head=document.createElement('div'); head.className='sechead';
+  const time=document.createElement('span'); time.className='time'; time.textContent=s.time;
+  const label=document.createElement('span'); label.className='label'; label.textContent=s.label;
+  const tag=document.createElement('span'); tag.className='tag t-'+s.tag; tag.textContent=TAGNAME[s.tag];
+  head.append(time,tag,label);
+  sec.append(head);
+  if(s.note){const n=document.createElement('div');n.className='note';n.textContent='⚠ '+s.note;sec.append(n);}
+  s.items.forEach(it=>sec.append(renderItem(it)));
+  return sec;
+}
+
+function renderReference(){
+  mainEl.innerHTML='';
+  const sec=document.createElement('div'); sec.className='section';
+  const h=document.createElement('div'); h.className='sechead';
+  h.innerHTML='<span class="time">!classes</span><span class="tag t-set">Set once</span><span class="label">Full weekend lineup, never edit</span>';
+  sec.append(h);
+  sec.append(renderItem({cmd:'!classes',text:DATA.reference.classes}));
+  mainEl.append(sec);
+
+  const sec2=document.createElement('div'); sec2.className='section';
+  const h2=document.createElement('div'); h2.className='sechead';
+  h2.innerHTML='<span class="time">Professor links</span><span class="label">All confirmed</span>';
+  sec2.append(h2);
+  const tbl=document.createElement('table'); tbl.className='linktable';
+  DATA.reference.linkTable.forEach(r=>{
+    const tr=document.createElement('tr');
+    const note=r[2].startsWith('WARN:')
+      ? '<span class="warn">'+r[2].slice(5)+'</span>' : r[2];
+    tr.innerHTML='<td>'+r[0]+'</td><td>'+r[1]+'</td><td>'+note+'</td>';
+    tbl.append(tr);
+  });
+  sec2.append(tbl);
+  const note=document.createElement('div'); note.className='note';
+  note.textContent='⚠ The SU app has wrong names for two professors: "Member" is really Lizzo (Thu 3P) and "Professor L" is really Ludwig (Sat 12P). This board uses their real names.';
+  sec2.append(note);
+  mainEl.append(sec2);
+}
+
+function renderDay(day){
+  mainEl.innerHTML='';
+  day.sections.forEach(s=>mainEl.append(renderSection(s)));
+}
+
+function selectTab(idx){
+  [...tabsEl.children].forEach((t,i)=>t.classList.toggle('active',i===idx));
+  if(idx===0) renderReference(); else renderDay(DATA.days[idx-1]);
+  window.scrollTo(0,0);
+}
+
+const tabNames=['Reference',...DATA.days.map(d=>d.name)];
+tabNames.forEach((n,i)=>{
+  const t=document.createElement('div'); t.className='tab'; t.textContent=n;
+  t.addEventListener('click',()=>selectTab(i));
+  tabsEl.append(t);
+});
+
+// Default to Thursday (event start); change if you like.
+selectTab(1);
+</script>
+</body>
+</html>
