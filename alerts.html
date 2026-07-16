@@ -94,7 +94,7 @@ function burst(n){
 /* ---------- sounds ----------
    Pick with ?snd=chime|bell|coin|sparkle|tada|pop|fanfare  (default: chime)
    Volume with ?vol=0.5 (0 to 2). Or use any audio file: ?sndurl=yourfile.mp3 */
-let SND=(Q.get('snd')||'chime').toLowerCase();
+let SND=(Q.get('snd')||'sparkle').toLowerCase();
 const VOL=Math.max(0,Math.min(2,parseFloat(Q.get('vol')||'1')||1));
 const SNDURL=Q.get('sndurl')||'';
 function tone(a,t,f,type,peak,dur){
