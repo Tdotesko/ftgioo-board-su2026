@@ -151,6 +151,22 @@
   .sbtn{flex:1;border:1px solid var(--line);background:var(--panel2);color:var(--text);border-radius:8px;padding:9px;font-weight:800;font-size:12.5px;cursor:pointer}
   .sbtn.primary{background:var(--accent);color:#160a24;border:none}
   .synchint{font-size:11px;color:var(--dim);line-height:1.4}
+  #livepanel{max-width:880px;margin:0 auto;padding:10px 12px 0}
+  .lp{background:var(--panel);border:1px solid #ff4d4d40;border-radius:12px;padding:10px 12px}
+  .lp>summary{cursor:pointer;font-weight:800;font-size:13px;color:#ff8a8a;list-style:none;display:flex;align-items:center;gap:8px}
+  .lp>summary::-webkit-details-marker{display:none}
+  .lphdrbtn{margin-left:auto;background:var(--panel2);border:1px solid var(--line);color:var(--text);border-radius:8px;padding:6px 10px;font-weight:800;font-size:12px;cursor:pointer}
+  .lprow{display:flex;flex-direction:column;gap:5px;padding:9px 0;border-top:1px solid var(--line);margin-top:8px}
+  .lprow:first-of-type{border-top:none}
+  .lptop{display:flex;align-items:center;gap:8px}
+  .lpname{font-family:ui-monospace,Menlo,Consolas,monospace;font-weight:800;color:var(--accent);font-size:12.5px}
+  .lpsrc{font-size:11px;color:var(--green);margin-left:auto;font-weight:700}
+  .lpsrc.manual{color:var(--amber)}
+  .lpta{width:100%;background:var(--panel2);border:1px solid var(--line);color:var(--text);border-radius:8px;padding:8px 10px;font-size:13px;resize:vertical;min-height:40px;font-family:inherit;line-height:1.4}
+  .lpbtns{display:flex;gap:6px}
+  .lpset{flex:1;background:var(--accent);color:#160a24;border:none;border-radius:8px;padding:9px;font-weight:800;font-size:12.5px;cursor:pointer}
+  .lpauto{background:var(--panel2);border:1px solid var(--line);color:var(--dim);border-radius:8px;padding:9px 12px;font-weight:700;font-size:12.5px;cursor:pointer}
+  .lphint{font-size:11px;color:var(--dim);margin-top:8px;line-height:1.4}
   #toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);background:#171221;
     border:1px solid var(--line);color:var(--text);padding:10px 14px;border-radius:10px;
     font-size:13px;font-weight:700;opacity:0;transition:opacity .25s;z-index:50;max-width:90%;text-align:center}
@@ -165,7 +181,7 @@
   <div class="ctclock" id="ctclock"><span class="rdot"></span><span id="clocktext">Reading Central Time…</span></div>
   <div class="how">
     <div class="row"><span class="n">1</span><span>The board <b>auto-follows Central Time</b> and jumps to the class happening now. It lights up as "You are here."</span></div>
-    <div class="row"><span class="n">2</span><span><b>Copy the commands in order 1 → 2 → 3</b> into Fossabot. They turn green as you go, so you never miss one.</span></div>
+    <div class="row"><span class="n">2</span><span><b>Press Set on any command line</b> (or tap a class) and Fossabot updates instantly — no copy-pasting. The red Live commands panel shows exactly what chat sees, and you can edit it there too.</span></div>
     <div class="row"><span class="n">3</span><span>Tapping anything <b>pauses auto-follow</b>. Hit <b>🔴 Go live</b> in the bar to snap back to the current class.</span></div>
     <div class="row"><span class="n">✓</span><span><b>Mark this class done</b> at the bottom of a card. When synced, <b>every mod sees it</b> (with who + time) so no one doubles up.</span></div>
   </div>
@@ -192,6 +208,7 @@
   </details>
 </header>
 <nav id="tabs"></nav>
+<div id="livepanel"></div>
 <div id="view"></div>
 <div class="foot">Auto-follows Central Time (Arkansas). Progress saves on this device. 🎓</div>
 </div>
@@ -406,7 +423,8 @@ function save(){try{localStorage.setItem(KEY,JSON.stringify(state));}catch(e){}}
 const DEFAULT_API='https://ftgioo-su2026-api-production.up.railway.app';
 const SKEY='ftgioo_su2026_sync';
 let sync=loadSync();
-let serverControl=null, syncHealthy=false, lastSig=null, lastActiveKey=null;
+let serverControl=null, syncHealthy=false, lastSig=null, lastActiveKey=null, liveCmds=null, lpBuilt=false;
+const lpRefs={};
 function loadSync(){ try{return JSON.parse(localStorage.getItem(SKEY))||{};}catch(e){return {};} }
 function saveSync(){ try{localStorage.setItem(SKEY,JSON.stringify(sync));}catch(e){} }
 function apiBase(){ return ((sync.url&&sync.url.trim()&&sync.url!=='__local__')?sync.url.trim():DEFAULT_API).replace(/\/+$/,''); }
@@ -458,11 +476,89 @@ async function pollSync(force){
       lastSig=sig; paintTab(tab);
       if(activeKey!==lastActiveKey){ lastActiveKey=activeKey; scrollToActive(eff.day,eff.section); }
     }
+    liveCmds=s.commands||null;
+    updateLivePanel();
     updateSyncBadge(s);
   }catch(e){
     syncHealthy=false; updateSyncBadge(null);
     clockTextEl.textContent=ctClockString()+' · Central Time (sync offline)';
   }
+}
+
+/* ---------- live command panel (edit what Fossabot serves) ---------- */
+const LP_FIELDS=['current','professor','next','today'];
+function setCmd(field,value){
+  return apiPost('/api/cmd',{field,value,by:(sync.name||'a mod')})
+    .then(()=>{ lastSig=null; toast('!'+field+' is now live for chat'); return pollSync(true); })
+    .catch(e=>{ toast('Set failed: '+e.message,true); throw e; });
+}
+function clearCmd(field){
+  return apiPost('/api/cmd',{field,value:'',by:(sync.name||'a mod')})
+    .then(()=>{ lastSig=null; toast('!'+field+' back to auto'); return pollSync(true); })
+    .catch(e=>toast('Revert failed: '+e.message,true));
+}
+function setLineBtn(field,text){
+  const b=document.createElement('button'); b.className='copy'; b.textContent='Set';
+  b.title='Make this the live !'+field+' in chat';
+  b.addEventListener('click',()=>{
+    b.textContent='Set…';
+    setCmd(field,text)
+      .then(()=>{ b.textContent='Set ✓'; setTimeout(()=>{b.textContent='Set';},1400); })
+      .catch(()=>{ b.textContent='Set'; });
+  });
+  return b;
+}
+function initLivePanel(){
+  const host=document.getElementById('livepanel'); if(!host) return;
+  if(!syncOn()){ host.style.display='none'; return; }
+  host.style.display='';
+  const d=document.createElement('details'); d.className='lp'; d.open=true;
+  const sum=document.createElement('summary'); sum.textContent='🔴 Live commands — what chat sees right now';
+  const resume=document.createElement('button'); resume.className='lphdrbtn'; resume.textContent='↺ All auto';
+  resume.title='Clear every manual edit and follow Central Time again';
+  resume.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();goLive();});
+  sum.append(resume); d.append(sum);
+  LP_FIELDS.forEach(f=>{
+    const row=document.createElement('div'); row.className='lprow';
+    const top=document.createElement('div'); top.className='lptop';
+    const name=document.createElement('span'); name.className='lpname'; name.textContent='!'+f;
+    const src=document.createElement('span'); src.className='lpsrc'; src.textContent='';
+    top.append(name,src);
+    const ta=document.createElement('textarea'); ta.className='lpta'; ta.rows=2;
+    const btns=document.createElement('div'); btns.className='lpbtns';
+    const setb=document.createElement('button'); setb.className='lpset'; setb.textContent='Set live';
+    setb.addEventListener('click',()=>{ setb.textContent='Setting…'; setCmd(f,ta.value).finally(()=>{setb.textContent='Set live';}); });
+    const autob=document.createElement('button'); autob.className='lpauto'; autob.textContent='Auto';
+    autob.title='Revert this command to the schedule (Central Time)';
+    autob.addEventListener('click',()=>clearCmd(f));
+    btns.append(setb,autob);
+    row.append(top,ta,btns);
+    d.append(row);
+    lpRefs[f]={ta,src,autob};
+  });
+  const hint=document.createElement('div'); hint.className='lphint';
+  hint.textContent='Type to edit, then Set live — the Fossabot command changes instantly for chat. Auto = follow the schedule by Central Time. Or press Set on any schedule line below, or tap a class to set all four at once.';
+  d.append(hint);
+  host.innerHTML=''; host.append(d); lpBuilt=true;
+  updateLivePanel();
+}
+function updateLivePanel(){
+  const host=document.getElementById('livepanel'); if(!host) return;
+  if(!syncOn()){ host.style.display='none'; return; }
+  host.style.display='';
+  if(!lpBuilt){ lpBuilt=true; initLivePanel(); return; }
+  if(!liveCmds) return;
+  LP_FIELDS.forEach(f=>{
+    const ref=lpRefs[f], c=liveCmds[f]; if(!ref||!c) return;
+    if(document.activeElement!==ref.ta) ref.ta.value=c.value||'';
+    if(c.source==='manual'){
+      ref.src.textContent='✏️ manually set'+(c.by?(' by '+c.by):'')+(c.at?(' · '+c.at):'');
+      ref.src.className='lpsrc manual'; ref.autob.style.display='';
+    }else{
+      ref.src.textContent='🟢 auto (by time)';
+      ref.src.className='lpsrc'; ref.autob.style.display='none';
+    }
+  });
 }
 
 /* ---------- Central Time engine ---------- */
@@ -550,11 +646,17 @@ function renderItem(dayId,si,ii,it,num){
   const name=document.createElement('div'); name.className='cmdname'; name.textContent=it.cmd;
   const body=document.createElement('div'); body.className='body'; body.textContent=it.text;
   wrap.append(name,body);
-  const btn=copyBtn(it.text,()=>{
-    state.copied[key]=true; save();
-    row.classList.add('copied'); if(!it.chat) badge.textContent='✓';
-    refreshChrome(dayId);
-  });
+  let btn;
+  const field=(!it.chat && it.cmd && it.cmd.charAt(0)==='!') ? it.cmd.slice(1) : null;
+  if(syncOn() && field && LP_FIELDS.includes(field)){
+    btn=setLineBtn(field,it.text);
+  }else{
+    btn=copyBtn(it.text,()=>{
+      state.copied[key]=true; save();
+      row.classList.add('copied'); if(!it.chat) badge.textContent='✓';
+      refreshChrome(dayId);
+    });
+  }
   row.append(badge,wrap,btn);
   return row;
 }
@@ -708,8 +810,8 @@ function selectStep(dayId,idx){
   if(syncOn()){
     state.tab=DATA.days.findIndex(d=>d.id===dayId)+1; state.active[dayId]=idx;
     paintTab(state.tab); scrollToActive(dayId,idx);
-    apiPost('/api/control',{mode:'manual',day:dayId,section:idx,by:(sync.name||'a mod')})
-      .then(()=>{ lastSig=null; pollSync(true); toast('Set current class for all mods + Fossabot'); })
+    apiPost('/api/setclass',{day:dayId,section:idx,by:(sync.name||'a mod')})
+      .then(()=>{ lastSig=null; pollSync(true); toast('Class set live — chat + all mods updated'); })
       .catch(e=>toast('Sync failed: '+e.message,true));
     return;
   }
@@ -718,8 +820,8 @@ function selectStep(dayId,idx){
 }
 function goLive(){
   if(syncOn()){
-    apiPost('/api/control',{mode:'auto',by:(sync.name||'a mod')})
-      .then(()=>{ lastSig=null; pollSync(true); toast('Resumed auto (Central Time) for all mods'); })
+    apiPost('/api/auto',{by:(sync.name||'a mod')})
+      .then(()=>{ lastSig=null; pollSync(true); toast('All commands back to auto (Central Time)'); })
       .catch(e=>toast('Sync failed: '+e.message,true));
     return;
   }
@@ -778,6 +880,7 @@ tabNames.forEach((n,i)=>{
 });
 
 initSyncPanel();
+initLivePanel();
 // Initial paint using local time so the board shows instantly, even offline.
 if(state.auto){ applyLive(true); }
 else { paintTab(state.tab); clockTextEl.textContent = ctClockString()+' · Central Time (Arkansas)'; markToday(); }
