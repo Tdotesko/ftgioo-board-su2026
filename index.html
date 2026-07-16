@@ -167,6 +167,9 @@
   .lpset{flex:1;background:var(--accent);color:#160a24;border:none;border-radius:8px;padding:9px;font-weight:800;font-size:12.5px;cursor:pointer}
   .lpauto{background:var(--panel2);border:1px solid var(--line);color:var(--dim);border-radius:8px;padding:9px 12px;font-weight:700;font-size:12.5px;cursor:pointer}
   .lphint{font-size:11px;color:var(--dim);margin-top:8px;line-height:1.4}
+  .actlist{padding:6px 0 2px}
+  .actrow{font-size:12px;color:var(--dim);padding:5px 0;border-top:1px solid var(--line)}
+  .actrow:first-child{border-top:none}
   #toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);background:#171221;
     border:1px solid var(--line);color:var(--text);padding:10px 14px;border-radius:10px;
     font-size:13px;font-weight:700;opacity:0;transition:opacity .25s;z-index:50;max-width:90%;text-align:center}
@@ -423,7 +426,7 @@ function save(){try{localStorage.setItem(KEY,JSON.stringify(state));}catch(e){}}
 const DEFAULT_API='https://ftgioo-su2026-api-production.up.railway.app';
 const SKEY='ftgioo_su2026_sync';
 let sync=loadSync();
-let serverControl=null, syncHealthy=false, lastSig=null, lastActiveKey=null, liveCmds=null, lpBuilt=false;
+let serverControl=null, syncHealthy=false, lastSig=null, lastActiveKey=null, liveCmds=null, lpBuilt=false, actLogs=null;
 const lpRefs={};
 function loadSync(){ try{return JSON.parse(localStorage.getItem(SKEY))||{};}catch(e){return {};} }
 function saveSync(){ try{localStorage.setItem(SKEY,JSON.stringify(sync));}catch(e){} }
@@ -477,6 +480,7 @@ async function pollSync(force){
       if(activeKey!==lastActiveKey){ lastActiveKey=activeKey; scrollToActive(eff.day,eff.section); }
     }
     liveCmds=s.commands||null;
+    actLogs=s.logs||null;
     updateLivePanel();
     updateSyncBadge(s);
   }catch(e){
@@ -539,7 +543,12 @@ function initLivePanel(){
   const hint=document.createElement('div'); hint.className='lphint';
   hint.textContent='Type to edit, then Set live — the Fossabot command changes instantly for chat. Auto = follow the schedule by Central Time. Or press Set on any schedule line below, or tap a class to set all four at once.';
   d.append(hint);
-  host.innerHTML=''; host.append(d); lpBuilt=true;
+  const act=document.createElement('details'); act.className='lp'; act.style.marginTop='8px';
+  const asum=document.createElement('summary'); asum.textContent='📋 Mod activity (who did what)';
+  act.append(asum);
+  const list=document.createElement('div'); list.id='actlist'; list.className='actlist';
+  act.append(list);
+  host.innerHTML=''; host.append(d,act); lpBuilt=true;
   updateLivePanel();
 }
 function updateLivePanel(){
@@ -558,7 +567,21 @@ function updateLivePanel(){
       ref.src.textContent='🟢 auto (by time)';
       ref.src.className='lpsrc'; ref.autob.style.display='none';
     }
+    if(f==='next'&&c.suffix&&c.source!=='manual'){ ref.src.textContent+=' · chat sees: '+c.suffix; }
   });
+  const list=document.getElementById('actlist');
+  if(list&&actLogs){
+    list.innerHTML='';
+    if(!actLogs.length){
+      const e=document.createElement('div'); e.className='actrow'; e.textContent='No activity yet.'; list.append(e);
+    }else{
+      actLogs.forEach(l=>{
+        const e=document.createElement('div'); e.className='actrow';
+        e.textContent=(l.at?l.at+' · ':'')+(l.by?l.by+' · ':'')+l.action;
+        list.append(e);
+      });
+    }
+  }
 }
 
 /* ---------- Central Time engine ---------- */
