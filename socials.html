@@ -96,6 +96,59 @@ PLATFORMS.forEach(p=>{
   bar.style.transformOrigin=p.o;
   bar.style.transform=(p.x?'translateX(-50%) ':'')+(s!==1?('scale('+s+')'):'');
 })();
+
+// Free positioning (?px=..&py=.. percent of screen) + drag/resize editor (?edit=1)
+(function(){
+  const el=document.getElementById('bar');
+  let s=parseFloat(Q.get('scale')||'1')||1;
+  if(Q.has('px')||Q.has('py')){
+    el.style.left=(parseFloat(Q.get('px'))||0)+'%';
+    el.style.top=(parseFloat(Q.get('py'))||0)+'%';
+    el.style.right='';el.style.bottom='';
+    el.style.transformOrigin='top left';
+    el.style.transform=s!==1?('scale('+s+')'):'';
+  }
+  if(Q.get('edit')!=='1') return;
+  const css=document.createElement('style');
+  css.textContent='#edittb{position:fixed;top:8px;left:50%;transform:translateX(-50%);z-index:99;display:flex;gap:6px;align-items:center;background:#1b1016;border:2px solid #ffb320;border-radius:10px;padding:8px 10px;font-family:Archivo,sans-serif;max-width:96vw;flex-wrap:wrap;justify-content:center}#edittb button{background:#ffb320;border:none;border-radius:6px;font-weight:800;font-size:15px;width:32px;height:32px;cursor:pointer}#edittb .cp{width:auto;padding:0 12px;font-size:12px}#edittb input{width:min(340px,50vw);font-size:11px;padding:7px;border-radius:6px;border:1px solid #7d2433;background:#2a161d;color:#f6e7c9}#edittb span{color:#ffb320;font-weight:800;font-size:13px;min-width:46px;text-align:center}';
+  document.head.appendChild(css);
+  const tb=document.createElement('div'); tb.id='edittb';
+  tb.innerHTML='<button id="eMinus">−</button><span id="eScale"></span><button id="ePlus">+</button><input id="eUrl" readonly><button id="eCopy" class="cp">Copy URL</button>';
+  document.body.appendChild(tb);
+  el.style.cursor='move'; el.style.touchAction='none';
+  function fixPos(){const r=el.getBoundingClientRect();
+    el.style.left=r.left+'px'; el.style.top=r.top+'px';
+    el.style.right='';el.style.bottom='';
+    el.style.transformOrigin='top left';
+    el.style.transform=s!==1?('scale('+s+')'):'';}
+  function urlNow(){const q=new URLSearchParams(location.search);
+    q.delete('edit');q.delete('pos');
+    if(s!==1)q.set('scale',s.toFixed(2));else q.delete('scale');
+    const r=el.getBoundingClientRect();
+    q.set('px',(r.left/innerWidth*100).toFixed(2));
+    q.set('py',(r.top/innerHeight*100).toFixed(2));
+    return location.origin+location.pathname+'?'+q.toString();}
+  function refresh(){document.getElementById('eScale').textContent=s.toFixed(2)+'×';
+    el.style.transform=s!==1?('scale('+s+')'):'';
+    document.getElementById('eUrl').value=urlNow();}
+  document.getElementById('ePlus').onclick=()=>{s=Math.min(3,s+0.05);refresh();};
+  document.getElementById('eMinus').onclick=()=>{s=Math.max(0.4,s-0.05);refresh();};
+  document.getElementById('eCopy').onclick=()=>{
+    const i=document.getElementById('eUrl');
+    if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(i.value);
+    else{i.select();try{document.execCommand('copy')}catch(e){}}
+    const b=document.getElementById('eCopy');b.textContent='Copied!';setTimeout(()=>b.textContent='Copy URL',1200);};
+  let drag=null;
+  el.addEventListener('pointerdown',e=>{fixPos();
+    const r=el.getBoundingClientRect();
+    drag={dx:e.clientX-r.left,dy:e.clientY-r.top};
+    el.setPointerCapture(e.pointerId);e.preventDefault();});
+  el.addEventListener('pointermove',e=>{if(!drag)return;
+    el.style.left=(e.clientX-drag.dx)+'px';
+    el.style.top=(e.clientY-drag.dy)+'px';refresh();});
+  el.addEventListener('pointerup',()=>{drag=null;refresh();});
+  fixPos();refresh();
+})();
 </script>
 </body>
 </html>
