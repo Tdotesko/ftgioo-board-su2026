@@ -166,11 +166,11 @@ function handle(line){
   }else if(id==='submysterygift'){
     const n=parseInt(t['msg-param-mass-gift-count'],10)||1;
     suppress[t['login']]=(suppress[t['login']]||0)+n;
-    enqueue({label:'🎁 <span class="hl">Scholarship Shower</span>',name:name,
-      detail:'is handing out <b>'+n+' scholarship'+(n>1?'s':'')+'</b>!!',big:n>=5});
+    enqueue({label:'🎁 <span class="hl">Gifted Subs</span>',name:name,
+      detail:'is gifting <b>'+n+' sub'+(n>1?'s':'')+'</b>!!',big:n>=5});
   }else if(id==='subgift'){
     if(suppress[t['login']]>0){ suppress[t['login']]--; return; }
-    enqueue({label:'🎁 <span class="hl">Scholarship</span>',name:name,
+    enqueue({label:'🎁 <span class="hl">Gifted Sub</span>',name:name,
       detail:'gifted a sub to <b>'+(t['msg-param-recipient-display-name']||'a student')+'</b>!'});
   }else if(id==='raid'){
     const n=parseInt(t['msg-param-viewerCount'],10)||0;
@@ -184,8 +184,8 @@ connect();
 if(Q.get('test')==='1'){
   const demo=[
     {label:'🎓 <span class="hl">New Enrollment</span>',name:'PixelPanda',detail:'just enrolled at Streamer University! · <b>Tier 1</b>'},
-    {label:'🎁 <span class="hl">Scholarship</span>',name:'Kaya',detail:'gifted a sub to <b>StreamerJoe</b>!'},
-    {label:'🎁 <span class="hl">Scholarship Shower</span>',name:'BigDonor99',detail:'is handing out <b>20 scholarships</b>!!',big:true},
+    {label:'🎁 <span class="hl">Gifted Sub</span>',name:'Kaya',detail:'gifted a sub to <b>StreamerJoe</b>!'},
+    {label:'🎁 <span class="hl">Gifted Subs</span>',name:'BigDonor99',detail:'is gifting <b>20 subs</b>!!',big:true},
     {label:'📚 <span class="hl">Re-Enrolled</span>',name:'LoyalViewer',detail:'<b>8 months</b> on campus! · <b>Tier 1</b>'},
     {label:'🚨 <span class="hl">Campus Visit</span>',name:'Poudii',detail:'arrived with <b>1,200 students</b>! Welcome to SU!',big:true}
   ];
