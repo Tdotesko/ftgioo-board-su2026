@@ -138,6 +138,23 @@
   .clearbtn{background:none;border:1px solid var(--line);color:var(--dim);border-radius:8px;
     padding:7px 12px;font-size:12px;cursor:pointer}
   .foot{color:var(--grey);font-size:12px;text-align:center;padding:12px}
+  .sync{margin-top:10px;background:#00000030;border:1px solid var(--line);border-radius:10px;padding:2px 10px}
+  .sync summary{cursor:pointer;font-size:12.5px;font-weight:800;color:var(--accent);padding:8px 0;list-style:none}
+  .sync summary::-webkit-details-marker{display:none}
+  .sync summary::before{content:"⚙ ";}
+  .syncbody{display:flex;flex-direction:column;gap:8px;padding:4px 0 10px}
+  .sstat{font-size:12px;font-weight:800;color:var(--dim)}
+  .sstat.ok{color:var(--green)} .sstat.err{color:var(--accent2)}
+  .syncbody label{display:flex;flex-direction:column;gap:3px;font-size:11px;color:var(--dim);font-weight:700}
+  .syncbody input{background:var(--panel2);border:1px solid var(--line);color:var(--text);border-radius:8px;padding:9px 10px;font-size:13px}
+  .syncbtns{display:flex;gap:8px}
+  .sbtn{flex:1;border:1px solid var(--line);background:var(--panel2);color:var(--text);border-radius:8px;padding:9px;font-weight:800;font-size:12.5px;cursor:pointer}
+  .sbtn.primary{background:var(--accent);color:#160a24;border:none}
+  .synchint{font-size:11px;color:var(--dim);line-height:1.4}
+  #toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);background:#171221;
+    border:1px solid var(--line);color:var(--text);padding:10px 14px;border-radius:10px;
+    font-size:13px;font-weight:700;opacity:0;transition:opacity .25s;z-index:50;max-width:90%;text-align:center}
+  #toast.bad{border-color:var(--accent2);color:#ffb3c9}
 </style>
 </head>
 <body>
@@ -150,7 +167,7 @@
     <div class="row"><span class="n">1</span><span>The board <b>auto-follows Central Time</b> and jumps to the class happening now. It lights up as "You are here."</span></div>
     <div class="row"><span class="n">2</span><span><b>Copy the commands in order 1 → 2 → 3</b> into Fossabot. They turn green as you go, so you never miss one.</span></div>
     <div class="row"><span class="n">3</span><span>Tapping anything <b>pauses auto-follow</b>. Hit <b>🔴 Go live</b> in the bar to snap back to the current class.</span></div>
-    <div class="row"><span class="n">✓</span><span><b>Mark this class done</b> at the bottom of a card flags it as handled (green ✓ on its chip). Note: saved on <b>this device only</b> for now.</span></div>
+    <div class="row"><span class="n">✓</span><span><b>Mark this class done</b> at the bottom of a card. When synced, <b>every mod sees it</b> (with who + time) so no one doubles up.</span></div>
   </div>
   <div class="legend">
     <span style="color:var(--blue)">● pre-stream</span>
@@ -159,6 +176,20 @@
     <span style="color:var(--grey)">● end of day</span>
     <span style="color:var(--chat)">📢 send to chat</span>
   </div>
+  <details class="sync">
+    <summary>Multi-mod sync setup</summary>
+    <div class="syncbody">
+      <div id="syncstatus" class="sstat">Checking sync…</div>
+      <label>API URL<input id="s-url" placeholder="https://...up.railway.app" autocomplete="off"></label>
+      <label>Mod key<input id="s-key" placeholder="shared secret from Railway" autocomplete="off"></label>
+      <label>Your name<input id="s-name" placeholder="e.g. Tdot" autocomplete="off"></label>
+      <div class="syncbtns">
+        <button id="s-connect" class="sbtn primary">Save &amp; connect</button>
+        <button id="s-disc" class="sbtn">Local only</button>
+      </div>
+      <div class="synchint">The board is pre-connected to the team server, so it already shows the current class everyone sees. Enter the <b>Mod key</b> and <b>your name</b> to mark classes done and control the live class — those sync to all mods and to Fossabot.</div>
+    </div>
+  </details>
 </header>
 <nav id="tabs"></nav>
 <div id="view"></div>
@@ -371,6 +402,69 @@ function load(){
 }
 function save(){try{localStorage.setItem(KEY,JSON.stringify(state));}catch(e){}}
 
+/* ---------- multi-mod sync (shared via Railway backend) ---------- */
+const DEFAULT_API='https://ftgioo-su2026-api-production.up.railway.app';
+const SKEY='ftgioo_su2026_sync';
+let sync=loadSync();
+let serverControl=null, syncHealthy=false, lastSig=null, lastActiveKey=null;
+function loadSync(){ try{return JSON.parse(localStorage.getItem(SKEY))||{};}catch(e){return {};} }
+function saveSync(){ try{localStorage.setItem(SKEY,JSON.stringify(sync));}catch(e){} }
+function apiBase(){ return ((sync.url&&sync.url.trim()&&sync.url!=='__local__')?sync.url.trim():DEFAULT_API).replace(/\/+$/,''); }
+function syncOn(){ return !sync.local && !!apiBase(); }
+async function apiPost(path,body){
+  const r=await fetch(apiBase()+path,{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify(Object.assign({},body,{key:(sync.key||'')}))});
+  let j={}; try{j=await r.json();}catch(e){}
+  if(!r.ok||!j.ok) throw new Error((j&&j.error)||('HTTP '+r.status));
+  return j;
+}
+function toast(msg,bad){
+  let el=document.getElementById('toast');
+  if(!el){el=document.createElement('div');el.id='toast';document.body.appendChild(el);}
+  el.textContent=msg; el.className=bad?'bad':'';
+  el.style.opacity='1'; clearTimeout(el._t);
+  el._t=setTimeout(()=>{el.style.opacity='0';},2800);
+}
+function applyServerMarks(m){
+  state.marked={}; Object.keys(m||{}).forEach(k=>{state.marked[k]={at:m[k].at,by:m[k].by};});
+}
+function updateSyncBadge(s){
+  const el=document.getElementById('syncstatus'); if(!el) return;
+  if(!syncOn()){ el.textContent='⚪ Local only — this device just follows Central Time (not shared)'; el.className='sstat'; return; }
+  if(syncHealthy&&s){
+    const canWrite=!!(sync.key&&sync.key.trim());
+    el.textContent='🟢 Synced ('+(s.storage||'')+') · mode: '+(s.control.mode||'')+
+      (sync.name?(' · you: '+sync.name):'')+(canWrite?'':' · read-only (enter mod key)');
+    el.className='sstat ok';
+  }else{
+    el.textContent='🔴 Server not reachable — using local time as backup (retrying)';
+    el.className='sstat err';
+  }
+}
+async function pollSync(force){
+  try{
+    const r=await fetch(apiBase()+'/api/state',{cache:'no-store'});
+    const s=await r.json();
+    if(!s.ok) throw new Error('server error');
+    syncHealthy=true; serverControl=s.control;
+    applyServerMarks(s.marks);
+    if(s.serverCT&&s.serverCT.clock) clockTextEl.textContent=s.serverCT.clock+' · Central Time (synced)';
+    const eff=s.effective, tab=DATA.days.findIndex(d=>d.id===eff.day)+1;
+    state.tab=tab; state.active[eff.day]=eff.section;
+    markToday();
+    const sig=tab+':'+eff.section+':'+s.control.mode+':'+JSON.stringify(s.marks||{});
+    const activeKey=eff.day+':'+eff.section;
+    if(force||sig!==lastSig){
+      lastSig=sig; paintTab(tab);
+      if(activeKey!==lastActiveKey){ lastActiveKey=activeKey; scrollToActive(eff.day,eff.section); }
+    }
+    updateSyncBadge(s);
+  }catch(e){
+    syncHealthy=false; updateSyncBadge(null);
+    clockTextEl.textContent=ctClockString()+' · Central Time (sync offline)';
+  }
+}
+
 /* ---------- Central Time engine ---------- */
 function ctParts(){
   const f=new Intl.DateTimeFormat('en-US',{timeZone:'America/Chicago',
@@ -391,6 +485,14 @@ function ctStamp(){
   return f.format(new Date());
 }
 function toggleMark(dayId,si){
+  if(syncOn()){
+    const has=!!state.marked[dayId+':'+si];
+    apiPost('/api/mark',{day:dayId,section:si,by:(sync.name||'a mod'),at:ctStamp()})
+      .then(j=>{ applyServerMarks(j.marks); lastSig=null; paintTab(state.tab);
+                 toast(has?'Unmarked for all mods':'✅ Marked done — all mods see it'); })
+      .catch(e=>toast('Mark failed: '+e.message,true));
+    return;
+  }
   const k=dayId+':'+si;
   if(state.marked[k]) delete state.marked[k]; else state.marked[k]={at:ctStamp()};
   save();
@@ -467,7 +569,8 @@ function renderSection(dayId,sec,si,activeIdx){
   const tag=document.createElement('span'); tag.className='tag t-'+sec.tag; tag.textContent=TAGNAME[sec.tag];
   const label=document.createElement('span'); label.className='label'; label.textContent=sec.label;
   const here=document.createElement('span'); here.className='herebadge'; here.textContent='▶ You are here';
-  const done=document.createElement('span'); done.className='donebadge'; done.textContent='✅ Done '+(mk?mk.at:'');
+  const done=document.createElement('span'); done.className='donebadge';
+  done.textContent='✅ Done '+(mk?((mk.at||'')+(mk.by?(' · '+mk.by):'')):'');
   head.append(time,tag,label,here,done);
   el.append(head);
   if(sec.note){const n=document.createElement('div');n.className='note';n.textContent='⚠ '+sec.note;el.append(n);}
@@ -475,7 +578,7 @@ function renderSection(dayId,sec,si,activeIdx){
   sec.items.forEach((it,ii)=>{ if(!it.chat) num++; el.append(renderItem(dayId,si,ii,it,num)); });
   const mr=document.createElement('div'); mr.className='markrow';
   const mb=document.createElement('button'); mb.className='markbtn'+(mk?' done':'');
-  mb.textContent = mk ? ('✅ Done '+mk.at+' · tap to undo') : '☐ Mark this class done';
+  mb.textContent = mk ? ('✅ Done '+(mk.at||'')+(mk.by?(' by '+mk.by):'')+' · tap to undo') : '☐ Mark this class done';
   mb.addEventListener('click',e=>{e.stopPropagation();toggleMark(dayId,si);});
   mr.append(mb); el.append(mr);
   return el;
@@ -498,14 +601,15 @@ function refreshChrome(dayId){
 }
 function updateLiveCtl(){
   if(!chromeRefs.live) return;
-  if(state.auto){
+  const autoNow = syncOn() ? (serverControl ? serverControl.mode==='auto' : true) : state.auto;
+  if(autoNow){
     chromeRefs.live.className='livebtn on';
     chromeRefs.live.textContent='🔴 LIVE';
-    chromeRefs.live.title='Following Central Time. Tap to pause.';
+    chromeRefs.live.title=syncOn()?'Following Central Time (synced to all mods).':'Following Central Time. Tap to pause.';
   }else{
     chromeRefs.live.className='livebtn off';
     chromeRefs.live.textContent='🔴 Go live';
-    chromeRefs.live.title='Jump to the class happening now and resume auto-follow.';
+    chromeRefs.live.title='Resume auto-follow by Central Time.';
   }
 }
 
@@ -515,7 +619,7 @@ function renderDay(day){
 
   const nowbar=document.createElement('div'); nowbar.className='nowbar';
   const live=document.createElement('button'); live.className='livebtn';
-  live.addEventListener('click',()=>{ if(state.auto){state.auto=false;save();updateLiveCtl();} else {goLive();} });
+  live.addEventListener('click',()=>{ if(syncOn()){goLive();} else if(state.auto){state.auto=false;save();updateLiveCtl();} else {goLive();} });
   const lbl=document.createElement('div'); lbl.className='nowlabel';
   const cur=day.sections[ai];
   lbl.innerHTML='<span class="muted">NOW ▸</span> '+cur.time+' · '+cur.label;
@@ -542,7 +646,7 @@ function renderDay(day){
   const main=document.createElement('main');
   day.sections.forEach((sec,i)=>main.append(renderSection(day.id,sec,i,ai)));
   const clearRow=document.createElement('div'); clearRow.className='clearrow';
-  const clr=document.createElement('button'); clr.className='clearbtn'; clr.textContent='↺ Clear green checkmarks for '+day.name;
+  const clr=document.createElement('button'); clr.className='clearbtn'; clr.textContent='↺ Clear my copy checkmarks for '+day.name;
   clr.addEventListener('click',()=>{
     Object.keys(state.copied).forEach(k=>{if(k.startsWith(day.id+':'))delete state.copied[k];});
     save(); renderDay(day);
@@ -601,11 +705,38 @@ function selectTab(idx){
   paintTab(idx); window.scrollTo({top:0,behavior:'auto'});
 }
 function selectStep(dayId,idx){
+  if(syncOn()){
+    state.tab=DATA.days.findIndex(d=>d.id===dayId)+1; state.active[dayId]=idx;
+    paintTab(state.tab); scrollToActive(dayId,idx);
+    apiPost('/api/control',{mode:'manual',day:dayId,section:idx,by:(sync.name||'a mod')})
+      .then(()=>{ lastSig=null; pollSync(true); toast('Set current class for all mods + Fossabot'); })
+      .catch(e=>toast('Sync failed: '+e.message,true));
+    return;
+  }
   state.auto=false; state.active[dayId]=idx; state.tab=DATA.days.findIndex(d=>d.id===dayId)+1; save();
   paintTab(state.tab); scrollToActive(dayId,idx);
 }
 function goLive(){
+  if(syncOn()){
+    apiPost('/api/control',{mode:'auto',by:(sync.name||'a mod')})
+      .then(()=>{ lastSig=null; pollSync(true); toast('Resumed auto (Central Time) for all mods'); })
+      .catch(e=>toast('Sync failed: '+e.message,true));
+    return;
+  }
   state.auto=true; lastKey=null; save(); applyLive(true);
+}
+function initSyncPanel(){
+  const u=document.getElementById('s-url'), k=document.getElementById('s-key'), n=document.getElementById('s-name');
+  if(!u) return;
+  u.value=sync.url||DEFAULT_API; k.value=sync.key||''; n.value=sync.name||'';
+  document.getElementById('s-connect').addEventListener('click',()=>{
+    sync.local=false; sync.url=u.value.trim(); sync.key=k.value.trim(); sync.name=n.value.trim(); saveSync();
+    lastSig=null; toast('Connecting…'); pollSync(true);
+  });
+  document.getElementById('s-disc').addEventListener('click',()=>{
+    sync={local:true}; saveSync(); syncHealthy=false;
+    toast('Local-only mode'); location.reload();
+  });
 }
 
 /* ---------- live loop ---------- */
@@ -642,14 +773,15 @@ tabNames.forEach((n,i)=>{
   tabsEl.append(t);
 });
 
-if(state.auto){
-  applyLive(true);
-}else{
-  paintTab(state.tab);
-  clockTextEl.textContent = ctClockString()+' · Central Time (Arkansas)';
-  markToday();
-}
-setInterval(()=>applyLive(false), 20000);
+initSyncPanel();
+// Initial paint using local time so the board shows instantly, even offline.
+if(state.auto){ applyLive(true); }
+else { paintTab(state.tab); clockTextEl.textContent = ctClockString()+' · Central Time (Arkansas)'; markToday(); }
+// If synced (default), immediately pull shared state from the server.
+if(syncOn()){ updateSyncBadge(null); pollSync(true); }
+else { updateSyncBadge(null); }
+// One loop: synced -> poll server; local-only -> follow local clock.
+setInterval(()=>{ if(syncOn()) pollSync(false); else applyLive(false); }, 7000);
 </script>
 </body>
 </html>
