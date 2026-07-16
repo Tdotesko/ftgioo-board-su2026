@@ -751,6 +751,10 @@ function applyLive(force){
   if(!state.auto) return;
   const L=computeLive();
   const key=L.tab+':'+L.sec;
+  if(!syncOn()){ // local fallback: auto-mark finished sections done
+    const dId=DATA.days[L.tab-1].id;
+    for(let i=0;i<L.sec;i++){ const k=dId+':'+i; if(!state.marked[k]) state.marked[k]={at:ctStamp(),by:'auto'}; }
+  }
   if(force || key!==lastKey){
     lastKey=key;
     state.tab=L.tab;
