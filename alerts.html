@@ -103,7 +103,7 @@ function fanfare(big){
       o.connect(g); g.connect(a.destination);
       const t=t0+i*0.13;
       g.gain.setValueAtTime(0.0001,t);
-      g.gain.exponentialRampToValueAtTime(0.22,t+0.03);
+      g.gain.exponentialRampToValueAtTime(0.11,t+0.03);
       g.gain.exponentialRampToValueAtTime(0.0001,t+0.9);
       o.start(t); o.stop(t+1);
     });
@@ -157,12 +157,12 @@ function handle(line){
   const anon=(t['login']||'')==='ananonymousgifter';
   const name=anon?'A Mystery Donor':who;
   if(id==='sub'){
-    enqueue({label:'🎓 <span class="hl">New Enrollment</span>',name:who,
-      detail:'just enrolled at Streamer University! · <b>'+tierOf(t['msg-param-sub-plan'])+'</b>'});
+    enqueue({label:'💜 <span class="hl">New Sub</span>',name:who,
+      detail:'just subscribed! · <b>'+tierOf(t['msg-param-sub-plan'])+'</b>'});
   }else if(id==='resub'){
     const mo=parseInt(t['msg-param-cumulative-months'],10)||0;
-    enqueue({label:'📚 <span class="hl">Re-Enrolled</span>',name:who,
-      detail:(mo?('<b>'+mo+' months</b> on campus! · '):'back on campus! · ')+'<b>'+tierOf(t['msg-param-sub-plan'])+'</b>'});
+    enqueue({label:'💜 <span class="hl">Resub</span>',name:who,
+      detail:(mo?('<b>'+mo+' months</b> subscribed! · '):'resubscribed! · ')+'<b>'+tierOf(t['msg-param-sub-plan'])+'</b>'});
   }else if(id==='submysterygift'){
     const n=parseInt(t['msg-param-mass-gift-count'],10)||1;
     suppress[t['login']]=(suppress[t['login']]||0)+n;
@@ -183,10 +183,10 @@ connect();
 /* ---------- test + edit modes ---------- */
 if(Q.get('test')==='1'){
   const demo=[
-    {label:'🎓 <span class="hl">New Enrollment</span>',name:'PixelPanda',detail:'just enrolled at Streamer University! · <b>Tier 1</b>'},
+    {label:'💜 <span class="hl">New Sub</span>',name:'PixelPanda',detail:'just subscribed! · <b>Tier 1</b>'},
     {label:'🎁 <span class="hl">Gifted Sub</span>',name:'Kaya',detail:'gifted a sub to <b>StreamerJoe</b>!'},
     {label:'🎁 <span class="hl">Gifted Subs</span>',name:'BigDonor99',detail:'is gifting <b>20 subs</b>!!',big:true},
-    {label:'📚 <span class="hl">Re-Enrolled</span>',name:'LoyalViewer',detail:'<b>8 months</b> on campus! · <b>Tier 1</b>'},
+    {label:'💜 <span class="hl">Resub</span>',name:'LoyalViewer',detail:'<b>8 months</b> subscribed! · <b>Tier 1</b>'},
     {label:'🚨 <span class="hl">Campus Visit</span>',name:'Poudii',detail:'arrived with <b>1,200 students</b>! Welcome to SU!',big:true}
   ];
   let i=0; enqueue(demo[0]);
