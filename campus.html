@@ -324,7 +324,7 @@ boot();
   const stage=document.createElement('div');
   stage.style.cssText='position:fixed;inset:0;background:#0c0d12;display:flex;align-items:center;justify-content:center;z-index:1';
   const frame=document.createElement('div');
-  frame.style.cssText='position:relative;aspect-ratio:16/9;width:min(100vw - 16px,(100vh - 116px)*16/9);background-color:#161a22;background-image:repeating-linear-gradient(0deg,transparent 0 59px,#ffffff0d 59px 60px),repeating-linear-gradient(90deg,transparent 0 59px,#ffffff0d 59px 60px);border:1px solid #3a3f4c;border-radius:6px;overflow:hidden;box-shadow:0 20px 60px -20px #000';
+  frame.style.cssText='position:relative;aspect-ratio:16/9;width:min(100vw - 16px,(100svh - 116px)*16/9);background-color:#161a22;background-image:repeating-linear-gradient(0deg,transparent 0 59px,#ffffff0d 59px 60px),repeating-linear-gradient(90deg,transparent 0 59px,#ffffff0d 59px 60px);border:1px solid #3a3f4c;border-radius:6px;overflow:hidden;box-shadow:0 20px 60px -20px #000';
   const ftag=document.createElement('div');
   ftag.style.cssText='position:absolute;bottom:6px;right:10px;color:#5b6270;font:700 11px Archivo,sans-serif;letter-spacing:1px;pointer-events:none';
   ftag.textContent='STREAM FRAME · 1920 × 1080';
@@ -375,24 +375,47 @@ boot();
     try{hiddenNow=!hiddenNow;await ovPost({hidden:hiddenNow});b.textContent=hiddenNow?'👁 Show':'👁 Hide';}
     catch(err){hiddenNow=!hiddenNow;}};
   el.style.cursor='move'; el.style.touchAction='none';
-  // corner grip: drag THIS to resize; drag the card body to move
-  const grip=document.createElement('div');
-  grip.style.cssText='position:absolute;right:-16px;bottom:-16px;width:30px;height:30px;background:#ffb320;border:3px solid #8f1622;border-radius:8px;cursor:nwse-resize;touch-action:none;z-index:3;box-shadow:0 2px 8px rgba(0,0,0,.5)';
-  grip.title='Drag to resize';
-  el.appendChild(grip);
-  let gs=null;
-  grip.addEventListener('pointerdown',e=>{ e.stopPropagation(); e.preventDefault();
-    const r0=el.getBoundingClientRect();
-    gs={x:e.clientX,w:r0.width,s0:s};
-    grip.setPointerCapture(e.pointerId); });
-  grip.addEventListener('pointermove',e=>{ if(!gs) return;
-    const nw=Math.max(60,gs.w+(e.clientX-gs.x));
-    s=Math.max(0.4,Math.min(3,+(gs.s0*nw/gs.w).toFixed(3)));
-    refresh(); });
-  grip.addEventListener('pointerup',()=>{gs=null;refresh();});
+  // resize handles on sides, bottom and corner (drag the card body to move)
+  const HSTYLE='position:absolute;background:#ffb320;border:3px solid #8f1622;border-radius:7px;touch-action:none;z-index:3;box-shadow:0 2px 8px rgba(0,0,0,.5)';
+  let rs=null;
+  function addHandle(mode,css,cursor,title){
+    const hnd=document.createElement('div');
+    hnd.style.cssText=HSTYLE+';'+css+';cursor:'+cursor;
+    hnd.title=title;
+    hnd.addEventListener('pointerdown',e=>{
+      e.stopPropagation(); e.preventDefault();
+      const r0=el.getBoundingClientRect(), f0=fw();
+      rs={mode:mode,x:e.clientX,y:e.clientY,w:r0.width,h:r0.height,s0:s,
+          left:r0.left-f0.left,top:r0.top-f0.top};
+      el.style.left=rs.left+'px'; el.style.top=rs.top+'px';
+      el.style.right='';el.style.bottom='';
+      hnd.setPointerCapture(e.pointerId);
+    });
+    hnd.addEventListener('pointermove',e=>{
+      if(!rs||rs.mode!==mode) return;
+      const dx=e.clientX-rs.x, dy=e.clientY-rs.y;
+      let ratio=1;
+      if(mode==='e') ratio=(rs.w+dx)/rs.w;
+      else if(mode==='w') ratio=(rs.w-dx)/rs.w;
+      else if(mode==='s') ratio=(rs.h+dy)/rs.h;
+      else ratio=(rs.w+Math.max(dx,dy*(rs.w/rs.h)))/rs.w;
+      s=Math.max(0.4,Math.min(3,+(rs.s0*ratio).toFixed(3)));
+      if(mode==='w'){
+        const newW=rs.w*(s/rs.s0);
+        el.style.left=(rs.left+rs.w-newW)+'px';   // right edge stays planted
+      }
+      refresh();
+    });
+    hnd.addEventListener('pointerup',()=>{rs=null;refresh();});
+    el.appendChild(hnd);
+  }
+  addHandle('e','right:-13px;top:50%;margin-top:-23px;width:16px;height:46px','ew-resize','Resize from the right side');
+  addHandle('w','left:-13px;top:50%;margin-top:-23px;width:16px;height:46px','ew-resize','Resize from the left side');
+  addHandle('s','bottom:-13px;left:50%;margin-left:-23px;width:46px;height:16px','ns-resize','Resize from the bottom');
+  addHandle('se','right:-15px;bottom:-15px;width:30px;height:30px','nwse-resize','Drag to resize');
   let moved=false;
   let drag=null;
-  el.addEventListener('pointerdown',e=>{moved=true;const r=el.getBoundingClientRect();
+  el.addEventListener('pointerdown',e=>{if(!e.isPrimary)return;moved=true;const r=el.getBoundingClientRect();
     drag={dx:e.clientX-r.left,dy:e.clientY-r.top}; el.setPointerCapture(e.pointerId); e.preventDefault();});
   el.addEventListener('pointermove',e=>{ if(!drag)return; const f=fw();
     el.style.left=(e.clientX-drag.dx-f.left)+'px'; el.style.top=(e.clientY-drag.dy-f.top)+'px'; refresh();});
