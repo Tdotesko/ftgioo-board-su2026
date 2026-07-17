@@ -22,9 +22,10 @@
   }
   *{box-sizing:border-box}
   body{margin:0;background:var(--bg);color:var(--cream);
-    font-family:'Archivo',-apple-system,'Segoe UI',Roboto,sans-serif;-webkit-font-smoothing:antialiased;line-height:1.45}
+    font-family:'Archivo',-apple-system,'Segoe UI',Roboto,sans-serif;-webkit-font-smoothing:antialiased;line-height:1.45;
+    overscroll-behavior-y:contain;padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-right)}
   .wrap{max-width:1060px;margin:0 auto;padding:0 14px}
-  h1,h2,h3,.gr{font-family:'Graduate',serif;letter-spacing:1px}
+  h1,h2,h3{font-family:'Graduate',serif;letter-spacing:1px}
   button{font-family:inherit;cursor:pointer}
   button,.tab,.dch,.usr,a.btn{touch-action:manipulation;-webkit-tap-highlight-color:transparent}
   input,textarea,select{font-family:inherit;background:var(--panel2);border:1px solid var(--line2);
@@ -32,11 +33,10 @@
   textarea{width:100%;resize:vertical;min-height:52px;line-height:1.4}
   input:focus,textarea:focus,select:focus{outline:2px solid var(--gold);outline-offset:0}
   .btn{background:var(--gold);color:#2a1108;border:none;border-radius:9px;
-    padding:10px 16px;font-weight:800;font-size:13px}
+    padding:10px 16px;font-weight:800;font-size:13px;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;gap:6px}
   .btn:hover{filter:brightness(1.07)}
   .btn.sec{background:var(--panel2);color:var(--cream);border:1px solid var(--line2)}
-  .btn.danger{background:transparent;color:#ff8a8a;border:1px solid #c31f2f88}
-  .btn.sm{padding:7px 12px;font-size:12px}
+  .btn.sm{padding:8px 12px;font-size:12px}
   .chip{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:800;
     letter-spacing:1px;text-transform:uppercase;padding:4px 10px;border-radius:20px}
   .chip .d{width:7px;height:7px;border-radius:50%}
@@ -62,89 +62,115 @@
   .usr{flex:1;padding:13px 4px;border-radius:11px;border:2px solid var(--line2);background:var(--panel2);
     color:var(--dim);font-family:'Graduate',serif;font-size:14px;letter-spacing:1px}
   .usr.sel{border-color:var(--gold);color:var(--gold);background:#3d1c14}
-  #pass{width:100%;margin-bottom:14px;text-align:center;font-size:16px}
+  #pass{width:100%;margin-bottom:14px;text-align:center}
   #loginbtn{width:100%;padding:13px;font-size:15px}
   #loginerr{color:#ff8a8a;font-size:13px;font-weight:700;margin-top:10px;min-height:18px}
 
-  /* app shell */
+  /* shell */
   #app{display:none}
-  header{background:linear-gradient(160deg,#3d1620,#24101a);border-bottom:2px solid var(--line);
-    padding:14px 0}
-  .hrow{display:flex;align-items:center;gap:13px}
-  .hrow img{width:46px;height:46px;object-fit:contain}
-  .hrow h1{font-size:16px;color:var(--gold);text-shadow:1px 1px 0 var(--red-deep);line-height:1.3}
-  .hrow h1 span{display:block;font-family:'Archivo';font-weight:700;font-size:11px;color:var(--dim);
+  header{background:linear-gradient(160deg,#3d1620,#24101a);border-bottom:2px solid var(--line);padding:12px 0}
+  .hrow{display:flex;align-items:center;gap:12px}
+  .hrow img{width:44px;height:44px;object-fit:contain}
+  .hrow h1{font-size:15px;color:var(--gold);text-shadow:1px 1px 0 var(--red-deep);line-height:1.3}
+  .hrow h1 span{display:block;font-family:'Archivo';font-weight:700;font-size:10.5px;color:var(--dim);
     letter-spacing:2px;text-transform:uppercase}
-  .me{margin-left:auto;display:flex;align-items:center;gap:10px}
-  .me .who{font-weight:800;font-size:13px;color:var(--cream)}
-  nav{position:sticky;top:0;z-index:20;background:#190b10f2;backdrop-filter:blur(8px);
-    border-bottom:1px solid var(--line)}
+  .me{margin-left:auto;display:flex;align-items:center;gap:9px}
+  .me .who{font-weight:800;font-size:13px}
+  nav{position:sticky;top:0;z-index:20;background:#190b10f2;backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
   .tabs{display:flex;gap:4px;overflow-x:auto;padding:8px 0;-webkit-overflow-scrolling:touch;scrollbar-width:none}
   .tabs::-webkit-scrollbar{display:none}
   .tab{flex-shrink:0;padding:10px 16px;border-radius:9px;background:transparent;border:1px solid transparent;
     color:var(--dim);font-weight:800;font-size:13px}
   .tab.act{background:var(--panel);border-color:var(--line2);color:var(--gold)}
-  main{padding:18px 0 70px}
+  main{padding:16px 0 84px}
   .grid{display:grid;gap:12px;grid-template-columns:repeat(auto-fill,minmax(min(235px,100%),1fr))}
   .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:15px}
   .card h3{margin:0 0 8px;font-size:12px;color:var(--gold);letter-spacing:1.5px;text-transform:uppercase}
   .big{font-size:26px;font-weight:800;line-height:1.2}
   .muted{color:var(--dim);font-size:12.5px}
   .row{display:flex;align-items:center;gap:9px;flex-wrap:wrap}
-  .sect{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:14px}
-  .sect h2{margin:0 0 12px;font-size:14px;color:var(--gold);text-shadow:1px 1px 0 var(--red-deep)}
-  .list .it{display:flex;align-items:center;gap:11px;padding:11px 4px;border-top:1px solid var(--line);flex-wrap:wrap}
-  .list .it:first-child{border-top:none}
-  .tme{font-weight:800;min-width:64px;font-variant-numeric:tabular-nums}
-  .lbl2{flex:1;min-width:150px}
-  .lbl2 b{display:block}
-  .lbl2 span{color:var(--dim);font-size:12px}
-  .daychips{display:flex;gap:7px;margin-bottom:12px;flex-wrap:wrap}
-  .dch{padding:8px 15px;border-radius:20px;border:1px solid var(--line2);background:var(--panel2);
-    color:var(--dim);font-weight:800;font-size:13px}
-  .dch.act{background:var(--gold);color:#2a1108;border-color:var(--gold)}
+  .sect{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:15px;margin-bottom:13px}
+  .sect h2{margin:0 0 11px;font-size:14px;color:var(--gold);text-shadow:1px 1px 0 var(--red-deep)}
+  .sect>details>summary{cursor:pointer;font-family:'Graduate',serif;font-size:14px;color:var(--gold);
+    text-shadow:1px 1px 0 var(--red-deep);letter-spacing:1px;list-style:none}
+  .sect>details>summary::-webkit-details-marker{display:none}
+  .sect>details>summary::after{content:' ▾';color:var(--dim)}
+  .sect>details[open]>summary::after{content:' ▴'}
   .src{font-size:11.5px;font-weight:700;color:var(--green)}
   .src.man{color:var(--gold-soft)}
-  .cmdrow{padding:13px 0;border-top:1px solid var(--line)}
+  .cmdrow{padding:12px 0;border-top:1px solid var(--line)}
   .cmdrow:first-of-type{border-top:none}
   .cmdrow .nm{font-family:ui-monospace,Consolas,monospace;font-weight:800;color:var(--gold);font-size:13.5px}
+
+  /* run show */
+  .nowbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .nowlbl{font-weight:800;font-size:14.5px}
+  .nowlbl .mu{color:var(--dim);font-weight:700}
+  .daychips{display:flex;gap:7px;margin:2px 0 10px;flex-wrap:wrap}
+  .dch{padding:9px 15px;border-radius:20px;border:1px solid var(--line2);background:var(--panel2);
+    color:var(--dim);font-weight:800;font-size:13px;position:relative}
+  .dch.act{background:var(--gold);color:#2a1108;border-color:var(--gold)}
+  .dch.today::after{content:"";position:absolute;top:5px;right:8px;width:6px;height:6px;border-radius:50%;background:var(--red)}
+  .stepper2{display:flex;gap:6px;overflow-x:auto;padding:2px 0 10px;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+  .stepper2::-webkit-scrollbar{display:none}
+  .sch{flex-shrink:0;display:flex;align-items:center;gap:6px;padding:8px 12px;border-radius:18px;
+    border:1px solid var(--line2);background:var(--panel2);color:var(--dim);font-weight:800;font-size:12px;cursor:pointer}
+  .sch.act{background:var(--gold);color:#2a1108;border-color:var(--gold)}
+  .sch .sd{width:7px;height:7px;border-radius:50%;background:var(--grey)}
+  .sch.done .sd{background:var(--green)}
+  .sch.act .sd{background:#2a1108}
+  .mcard{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:12px}
+  .mcard.act{border-color:var(--gold);box-shadow:0 0 0 1px var(--gold),0 8px 30px -12px #ffb32055}
+  .mhead{display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+  .mtime{font-weight:800;font-size:15px;font-variant-numeric:tabular-nums}
+  .mlbl{color:var(--dim);font-size:13px}
+  .tg{font-size:10.5px;font-weight:800;letter-spacing:1px;padding:3px 9px;border-radius:14px;text-transform:uppercase}
+  .tg.set{background:#4a8cff22;color:#7fb0ff;border:1px solid #4a8cff55}
+  .tg.session{background:#57c25f22;color:var(--green);border:1px solid #57c25f55}
+  .tg.break{background:#ffb32022;color:var(--gold-soft);border:1px solid #ffb32055}
+  .tg.end{background:#8d737022;color:var(--grey);border:1px solid #8d737055}
+  .here{background:var(--gold);color:#2a1108;font-size:10.5px;font-weight:800;padding:4px 10px;
+    border-radius:14px;letter-spacing:.8px;text-transform:uppercase;margin-left:auto}
+  .donechip{color:var(--green);font-size:11.5px;font-weight:800}
+  .note2{color:var(--gold-soft);font-size:12px;margin-top:6px}
+  .mitem{display:flex;gap:9px;margin-top:9px;align-items:stretch}
+  .mcmd{flex-shrink:0;width:84px;font-family:ui-monospace,Consolas,monospace;font-size:11.5px;
+    font-weight:800;color:var(--gold);padding-top:9px}
+  .mcmd.chat{color:#d9a0ff;font-size:10.5px;line-height:1.25}
+  .mtxt{flex:1;min-width:0;background:var(--panel2);border:1px solid var(--line);border-radius:9px;
+    padding:8px 10px;font-size:13px;word-break:break-word}
+  .mitem.chat .mtxt{border-style:dashed;border-color:#b06fd455;background:#b06fd410}
+  .mfoot{display:flex;gap:8px;margin-top:11px;flex-wrap:wrap}
+
+  /* overlays */
   .ovgrid{display:grid;gap:12px;grid-template-columns:repeat(auto-fill,minmax(min(300px,100%),1fr))}
   .ovcard{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:15px}
   .ovcard h3{margin:0;font-size:15px;color:var(--cream);font-family:'Archivo';font-weight:800}
   .ovcard .desc{color:var(--dim);font-size:12.5px;margin:4px 0 10px}
   .ovcard .cfg{font-size:11.5px;color:var(--grey);margin:8px 0;font-variant-numeric:tabular-nums}
-  .alx{display:grid;gap:8px;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));margin-top:10px;padding-top:10px;border-top:1px solid var(--line)}
+  .alx{display:grid;gap:8px;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));margin-top:10px;
+    padding-top:10px;border-top:1px solid var(--line)}
   .alx label{font-size:11px;color:var(--dim);font-weight:700;display:flex;flex-direction:column;gap:4px}
   .actrow2{font-size:12.5px;color:var(--dim);padding:7px 0;border-top:1px solid var(--line)}
   .actrow2:first-child{border-top:none}
   .actrow2 b{color:var(--cream)}
-  #toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom));transform:translateX(-50%);background:var(--panel);
-    border:2px solid var(--gold);color:var(--cream);padding:11px 17px;border-radius:11px;
+  .qk{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
+  #toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom));transform:translateX(-50%);
+    background:var(--panel);border:2px solid var(--gold);color:var(--cream);padding:11px 17px;border-radius:11px;
     font-size:13.5px;font-weight:700;opacity:0;transition:opacity .25s;z-index:60;max-width:92%;text-align:center}
   #toast.bad{border-color:var(--red)}
-  .qk{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
-  body{overscroll-behavior-y:contain;
-    padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-right)}
+
   @media (pointer:coarse){
-    .btn{min-height:44px}
-    .btn.sm{min-height:42px}
-    .tab,.dch{min-height:42px;display:inline-flex;align-items:center}
-    input,select{min-height:46px}
-    .usr{min-height:50px}
+    .btn{min-height:44px}.btn.sm{min-height:42px}
+    .tab,.dch,.sch{min-height:42px;display:inline-flex;align-items:center}
+    input,select{min-height:46px}.usr{min-height:50px}
   }
   @media (max-width:640px){
-    header{padding:10px 0}
-    .hrow{gap:9px}
-    .hrow img{width:36px;height:36px}
-    .hrow h1{font-size:12.5px}
-    .hrow h1 span{font-size:9.5px;letter-spacing:1.2px}
-    .me .who{font-size:11.5px}
-    .big{font-size:22px}
-    .sect{padding:13px}
-    .card{padding:13px}
-    .tme{min-width:54px;font-size:13px}
-    main{padding:14px 0 84px}
-    .list .it{gap:8px}
+    header{padding:9px 0}.hrow{gap:9px}.hrow img{width:36px;height:36px}
+    .hrow h1{font-size:12.5px}.hrow h1 span{font-size:9.5px;letter-spacing:1.2px}
+    .me .who{font-size:11.5px}.big{font-size:22px}
+    .sect,.card,.mcard{padding:12px}
+    .mcmd{width:74px;font-size:10.5px}
   }
 </style>
 </head>
@@ -176,11 +202,15 @@
   <main class="wrap" id="main"></main>
 </div>
 
+<script id="bdata" type="application/json">{"days":[{"id":"thu","name":"Thu 16","date":16,"sections":[{"time":"~9:45A","short":"Setup","label":"Pre-stream setup","tag":"set","min":585,"items":[{"cmd":"!today","text":"🎓 Today (Thu, Jul 16): 10A How To Adapt (ADAPT) | 11A Let Kaiya Cook (Kaiya) | 3P The Art of Self-Love (Lizzo)"},{"cmd":"!current","text":"⏳ No class live yet! First up 10A: How To Adapt with ADAPT. Type !nextclass!"},{"cmd":"!professor","text":"👨‍🏫 First professor today: ADAPT, How To Adapt at 10A. Channel: twitch.tv/adapt"},{"cmd":"!nextclass","text":"➡️ Up Next: How To Adapt with ADAPT at 10:00 AM"}]},{"time":"10:00A","short":"10A Adapt","label":"How To Adapt","tag":"session","min":600,"items":[{"cmd":"!current","text":"🔔 CLASS IN SESSION: How To Adapt with ADAPT. Follow: twitch.tv/adapt"},{"cmd":"!professor","text":"👨‍🏫 Now teaching: ADAPT (How To Adapt). Follow: twitch.tv/adapt"},{"cmd":"!nextclass","text":"➡️ Up Next: Let Kaiya Cook with Kaiya at 11:00 AM"},{"cmd":"send to chat ~10:55A","chat":true,"text":"⏭️ 5 min out! Next: Let Kaiya Cook with Kaiya at 11:00 AM. youtube.com/@kaiyacenattv"}]},{"time":"11:00A","short":"11A Kaiya","label":"Let Kaiya Cook","tag":"session","min":660,"items":[{"cmd":"!current","text":"🔔 CLASS IN SESSION: Let Kaiya Cook with Kaiya. Follow: youtube.com/@kaiyacenattv"},{"cmd":"!professor","text":"👩‍🏫 Now teaching: Kaiya (Let Kaiya Cook). Follow: youtube.com/@kaiyacenattv"},{"cmd":"!nextclass","text":"➡️ Up Next: The Art of Self-Love with Lizzo at 3:00 PM"}]},{"time":"~12P to 3P","short":"Break","label":"Long break","tag":"break","min":720,"note":"Paste after Kaiya ends; long gap until the 3P class.","items":[{"cmd":"!current","text":"☕ Break time! No class live. Next 3P: The Art of Self-Love with Lizzo. Type !nextclass!"},{"cmd":"!professor","text":"☕ No professor teaching right now. Next up: Lizzo at 3:00 PM."},{"cmd":"send to chat ~2:55P","chat":true,"text":"⏰ 5 min out! Final class: The Art of Self-Love with Lizzo at 3:00 PM."}]},{"time":"3:00P","short":"3P Lizzo","label":"The Art of Self-Love","tag":"session","min":900,"items":[{"cmd":"!current","text":"🔔 CLASS IN SESSION: The Art of Self-Love with Lizzo. Follow: twitch.tv/lizzobetwitchin"},{"cmd":"!professor","text":"👩‍🏫 Now teaching: Lizzo (The Art of Self-Love). Follow: twitch.tv/lizzobetwitchin"},{"cmd":"!nextclass","text":"🎉 Last class today! Back tomorrow (Fri) 10A: 0 to 1M Followers with agent00"}]},{"time":"End of day","short":"End","label":"Wrap up","tag":"end","min":960,"items":[{"cmd":"!current","text":"🎉 Classes done for today! Back tomorrow! Type !today for Friday's lineup."},{"cmd":"!professor","text":"🎓 No more professors today. Check back tomorrow!"}]}]},{"id":"fri","name":"Fri 17","date":17,"sections":[{"time":"~9:45A","short":"Setup","label":"Pre-stream setup","tag":"set","min":585,"items":[{"cmd":"!today","text":"🎓 Today (Fri, Jul 17): 10A 0 to 1,000,000 Followers in 12 Months (agent00) | 11A Brand Elevation Beyond Streaming (Valkyrae) | 12P Networking 101 (cinna)"},{"cmd":"!current","text":"⏳ No class live yet! First up 10A: From 0 to 1,000,000 Followers with agent00. Type !nextclass!"},{"cmd":"!professor","text":"👨‍🏫 First professor today: agent00, 0 to 1M Followers at 10A. Channel: twitch.tv/agent00"},{"cmd":"!nextclass","text":"➡️ Up Next: From 0 to 1,000,000 Followers with agent00 at 10:00 AM"}]},{"time":"10:00A","short":"10A agent00","label":"0 to 1M Followers","tag":"session","min":600,"items":[{"cmd":"!current","text":"🔔 CLASS IN SESSION: From 0 to 1,000,000 Followers with agent00. Follow: twitch.tv/agent00"},{"cmd":"!professor","text":"👨‍🏫 Now teaching: agent00 (0 to 1M Followers). Follow: twitch.tv/agent00"},{"cmd":"!nextclass","text":"➡️ Up Next: Brand Elevation Beyond Streaming with Valkyrae at 11:00 AM"},{"cmd":"send to chat ~10:55A","chat":true,"text":"⏭️ 5 min out! Next: Brand Elevation with Valkyrae at 11:00 AM. youtube.com/@Valkyrae"}]},{"time":"11:00A","short":"11A Valkyrae","label":"Brand Elevation","tag":"session","min":660,"items":[{"cmd":"!current","text":"🔔 CLASS IN SESSION: Brand Elevation Beyond Streaming with Valkyrae. Follow: youtube.com/@Valkyrae"},{"cmd":"!professor","text":"👨‍🏫 Now teaching: Valkyrae (Brand Elevation). Follow: youtube.com/@Valkyrae"},{"cmd":"!nextclass","text":"➡️ Up Next: Networking 101 with cinna at 12:00 PM"},{"cmd":"send to chat ~11:55A","chat":true,"text":"⏭️ 5 min out! Next: Networking 101 with cinna at 12:00 PM. twitch.tv/cinna"}]},{"time":"12:00P","short":"12P cinna","label":"Networking 101","tag":"session","min":720,"items":[{"cmd":"!current","text":"🔔 CLASS IN SESSION: Networking 101 with cinna. Follow: twitch.tv/cinna"},{"cmd":"!professor","text":"👨‍🏫 Now teaching: cinna (Networking 101). Follow: twitch.tv/cinna"},{"cmd":"!nextclass","text":"🎉 Last class today! Back tomorrow (Sat) 10A: Make Love, Not Porn with Cindy Gallop"}]},{"time":"Any gap","short":"Break","label":"Break filler","tag":"break","min":780,"items":[{"cmd":"!current","text":"☕ No class live right now! Type !nextclass to see what's coming up!"},{"cmd":"!professor","text":"☕ No professor teaching right now. Type !nextclass for what's up."}]},{"time":"End of day","short":"End","label":"Wrap up","tag":"end","min":810,"items":[{"cmd":"!current","text":"🎉 Classes done for today! Back tomorrow! Type !today for Saturday's lineup."},{"cmd":"!professor","text":"🎓 No more professors today. Check back tomorrow!"}]}]},{"id":"sat","name":"Sat 18","date":18,"sections":[{"time":"~9:45A","short":"Setup","label":"Pre-stream setup","tag":"set","min":585,"items":[{"cmd":"!today","text":"🎓 Today (Sat, Jul 18): 10A Make Love, Not Porn (Cindy Gallop) | 11A Stream Tech 101 (thesushidragon) | 12P How To Get Lucky (Ludwig)"},{"cmd":"!current","text":"⏳ No class live yet! First up 10A: Make Love, Not Porn with Cindy Gallop. Type !nextclass!"},{"cmd":"!professor","text":"👨‍🏫 First professor today: Cindy Gallop, Make Love, Not Porn at 10A."},{"cmd":"!nextclass","text":"➡️ Up Next: Make Love, Not Porn with Cindy Gallop at 10:00 AM"}]},{"time":"10:00A","short":"10A Cindy","label":"Make Love, Not Porn","tag":"session","min":600,"note":"No follow link for Cindy Gallop; her site is adult content (Twitch TOS).","items":[{"cmd":"!current","text":"🔔 CLASS IN SESSION: Make Love, Not Porn with Cindy Gallop"},{"cmd":"!professor","text":"👨‍🏫 Now teaching: Cindy Gallop (Make Love, Not Porn)"},{"cmd":"!nextclass","text":"➡️ Up Next: Stream Tech 101 with thesushidragon at 11:00 AM"},{"cmd":"send to chat ~10:55A","chat":true,"text":"⏭️ 5 min out! Next: Stream Tech 101 with thesushidragon at 11:00 AM. twitch.tv/thesushidragon"}]},{"time":"11:00A","short":"11A Sushi","label":"Stream Tech 101","tag":"session","min":660,"items":[{"cmd":"!current","text":"🔔 CLASS IN SESSION: Stream Tech 101 with thesushidragon. Follow: twitch.tv/thesushidragon"},{"cmd":"!professor","text":"👨‍🏫 Now teaching: thesushidragon (Stream Tech 101). Follow: twitch.tv/thesushidragon"},{"cmd":"!nextclass","text":"➡️ Up Next: How To Get Lucky with Ludwig at 12:00 PM"},{"cmd":"send to chat ~11:55A","chat":true,"text":"⏭️ 5 min out! Next: How To Get Lucky with Ludwig at 12:00 PM"}]},{"time":"12:00P","short":"12P Ludwig","label":"How To Get Lucky","tag":"session","min":720,"items":[{"cmd":"!current","text":"🔔 CLASS IN SESSION: How To Get Lucky with Ludwig. Follow: twitch.tv/ludwig"},{"cmd":"!professor","text":"👨‍🏫 Now teaching: Ludwig (How To Get Lucky). Follow: twitch.tv/ludwig"},{"cmd":"!nextclass","text":"🎉 Last class today! Back tomorrow (Sun) 11A: Clickbait & Trolling 101 with Poudii"}]},{"time":"Any gap","short":"Break","label":"Break filler","tag":"break","min":780,"items":[{"cmd":"!current","text":"☕ No class live right now! Type !nextclass to see what's coming up!"},{"cmd":"!professor","text":"☕ No professor teaching right now. Type !nextclass for what's up."}]},{"time":"End of day","short":"End","label":"Wrap up","tag":"end","min":810,"items":[{"cmd":"!current","text":"🎉 Classes done for today! Final day tomorrow! Type !today for Sunday's lineup."},{"cmd":"!professor","text":"🎓 No more professors today. Check back tomorrow for the finale!"}]}]},{"id":"sun","name":"Sun 19","date":19,"sections":[{"time":"~10:45A","short":"Setup","label":"Pre-stream setup","tag":"set","min":645,"items":[{"cmd":"!today","text":"🎓 Today (Sun, Jul 19): 11A Clickbait & Trolling 101 (Poudii) | 3P Guidance & Understanding (yourragegaming)"},{"cmd":"!current","text":"⏳ No class live yet! First up 11A: Clickbait & Trolling 101 with Poudii. Type !nextclass!"},{"cmd":"!professor","text":"👨‍🏫 First professor today: Poudii, Clickbait & Trolling 101 at 11A. Channel: twitch.tv/poudii"},{"cmd":"!nextclass","text":"➡️ Up Next: Clickbait & Trolling 101 with Poudii at 11:00 AM"}]},{"time":"11:00A","short":"11A Poudii","label":"Clickbait & Trolling 101","tag":"session","min":660,"items":[{"cmd":"!current","text":"🔔 CLASS IN SESSION: Clickbait & Trolling 101 with Poudii. Follow: twitch.tv/poudii"},{"cmd":"!professor","text":"👨‍🏫 Now teaching: Poudii (Clickbait & Trolling 101). Follow: twitch.tv/poudii"},{"cmd":"!nextclass","text":"➡️ Up Next: Guidance & Understanding with yourragegaming at 3:00 PM"}]},{"time":"~12P to 3P","short":"Break","label":"Long break","tag":"break","min":720,"note":"Paste after Clickbait ends; long gap until the final 3P class.","items":[{"cmd":"!current","text":"☕ Break time! No class live. Final class 3P: Guidance & Understanding with yourragegaming. Type !nextclass!"},{"cmd":"!professor","text":"☕ No professor teaching right now. Final one up at 3P: yourragegaming."},{"cmd":"send to chat ~2:55P","chat":true,"text":"⏰ 5 min out! FINAL class: Guidance & Understanding with yourragegaming at 3:00 PM. twitch.tv/yourragegaming"}]},{"time":"3:00P","short":"3P YRG","label":"Guidance & Understanding","tag":"session","min":900,"items":[{"cmd":"!current","text":"🔔 CLASS IN SESSION: Guidance & Understanding with yourragegaming. Follow: twitch.tv/yourragegaming"},{"cmd":"!professor","text":"👨‍🏫 Now teaching: yourragegaming (Guidance & Understanding, Guidance Counselor). Follow: twitch.tv/yourragegaming"},{"cmd":"!nextclass","text":"🎓 That's a WRAP on Streamer University 2026! Huge love to every professor, guest & student. Type !classes to relive the lineup."}]},{"time":"End of event","short":"Grad","label":"Graduation","tag":"end","min":960,"items":[{"cmd":"!current","text":"🎓 Streamer University 2026 has GRADUATED! Thank you for an incredible weekend. Follow FTGIOO for what's next!"},{"cmd":"!professor","text":"🎓 All professors have clocked out. Semester complete! Thanks for a great weekend."}]}]}]}</script>
+
 <script>
 const API='https://ftgioo-su2026-api-production.up.railway.app';
-const PAGES='.'; // overlays live beside this page
 const $=id=>document.getElementById(id);
+const BD=JSON.parse($('bdata').textContent).days;
 const CMDS=[['current','!current'],['professor','!professor'],['next','!nextclass'],['today','!today']];
+const FIELD={'!current':'current','!professor':'professor','!nextclass':'next','!today':'today'};
+const TAGS={set:['Pre-stream','set'],session:['In class','session'],break:['Break','break'],end:['End','end']};
 const SOUNDS=['sparkle','chime','bell','coin','tada','pop','fanfare'];
 const OVS=[
  {id:'campus',t:'Campus Feed',d:'All-in-one: class card, NOW STARTING takeover, countdown, rotating subs/socials.',u:'campus.html'},
@@ -189,7 +219,7 @@ const OVS=[
  {id:'subs',t:'Sub Counter',d:'Live sub count with the gold goal bar.',u:'subs.html'},
  {id:'alerts',t:'Alerts',d:'Sub / resub / gifted subs / raid pop-ups with confetti + sound.',u:'alerts.html',al:true}
 ];
-let sess=null, ST=null, OV=null, SCHED=null, tab='dash', day=null;
+let sess=null, ST=null, OV=null, tab='run', day=null;
 
 /* ---------- session ---------- */
 try{ sess=JSON.parse(localStorage.getItem('su_hub_sess')); }catch(e){}
@@ -203,13 +233,11 @@ function logout(){
   sess=null; try{localStorage.removeItem('su_hub_sess');}catch(e){}
   showLogin('');
 }
-// surface any unexpected script error instead of a dead page
 window.addEventListener('error',ev=>{
   try{ const el=$('loginerr');
     if(el && $('login').style.display!=='none') el.textContent='Something went wrong: '+(ev.message||'unknown error');
   }catch(e){}
 });
-
 function toast(m,bad){
   let el=$('toast'); if(!el){el=document.createElement('div');el.id='toast';document.body.appendChild(el);}
   el.textContent=m; el.className=bad?'bad':''; el.style.opacity='1';
@@ -219,12 +247,12 @@ async function api(path,body){
   const r=await fetch(API+path,{method:'POST',headers:{'Content-Type':'application/json'},
     body:JSON.stringify(Object.assign({},body,{token:sess&&sess.token}))});
   const j=await r.json().catch(()=>({}));
-  if(r.status===403){ toast('Session expired — log in again',true); logout(); $('loginerr').textContent='Session expired — please log in again.'; throw new Error('Session expired'); }
+  if(r.status===403){ toast('Session expired, log in again',true); logout(); $('loginerr').textContent='Session expired. Please log in again.'; throw new Error('Session expired'); }
   if(!r.ok||!j.ok) throw new Error((j&&j.error)||('HTTP '+r.status));
   return j;
 }
 
-/* ---------- login flow ---------- */
+/* ---------- login ---------- */
 let pickedUser='tdot';
 document.querySelectorAll('.usr').forEach(b=>{
   b.addEventListener('click',()=>{ pickedUser=b.dataset.u;
@@ -244,10 +272,10 @@ async function doLogin(){
       sess={token:j.token,user:j.user,exp:j.exp}; saveSess(); $('pass').value='';
       await enterApp();
     }else{
-      $('loginerr').textContent=(j&&j.error)||('Login failed (HTTP '+r.status+') — try again.');
+      $('loginerr').textContent=(j&&j.error)||('Login failed (HTTP '+r.status+'). Try again.');
     }
   }catch(e){
-    $('loginerr').textContent='Can’t reach the server — check your connection and try again.';
+    $('loginerr').textContent='Can’t reach the server. Check your connection and try again.';
   }
   btn.disabled=false; btn.textContent='Enter the Hub';
 }
@@ -255,13 +283,16 @@ $('loginbtn').addEventListener('click',doLogin);
 $('pass').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
 
 /* ---------- helpers ---------- */
-const isClass=s=>!!(s&&s.current&&s.current.indexOf('🔔')===0);
-function profOf(s){const m=(s&&s.professor||'').match(/Now teaching:\s*([^(]+?)\s*\(/);return m?m[1].trim():'';}
-function fmtT(min){let h=Math.floor(min/60),m=min%60,ap=h>=12?'PM':'AM';h=h%12;if(!h)h=12;
-  return h+(m?(':'+String(m).padStart(2,'0')):':00')+' '+ap;}
 function ctStamp(){return new Intl.DateTimeFormat('en-US',{timeZone:'America/Chicago',hour:'numeric',minute:'2-digit',hour12:true}).format(new Date());}
 function editing(){ const a=document.activeElement;
   return a&&(a.tagName==='TEXTAREA'||a.tagName==='INPUT'||a.tagName==='SELECT')&&$('main').contains(a); }
+function copyText(t,btn){
+  const done=()=>{ if(btn){const o=btn.textContent;btn.textContent='Copied ✓';setTimeout(()=>btn.textContent=o,1300);} };
+  if(navigator.clipboard&&navigator.clipboard.writeText){ navigator.clipboard.writeText(t).then(done).catch(()=>fb()); }
+  else fb();
+  function fb(){const x=document.createElement('textarea');x.value=t;document.body.appendChild(x);x.select();
+    try{document.execCommand('copy')}catch(e){}document.body.removeChild(x);done();}
+}
 
 /* ---------- data ---------- */
 async function refresh(force){
@@ -271,14 +302,13 @@ async function refresh(force){
       fetch(API+'/api/overlay',{cache:'no-store'}).then(r=>r.json())
     ]);
     if(s.ok) ST=s; if(o.ok) OV=o.overlays||{};
-    if(!SCHED) SCHED=await fetch(API+'/api/schedule').then(r=>r.json());
     if(!day&&ST) day=ST.effective.day;
     if(force||!editing()) render();
-  }catch(e){/* keep last */}
+  }catch(e){/* keep last view */}
 }
 
-/* ---------- render shell ---------- */
-const TABS=[['dash','Dashboard'],['classes','Classes'],['commands','Commands'],['overlays','Overlays'],['subs','Subs'],['activity','Activity']];
+/* ---------- shell ---------- */
+const TABS=[['run','Run Show'],['dash','Dashboard'],['overlays','Overlays'],['subs','Subs'],['activity','Activity']];
 function renderTabs(){
   $('tabs').innerHTML='';
   TABS.forEach(([id,label])=>{
@@ -288,88 +318,50 @@ function renderTabs(){
   });
 }
 function render(){
-  if(!ST||!SCHED) return;
+  if(!ST) return;
   renderTabs();
   const m=$('main'); m.innerHTML='';
-  ({dash:rDash,classes:rClasses,commands:rCommands,overlays:rOverlays,subs:rSubs,activity:rActivity})[tab](m);
+  ({run:rRun,dash:rDash,overlays:rOverlays,subs:rSubs,activity:rActivity})[tab](m);
 }
 
-/* ---------- dashboard ---------- */
-function curSection(){
-  const d=SCHED.days.find(x=>x.id===ST.effective.day);
-  return {d,sec:d?d.sections[ST.effective.section]:null};
+/* ================= RUN SHOW ================= */
+function effSection(){
+  const d=BD.find(x=>x.id===ST.effective.day);
+  return {d,i:ST.effective.section,sec:d?d.sections[ST.effective.section]:null};
 }
-function rDash(m){
-  const {sec}=curSection();
-  const g=document.createElement('div'); g.className='grid';
-  const inCls=isClass(sec);
-  g.innerHTML=
-   '<div class="card"><h3>On air now</h3><div class="row">'+
-     (inCls?'<span class="chip live"><span class="d"></span>In class</span>':'<span class="chip off"><span class="d"></span>'+(sec?sec.label:'—')+'</span>')+
-   '</div><div class="big" style="margin-top:6px">'+(sec?sec.label:'—')+'</div>'+
-   (inCls?('<div class="muted">Professor · '+profOf(sec)+'</div>'):'')+'</div>'+
-   '<div class="card"><h3>Central Time</h3><div class="big">'+ST.serverCT.clock+'</div>'+
-   '<div class="row" style="margin-top:8px">'+
-     (ST.control.mode==='auto'?'<span class="chip on"><span class="d"></span>Auto by time</span>'
-       :'<span class="chip man"><span class="d"></span>Manual'+(ST.control.updated_by?(' · '+ST.control.updated_by):'')+'</span>')+
-   '<button class="btn sec sm" id="qauto">↺ Resume auto</button></div></div>'+
-   '<div class="card"><h3>!nextclass says</h3><div class="muted" style="font-size:13px">'+
-     (ST.commands.next.value||'')+' <b style="color:var(--gold-soft)">'+(ST.commands.next.suffix||'')+'</b></div></div>'+
-   '<div class="card"><h3>Subs</h3><div class="big">'+(ST.subs.count==null?'—':ST.subs.count.toLocaleString())+
-     (ST.subs.goal?('<span class="muted" style="font-size:15px"> / '+ST.subs.goal.toLocaleString()+'</span>'):'')+'</div>'+
-   '<div class="muted">'+(ST.subs.source==='twitch'?'auto from Twitch':'via '+(ST.subs.by||'chat / manual'))+(ST.subs.at?(' · '+ST.subs.at):'')+'</div></div>';
-  m.appendChild(g);
-  $('qauto').onclick=()=>api('/api/auto',{}).then(()=>{toast('Everything back to auto');refresh(true);}).catch(e=>toast(e.message,true));
-
-  const s2=document.createElement('div'); s2.className='sect';
-  s2.innerHTML='<h2>Quick links</h2><div class="qk">'+
-    '<a class="btn sec sm" href="./" target="_blank">🎛 Mod Board</a>'+
-    OVS.map(o=>'<a class="btn sec sm" href="'+o.u+'" target="_blank">'+o.t+'</a>').join('')+
-    '<a class="btn sec sm" href="'+API+'" target="_blank">API status</a></div>';
-  m.appendChild(s2);
-
-  const s3=document.createElement('div'); s3.className='sect';
-  s3.innerHTML='<h2>Recent activity</h2>'+
-    (ST.logs||[]).slice(0,7).map(l=>'<div class="actrow2">'+l.at+' · <b>'+(l.by||'—')+'</b> '+l.action+'</div>').join('');
-  m.appendChild(s3);
+function setClass(dayId,idx,label){
+  api('/api/setclass',{day:dayId,section:idx})
+    .then(()=>{toast((label||'Class')+' is live for chat + overlays');refresh(true);})
+    .catch(e=>{if(e.message!=='Session expired')toast(e.message,true);});
 }
+function rRun(m){
+  const eff=effSection();
 
-/* ---------- classes ---------- */
-function rClasses(m){
-  const s=document.createElement('div'); s.className='sect';
-  s.innerHTML='<h2>Schedule control</h2><div class="daychips" id="dch"></div><div class="list" id="dlist"></div>';
-  m.appendChild(s);
-  SCHED.days.forEach(d=>{
-    const b=document.createElement('button'); b.className='dch'+(day===d.id?' act':'');
-    b.textContent=d.id.toUpperCase()+' '+d.date;
-    b.onclick=()=>{day=d.id;render();};
-    $('dch').appendChild(b);
-  });
-  const d=SCHED.days.find(x=>x.id===day);
-  d.sections.forEach((sec,i)=>{
-    const live=ST.effective.day===d.id&&ST.effective.section===i;
-    const mk=ST.marks[d.id+':'+i];
-    const it=document.createElement('div'); it.className='it';
-    it.innerHTML='<span class="tme">'+fmtT(sec.min)+'</span>'+
-      '<span class="lbl2"><b>'+sec.label+'</b><span>'+(isClass(sec)?('Prof · '+profOf(sec)):'')+
-      (mk?(' · ✓ done '+(mk.at||'')+(mk.by?(' by '+mk.by):'')):'')+'</span></span>'+
-      (live?'<span class="chip live"><span class="d"></span>Live</span>':'');
-    const b1=document.createElement('button'); b1.className='btn sm'+(live?' sec':''); b1.textContent=live?'On air':'Set live';
-    b1.disabled=live;
-    b1.onclick=()=>api('/api/setclass',{day:d.id,section:i})
-      .then(()=>{toast(sec.label+' is live for chat + overlays');refresh(true);}).catch(e=>toast(e.message,true));
-    const b2=document.createElement('button'); b2.className='btn sec sm'; b2.textContent=mk?'Unmark':'✓ Done';
-    b2.onclick=()=>api('/api/mark',{day:d.id,section:i,at:ctStamp()})
-      .then(()=>{toast(mk?'Unmarked':'Marked done');refresh(true);}).catch(e=>toast(e.message,true));
-    it.append(b1,b2);
-    $('dlist').appendChild(it);
-  });
-}
+  // NOW bar
+  const nb=document.createElement('div'); nb.className='sect';
+  const modeChip=ST.control.mode==='auto'
+    ?'<span class="chip on"><span class="d"></span>Auto by time</span>'
+    :'<span class="chip man"><span class="d"></span>Manual'+(ST.control.updated_by?(' · '+ST.control.updated_by):'')+'</span>';
+  nb.innerHTML='<div class="nowbar">'+modeChip+
+    '<span class="nowlbl"><span class="mu">NOW ▸</span> '+(eff.sec?eff.sec.time+' · '+eff.sec.label:'-')+'</span>'+
+    '<span class="muted">'+ST.serverCT.clock+' CT</span>'+
+    '<span style="flex:1"></span>'+
+    '<button class="btn sec sm" id="rAuto">↺ All auto</button>'+
+    '<button class="btn sm" id="rNext">Next class →</button></div>';
+  m.appendChild(nb);
+  $('rAuto').onclick=()=>api('/api/auto',{}).then(()=>{toast('Everything back to auto (Central Time)');refresh(true);})
+    .catch(e=>{if(e.message!=='Session expired')toast(e.message,true);});
+  $('rNext').onclick=()=>{
+    const d=BD.find(x=>x.id===ST.effective.day); let di=BD.indexOf(d), i=ST.effective.section+1;
+    if(i>=d.sections.length){ if(di<BD.length-1){di++;i=0;} else {toast('That was the last one. Semester complete 🎓');return;} }
+    setClass(BD[di].id,i,BD[di].sections[i].label);
+  };
 
-/* ---------- commands ---------- */
-function rCommands(m){
-  const s=document.createElement('div'); s.className='sect';
-  s.innerHTML='<h2>Live Fossabot commands</h2><div class="muted" style="margin-bottom:6px">What chat sees right now. Edit and Set — it changes instantly. Auto = follow the schedule.</div>';
+  // live commands (collapsible)
+  const cs=document.createElement('div'); cs.className='sect';
+  const det=document.createElement('details'); det.open=window.innerWidth>760;
+  const sum=document.createElement('summary'); sum.textContent='Live Fossabot commands (what chat sees)';
+  det.appendChild(sum);
   CMDS.forEach(([f,label])=>{
     const c=ST.commands[f];
     const row=document.createElement('div'); row.className='cmdrow';
@@ -382,21 +374,133 @@ function rCommands(m){
     const rr=document.createElement('div'); rr.className='row'; rr.style.marginTop='8px';
     const b1=document.createElement('button'); b1.className='btn sm'; b1.textContent='Set live';
     b1.onclick=()=>api('/api/cmd',{field:f,value:ta.value})
-      .then(()=>{toast(label+' updated for chat');refresh(true);}).catch(e=>toast(e.message,true));
+      .then(()=>{toast(label+' updated for chat');refresh(true);}).catch(e=>{if(e.message!=='Session expired')toast(e.message,true);});
     const b2=document.createElement('button'); b2.className='btn sec sm'; b2.textContent='Auto';
     b2.onclick=()=>api('/api/cmd',{field:f,value:''})
-      .then(()=>{toast(label+' back to auto');refresh(true);}).catch(e=>toast(e.message,true));
+      .then(()=>{toast(label+' back to auto');refresh(true);}).catch(e=>{if(e.message!=='Session expired')toast(e.message,true);});
     rr.append(b1,b2);
     row.append(ta,rr);
-    s.appendChild(row);
+    det.appendChild(row);
   });
-  m.appendChild(s);
+  cs.appendChild(det);
+  m.appendChild(cs);
+
+  // day chips
+  const dc=document.createElement('div'); dc.className='daychips';
+  BD.forEach(d=>{
+    const b=document.createElement('button');
+    b.className='dch'+(day===d.id?' act':'')+(ST.serverCT.day===d.date?' today':'');
+    b.textContent=d.id.toUpperCase()+' '+d.date;
+    b.onclick=()=>{day=d.id;render();};
+    dc.appendChild(b);
+  });
+  m.appendChild(dc);
+
+  // stepper
+  const d=BD.find(x=>x.id===day);
+  const stp=document.createElement('div'); stp.className='stepper2';
+  d.sections.forEach((sec,i)=>{
+    const live=ST.effective.day===d.id&&ST.effective.section===i;
+    const done=!!ST.marks[d.id+':'+i];
+    const c=document.createElement('button'); c.className='sch'+(live?' act':'')+(done?' done':'');
+    c.innerHTML='<span class="sd"></span>'+sec.short+(done?' <span style="color:var(--green)">✓</span>':'');
+    c.onclick=()=>{ const el=document.getElementById('mc-'+i); if(el) el.scrollIntoView({behavior:'smooth',block:'center'}); };
+    stp.appendChild(c);
+  });
+  m.appendChild(stp);
+
+  // moment cards
+  d.sections.forEach((sec,i)=>{
+    const live=ST.effective.day===d.id&&ST.effective.section===i;
+    const mk=ST.marks[d.id+':'+i];
+    const card=document.createElement('div'); card.className='mcard'+(live?' act':''); card.id='mc-'+i;
+    const tg=TAGS[sec.tag]||TAGS.set;
+    card.innerHTML='<div class="mhead"><span class="mtime">'+sec.time+'</span>'+
+      '<span class="tg '+tg[1]+'">'+tg[0]+'</span>'+
+      '<span class="mlbl">'+sec.label+'</span>'+
+      (live?'<span class="here">▶ On air</span>':'')+
+      (mk?('<span class="donechip">✓ done '+(mk.at||'')+(mk.by?(' · '+mk.by):'')+'</span>'):'')+
+      '</div>'+
+      (sec.note?('<div class="note2">⚠ '+sec.note+'</div>'):'');
+    (sec.items||[]).forEach(it=>{
+      const isChat=!!it.chat;
+      const rowd=document.createElement('div'); rowd.className='mitem'+(isChat?' chat':'');
+      const nm=document.createElement('div'); nm.className='mcmd'+(isChat?' chat':''); nm.textContent=it.cmd;
+      const tx=document.createElement('div'); tx.className='mtxt'; tx.textContent=it.text;
+      rowd.append(nm,tx);
+      if(isChat){
+        const b=document.createElement('button'); b.className='btn sec sm'; b.style.alignSelf='center'; b.textContent='Copy';
+        b.onclick=()=>copyText(it.text,b);
+        rowd.appendChild(b);
+      }else{
+        const f=FIELD[it.cmd];
+        const b=document.createElement('button'); b.className='btn sm'; b.style.alignSelf='center'; b.textContent='Set';
+        b.title='Make this the live '+it.cmd+' in chat';
+        b.onclick=()=>{ b.textContent='…';
+          api('/api/cmd',{field:f,value:it.text})
+            .then(()=>{toast(it.cmd+' is live for chat');refresh(true);})
+            .catch(e=>{if(e.message!=='Session expired')toast(e.message,true);})
+            .finally(()=>b.textContent='Set');
+        };
+        rowd.appendChild(b);
+      }
+      card.appendChild(rowd);
+    });
+    const foot=document.createElement('div'); foot.className='mfoot';
+    const b1=document.createElement('button'); b1.className='btn sm'; b1.textContent=live?'▶ On air now':'Set this class live';
+    b1.disabled=live;
+    if(live){ b1.className='btn sec sm'; }
+    b1.onclick=()=>setClass(d.id,i,sec.label);
+    const b2=document.createElement('button'); b2.className='btn sec sm'; b2.textContent=mk?'Unmark done':'✓ Mark done';
+    b2.onclick=()=>api('/api/mark',{day:d.id,section:i,at:ctStamp()})
+      .then(()=>{toast(mk?'Unmarked':'Marked done for all mods');refresh(true);})
+      .catch(e=>{if(e.message!=='Session expired')toast(e.message,true);});
+    foot.append(b1,b2);
+    card.appendChild(foot);
+    m.appendChild(card);
+  });
 }
 
-/* ---------- overlays ---------- */
+/* ================= DASHBOARD ================= */
+function rDash(m){
+  const eff=effSection();
+  const inCls=eff.sec&&eff.sec.tag==='session';
+  const g=document.createElement('div'); g.className='grid';
+  g.innerHTML=
+   '<div class="card"><h3>On air now</h3><div class="row">'+
+     (inCls?'<span class="chip live"><span class="d"></span>In class</span>':'<span class="chip off"><span class="d"></span>'+(eff.sec?TAGS[eff.sec.tag][0]:'-')+'</span>')+
+   '</div><div class="big" style="margin-top:6px">'+(eff.sec?eff.sec.label:'-')+'</div>'+
+   '<div class="muted">'+(eff.sec?eff.sec.time:'')+'</div></div>'+
+   '<div class="card"><h3>Central Time</h3><div class="big">'+ST.serverCT.clock+'</div>'+
+   '<div class="row" style="margin-top:8px">'+
+     (ST.control.mode==='auto'?'<span class="chip on"><span class="d"></span>Auto by time</span>'
+       :'<span class="chip man"><span class="d"></span>Manual'+(ST.control.updated_by?(' · '+ST.control.updated_by):'')+'</span>')+
+   '<button class="btn sec sm" id="qauto">↺ Resume auto</button></div></div>'+
+   '<div class="card"><h3>!nextclass says</h3><div class="muted" style="font-size:13px">'+
+     (ST.commands.next.value||'')+' <b style="color:var(--gold-soft)">'+(ST.commands.next.suffix||'')+'</b></div></div>'+
+   '<div class="card"><h3>Subs</h3><div class="big">'+(ST.subs.count==null?'-':ST.subs.count.toLocaleString())+
+     (ST.subs.goal?('<span class="muted" style="font-size:15px"> / '+ST.subs.goal.toLocaleString()+'</span>'):'')+'</div>'+
+   '<div class="muted">'+(ST.subs.source==='twitch'?'auto from Twitch':'via '+(ST.subs.by||'chat / manual'))+(ST.subs.at?(' · '+ST.subs.at):'')+'</div></div>';
+  m.appendChild(g);
+  $('qauto').onclick=()=>api('/api/auto',{}).then(()=>{toast('Everything back to auto');refresh(true);})
+    .catch(e=>{if(e.message!=='Session expired')toast(e.message,true);});
+
+  const s2=document.createElement('div'); s2.className='sect';
+  s2.innerHTML='<h2>Quick links</h2><div class="qk">'+
+    OVS.map(o=>'<a class="btn sec sm" href="'+o.u+'" target="_blank">'+o.t+'</a>').join('')+
+    '<a class="btn sec sm" href="'+API+'" target="_blank">API status</a></div>';
+  m.appendChild(s2);
+
+  const s3=document.createElement('div'); s3.className='sect';
+  s3.innerHTML='<h2>Recent activity</h2>'+
+    (ST.logs||[]).slice(0,7).map(l=>'<div class="actrow2">'+l.at+' · <b>'+(l.by||'-')+'</b> '+l.action+'</div>').join('');
+  m.appendChild(s3);
+}
+
+/* ================= OVERLAYS ================= */
 function rOverlays(m){
   const intro=document.createElement('div'); intro.className='sect';
-  intro.innerHTML='<h2>Stream overlays</h2><div class="muted">These control the pages inside TVU Go, live — changes land on stream within ~9 seconds. Use <b>Move &amp; resize</b> to drag an overlay on your phone, then hit 💾 Save live there.</div>';
+  intro.innerHTML='<h2>Stream overlays</h2><div class="muted">These control the pages inside TVU Go, live; changes land on stream within ~9 seconds. <b>Move &amp; resize</b> opens the drag editor; hit 💾 Save live there.</div>';
   m.appendChild(intro);
   const g=document.createElement('div'); g.className='ovgrid';
   OVS.forEach(o=>{
@@ -411,13 +515,13 @@ function rOverlays(m){
     const rr=document.createElement('div'); rr.className='row';
     const mk=(t,fn,sec)=>{const b=document.createElement('button');b.className='btn sm'+(sec?' sec':'');b.textContent=t;b.onclick=fn;rr.appendChild(b);return b;};
     mk(hidden?'👁 Show':'👁 Hide',()=>api('/api/overlay',{name:o.id,cfg:{hidden:!hidden}})
-      .then(()=>{toast(o.t+(hidden?' shown':' hidden')+' on stream');refresh(true);}).catch(e=>toast(e.message,true)));
+      .then(()=>{toast(o.t+(hidden?' shown':' hidden')+' on stream');refresh(true);}).catch(e=>{if(e.message!=='Session expired')toast(e.message,true);}));
     const ed=document.createElement('a'); ed.className='btn sec sm'; ed.textContent='✥ Move & resize';
     ed.href=o.u+'?edit=1'; ed.target='_blank'; rr.appendChild(ed);
     const pv=document.createElement('a'); pv.className='btn sec sm'; pv.textContent='Preview';
     pv.href=o.u+(o.al?'?test=1':''); pv.target='_blank'; rr.appendChild(pv);
     mk('Reset pos',()=>api('/api/overlay',{name:o.id,cfg:{px:null,py:null,scale:null}})
-      .then(()=>{toast(o.t+' back to default position');refresh(true);}).catch(e=>toast(e.message,true)),true);
+      .then(()=>{toast(o.t+' back to default position');refresh(true);}).catch(e=>{if(e.message!=='Session expired')toast(e.message,true);}),true);
     card.appendChild(rr);
     if(o.al){
       const ax=document.createElement('div'); ax.className='alx';
@@ -426,7 +530,7 @@ function rOverlays(m){
       SOUNDS.forEach(s2=>{const op=document.createElement('option');op.value=s2;op.textContent=s2;
         if((cfg.snd||'sparkle')===s2)op.selected=true;sel.appendChild(op);});
       selL.appendChild(sel);
-      const volL=document.createElement('label'); volL.textContent='Volume';
+      const volL=document.createElement('label'); volL.textContent='Volume (0 to 2)';
       const vol=document.createElement('input'); vol.type='number'; vol.min='0'; vol.max='2'; vol.step='0.1';
       vol.value=(typeof cfg.vol==='number')?cfg.vol:1; volL.appendChild(vol);
       const holdL=document.createElement('label'); holdL.textContent='Seconds on screen';
@@ -435,7 +539,7 @@ function rOverlays(m){
       const svL=document.createElement('label'); svL.textContent=' ';
       const sv=document.createElement('button'); sv.className='btn sm'; sv.textContent='💾 Save alert settings';
       sv.onclick=()=>api('/api/overlay',{name:'alerts',cfg:{snd:sel.value,vol:+vol.value,hold:+hold.value}})
-        .then(()=>{toast('Alert sound settings live');refresh(true);}).catch(e=>toast(e.message,true));
+        .then(()=>{toast('Alert sound settings live');refresh(true);}).catch(e=>{if(e.message!=='Session expired')toast(e.message,true);});
       svL.appendChild(sv);
       ax.append(selL,volL,holdL,svL);
       card.appendChild(ax);
@@ -445,16 +549,16 @@ function rOverlays(m){
   m.appendChild(g);
 }
 
-/* ---------- subs ---------- */
+/* ================= SUBS ================= */
 function rSubs(m){
   const s=document.createElement('div'); s.className='sect';
   const su=ST.subs;
   s.innerHTML='<h2>Sub count</h2>'+
-    '<div class="big" style="font-size:40px">'+(su.count==null?'—':su.count.toLocaleString())+
+    '<div class="big" style="font-size:40px">'+(su.count==null?'-':su.count.toLocaleString())+
     (su.goal?('<span class="muted" style="font-size:18px"> / goal '+su.goal.toLocaleString()+'</span>'):'')+'</div>'+
     '<div class="muted" style="margin-bottom:14px">'+
       (su.source==='twitch'?'🟢 auto from Twitch':'updated by '+(su.by||'chat (!subs)'))+(su.at?(' · '+su.at):'')+
-      ' — chat typing <b>!subs</b> refreshes this automatically.</div>';
+      '. Chat typing <b>!subs</b> refreshes this automatically.</div>';
   const rr=document.createElement('div'); rr.className='row';
   const cin=document.createElement('input'); cin.type='number'; cin.min='0'; cin.placeholder='fix count'; cin.style.cssText='flex:1;min-width:120px;max-width:220px';
   const gin=document.createElement('input'); gin.type='number'; gin.min='0'; gin.placeholder='goal (0 = off)'; gin.style.cssText='flex:1;min-width:120px;max-width:220px';
@@ -465,18 +569,18 @@ function rSubs(m){
     if(gin.value!=='')body.goal=parseInt(gin.value,10);
     if(body.count===undefined&&body.goal===undefined){toast('Enter a count and/or goal',true);return;}
     api('/api/subs',body).then(()=>{toast('Subs updated everywhere');cin.value='';gin.value='';refresh(true);})
-      .catch(e=>toast(e.message,true));
+      .catch(e=>{if(e.message!=='Session expired')toast(e.message,true);});
   };
   rr.append(cin,gin,b);
   s.appendChild(rr);
   m.appendChild(s);
 }
 
-/* ---------- activity ---------- */
+/* ================= ACTIVITY ================= */
 function rActivity(m){
   const s=document.createElement('div'); s.className='sect';
   s.innerHTML='<h2>Mod activity</h2>'+
-    ((ST.logs&&ST.logs.length)?ST.logs.map(l=>'<div class="actrow2">'+l.at+' · <b>'+(l.by||'—')+'</b> '+l.action+'</div>').join('')
+    ((ST.logs&&ST.logs.length)?ST.logs.map(l=>'<div class="actrow2">'+l.at+' · <b>'+(l.by||'-')+'</b> '+l.action+'</div>').join('')
       :'<div class="muted">No activity yet.</div>');
   m.appendChild(s);
 }
@@ -486,10 +590,10 @@ async function enterApp(){
   let w=null, netfail=false;
   try{
     const r=await fetch(API+'/api/whoami?token='+encodeURIComponent(sess.token));
-    if(r.status===403){ logout(); $('loginerr').textContent='Session expired — please log in again.'; return; }
+    if(r.status===403){ logout(); $('loginerr').textContent='Session expired. Please log in again.'; return; }
     w=await r.json();
   }catch(e){ netfail=true; }
-  if(netfail||!w||!w.ok){ showLogin('Can’t reach the server right now — try again in a moment.'); return; }
+  if(netfail||!w||!w.ok){ showLogin('Can’t reach the server right now. Try again in a moment.'); return; }
   $('login').style.display='none'; $('app').style.display='block';
   $('who').textContent=sess.user;
   $('logout').onclick=logout;

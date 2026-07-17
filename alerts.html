@@ -242,7 +242,7 @@ if(Q.get('test')==='1'){
   sp.style.cssText='position:fixed;bottom:12px;left:50%;transform:translateX(-50%);z-index:99;display:flex;gap:6px;align-items:center;flex-wrap:wrap;justify-content:center;background:#1b1016;border:2px solid #ffb320;border-radius:10px;padding:9px 12px;font-family:Archivo,sans-serif;max-width:96vw';
   const lbl=document.createElement('div');
   lbl.style.cssText='width:100%;text-align:center;color:#dcc9a4;font-size:11px;font-weight:700;margin-bottom:2px';
-  lbl.textContent='Tap a sound to hear it — then add that ?snd= to your TVU Go URL';
+  lbl.textContent='Tap a sound to hear it, then add that ?snd= to your TVU Go URL';
   sp.appendChild(lbl);
   Object.keys(SYNTHS).forEach(name=>{
     const b=document.createElement('button');
@@ -264,7 +264,7 @@ if(Q.get('test')==='1'){
   mkbtn('vol +',()=>{volTouched=true;VOLR=Math.min(2,+(VOLR+0.1).toFixed(2));playSound(false);});
   const sv=mkbtn('💾 Save live (sound + vol)',async()=>{
     sv.textContent='Saving…';
-    try{ await ovPost({snd:ESND(),vol:+EVOL().toFixed(2)}); sv.textContent='Saved ✓ — live!'; }
+    try{ await ovPost({snd:ESND(),vol:+EVOL().toFixed(2)}); sv.textContent='Saved, live!'; }
     catch(e){ sv.textContent='Failed: '+e.message; }
     setTimeout(()=>{sv.textContent='💾 Save live (sound + vol)';},2200);
   });
@@ -298,6 +298,14 @@ if(Q.get('test')==='1'){
   if(bg) document.body.style.background=/^[0-9a-fA-F]{6}$/.test(bg)?('#'+bg):bg;
   const y=parseFloat(Q.get('y'));
   if(!isNaN(y)) el.style.top=y+'%';
+  const upx=parseFloat(Q.get('px')), upy=parseFloat(Q.get('py'));
+  if(!isNaN(upx)&&!isNaN(upy)&&Q.get('edit')!=='1'){
+    el.style.left=upx+'%'; el.style.top=upy+'%';
+    const s0=parseFloat(Q.get('scale')||'1')||1;
+    const st0=document.createElement('style');
+    st0.textContent='#alert{transform:scale('+(s0*.6)+');transform-origin:top left}#alert.show{transform:scale('+s0+');transform-origin:top left}';
+    document.head.appendChild(st0);
+  }
   const s=parseFloat(Q.get('scale')||'1')||1;
   if(s!==1){
     el.style.transformOrigin='top center';
@@ -311,12 +319,17 @@ if(Q.get('test')==='1'){
 /* ---------- live remote settings ---------- */
 let ovStyle=null;
 function applyOvCfg(){
-  if(!ovCfg) return;
+  if(!ovCfg||Q.get('edit')==='1') return;
   const el=document.getElementById('alert');
-  if(typeof ovCfg.y==='number') el.style.top=ovCfg.y+'%';
-  if(typeof ovCfg.scale==='number'){
-    if(!ovStyle){ ovStyle=document.createElement('style'); document.head.appendChild(ovStyle); }
-    ovStyle.textContent='#alert{transform:translateX(-50%) scale('+(ovCfg.scale*.6)+')}#alert.show{transform:translateX(-50%) scale('+ovCfg.scale+')}';
+  if(!ovStyle){ ovStyle=document.createElement('style'); document.head.appendChild(ovStyle); }
+  const sc=(typeof ovCfg.scale==='number')?ovCfg.scale:1;
+  if(typeof ovCfg.px==='number'&&typeof ovCfg.py==='number'){
+    el.style.left=ovCfg.px+'%'; el.style.top=ovCfg.py+'%';
+    ovStyle.textContent='#alert{transform:scale('+(sc*.6)+');transform-origin:top left}#alert.show{transform:scale('+sc+');transform-origin:top left}';
+  }else{
+    if(typeof ovCfg.y==='number') el.style.top=ovCfg.y+'%';
+    if(typeof ovCfg.scale==='number')
+      ovStyle.textContent='#alert{transform:translateX(-50%) scale('+(sc*.6)+')}#alert.show{transform:translateX(-50%) scale('+sc+')}';
   }
 }
 async function pollOvCfg(){
@@ -324,6 +337,79 @@ async function pollOvCfg(){
     if(j.ok){ ovCfg=(j.overlays&&j.overlays[OVKEY])||{}; applyOvCfg(); } }catch(e){}
 }
 pollOvCfg(); setInterval(pollOvCfg,9000);
+// drag/resize editor on the stream frame (?edit=1)
+if(Q.get('edit')==='1'){
+  (function(){
+    const el=document.getElementById('alert');
+    document.getElementById('a2').textContent='PixelPanda';
+    document.getElementById('a3').innerHTML='just subscribed! · <b>Tier 1</b>';
+    el.classList.add('show'); el.style.opacity='1';
+    let s=parseFloat(Q.get('scale')||'1')||1;
+
+  // stream-accurate stage: a 16:9 frame that IS the 1920x1080 stream canvas
+  const stage=document.createElement('div');
+  stage.style.cssText='position:fixed;inset:0;background:#0c0d12;display:flex;align-items:center;justify-content:center;z-index:1';
+  const frame=document.createElement('div');
+  frame.style.cssText='position:relative;aspect-ratio:16/9;width:min(100vw - 16px,(100vh - 116px)*16/9);background-color:#161a22;background-image:repeating-linear-gradient(0deg,transparent 0 59px,#ffffff0d 59px 60px),repeating-linear-gradient(90deg,transparent 0 59px,#ffffff0d 59px 60px);border:1px solid #3a3f4c;border-radius:6px;overflow:hidden;box-shadow:0 20px 60px -20px #000';
+  const ftag=document.createElement('div');
+  ftag.style.cssText='position:absolute;bottom:6px;right:10px;color:#5b6270;font:700 11px Archivo,sans-serif;letter-spacing:1px;pointer-events:none';
+  ftag.textContent='STREAM FRAME · 1920 × 1080';
+  frame.appendChild(ftag);
+  stage.appendChild(frame);
+  document.body.appendChild(stage);
+  frame.appendChild(el);
+  el.style.position='absolute'; el.style.zIndex='2'; el.style.visibility='';
+  const fw=()=>frame.getBoundingClientRect();
+  const fscale=()=>fw().width/1920;
+  function place(pxPct,pyPct){
+    el.style.left=pxPct+'%'; el.style.top=pyPct+'%';
+    el.style.right='';el.style.bottom='';
+    el.style.transformOrigin='top left';
+    el.style.transform='scale('+(s*fscale())+')';
+  }
+  const spx=parseFloat(Q.get('px')), spy=parseFloat(Q.get('py'));
+  place(isNaN(spx)?26:spx, isNaN(spy)?8:spy);
+  const ecss=document.createElement('style');
+  ecss.textContent='#edittb{position:fixed;top:8px;left:50%;transform:translateX(-50%);z-index:99;display:flex;gap:6px;align-items:center;background:#1b1016;border:2px solid #ffb320;border-radius:10px;padding:8px 10px;font-family:Archivo,sans-serif;max-width:96vw;flex-wrap:wrap;justify-content:center}#edittb button{background:#ffb320;border:none;border-radius:6px;font-weight:800;font-size:15px;width:32px;height:32px;cursor:pointer}#edittb .cp{width:auto;padding:0 12px;font-size:12px}#edittb input{width:min(280px,40vw);font-size:11px;padding:7px;border-radius:6px;border:1px solid #7d2433;background:#2a161d;color:#f6e7c9}#edittb span{color:#ffb320;font-weight:800;font-size:13px;min-width:46px;text-align:center}';
+  document.head.appendChild(ecss);
+  const tb=document.createElement('div'); tb.id='edittb';
+  tb.innerHTML='<button id="eMinus">−</button><span id="eScale"></span><button id="ePlus">+</button><input id="eUrl" readonly><button id="eCopy" class="cp">Copy URL</button><button id="eSave" class="cp">💾 Save live</button><button id="eHide" class="cp">👁 Hide</button>';
+  document.body.appendChild(tb);
+  function pcts(){ const r=el.getBoundingClientRect(), f=fw();
+    return {px:+(((r.left-f.left)/f.width)*100).toFixed(2), py:+(((r.top-f.top)/f.height)*100).toFixed(2)}; }
+  function urlNow(){ const q=new URLSearchParams(location.search);
+    q.delete('edit'); q.delete('pos');
+    if(s!==1) q.set('scale',s.toFixed(2)); else q.delete('scale');
+    const p=pcts(); q.set('px',p.px); q.set('py',p.py);
+    return location.origin+location.pathname+'?'+q.toString(); }
+  function refresh(){ document.getElementById('eScale').textContent=s.toFixed(2)+'×';
+    el.style.transform='scale('+(s*fscale())+')';
+    document.getElementById('eUrl').value=urlNow(); }
+  document.getElementById('ePlus').onclick=()=>{s=Math.min(3,+(s+0.05).toFixed(2));refresh();};
+  document.getElementById('eMinus').onclick=()=>{s=Math.max(0.4,+(s-0.05).toFixed(2));refresh();};
+  document.getElementById('eCopy').onclick=()=>{const i=document.getElementById('eUrl');
+    if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(i.value);
+    else{i.select();try{document.execCommand('copy')}catch(e){}}
+    const b=document.getElementById('eCopy');b.textContent='Copied!';setTimeout(()=>{b.textContent='Copy URL';},1200);};
+  document.getElementById('eSave').onclick=async()=>{const b=document.getElementById('eSave');b.textContent='Saving…';
+    try{const p=pcts();await ovPost({px:p.px,py:p.py,scale:+s.toFixed(2)});b.textContent='Saved, live!';}
+    catch(err){b.textContent='Failed: '+err.message;}
+    setTimeout(()=>{b.textContent='💾 Save live';},2200);};
+  let hiddenNow=false;
+  document.getElementById('eHide').onclick=async()=>{const b=document.getElementById('eHide');
+    try{hiddenNow=!hiddenNow;await ovPost({hidden:hiddenNow});b.textContent=hiddenNow?'👁 Show':'👁 Hide';}
+    catch(err){hiddenNow=!hiddenNow;}};
+  el.style.cursor='move'; el.style.touchAction='none';
+  let drag=null;
+  el.addEventListener('pointerdown',e=>{const r=el.getBoundingClientRect();
+    drag={dx:e.clientX-r.left,dy:e.clientY-r.top}; el.setPointerCapture(e.pointerId); e.preventDefault();});
+  el.addEventListener('pointermove',e=>{ if(!drag)return; const f=fw();
+    el.style.left=(e.clientX-drag.dx-f.left)+'px'; el.style.top=(e.clientY-drag.dy-f.top)+'px'; refresh();});
+  el.addEventListener('pointerup',()=>{drag=null;refresh();});
+  addEventListener('resize',()=>{ const p=pcts(); place(p.px,p.py); refresh(); });
+  refresh();
+  })();
+}
 </script>
 </body>
 </html>
