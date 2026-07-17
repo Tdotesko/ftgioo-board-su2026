@@ -130,8 +130,10 @@ const ICONS={
   x:'M18.901 1.153h3.68l-8.04 9.19L24 22.846h-7.406l-5.8-7.584-6.638 7.584H.474l8.6-9.83L0 1.154h7.594l5.243 6.932ZM17.61 20.644h2.039L6.486 3.24H4.298Z'
 };
 
-let SCHED=null, eff=null, marks={}, subs=null, target=null, lastEffKey=null, booted=false;
+let SCHED=null, eff=null, marks={}, subs=null, target=null, lastEffKey=null, booted=false, lastCustKey='';
 const $=id=>document.getElementById(id);
+const strip=v=>String(v==null?'':v).replace(/[<>]/g,'');
+function customClass(){ return (typeof ovCfg!=='undefined'&&ovCfg&&ovCfg.custom&&ovCfg.custom.title)?ovCfg.custom:null; }
 const isClass=s=>!!(s&&s.current&&s.current.indexOf('🔔')===0);
 function profOf(sec){const m=(sec&&sec.professor||'').match(/Now teaching:\s*([^(]+?)\s*\(/);return m?m[1].trim():'';}
 function followOf(sec){const m=(sec&&sec.current||'').match(/(?:Follow|follow):\s*(\S+)/);return m?m[1]:'';}
@@ -180,9 +182,13 @@ function icoHTML(k){
 let slotIdx=0;
 function buildSlots(sec,nxt,mode){
   const slots=[];
-  if(mode==='class'){
+  const cust=customClass();
+  if(cust){
+    slots.push('👨‍🏫 '+(cust.prof?('Professor · <b>'+strip(cust.prof)+'</b>'):('<b>'+strip(cust.title)+'</b>'))+
+      (cust.follow?(' · follow: <span class="g">'+strip(cust.follow)+'</span>'):''));
+  }else if(mode==='class'){
     const p=profOf(sec), f=followOf(sec);
-    slots.push('👨‍🏫 Professor · <b>'+p+'</b>'+(f?(' — follow: <span class="g">'+f+'</span>'):''));
+    slots.push('👨‍🏫 Professor · <b>'+p+'</b>'+(f?(' · follow: <span class="g">'+f+'</span>'):''));
   }else if(nxt){
     slots.push('👨‍🏫 Up next professor · <b>'+nxt.prof+'</b>');
   }
@@ -234,8 +240,13 @@ function render(){
   const isEnd=sec.label&&/wrap|graduation/i.test(sec.label);
   const mode=inClass?'class':(nxt?(isSetup?'soon':(isEnd?'end':'break')):'grad');
 
+  const cust=customClass();
   const pill=$('pill'),pt=$('pilltext'),title=$('title'),card=$('card');
-  if(mode==='class'){
+  if(cust){
+    pill.className='pill live'; pt.textContent='In class';
+    title.textContent=strip(cust.title); card.classList.remove('bigcd');
+    if(nxt){ $('cdl').textContent='Next class'; }
+  }else if(mode==='class'){
     pill.className='pill live'; pt.textContent='In class';
     title.textContent=sec.label; card.classList.remove('bigcd');
     $('cdl').textContent='Next class';
@@ -256,8 +267,17 @@ function render(){
   $('slot').innerHTML=curSlots[slotIdx]||'';
 
   // takeover on class start (only for changes observed while open)
+  const ckey=cust?('CUSTOM:'+cust.title):'';
+  if(booted && ckey && ckey!==lastCustKey){
+    $('tk-title').textContent=strip(cust.title);
+    $('tk-prof').innerHTML=cust.prof?('with <b>'+strip(cust.prof)+'</b>'):'';
+    $('takeover').classList.add('show');
+    chime();
+    setTimeout(()=>$('takeover').classList.remove('show'),15000);
+  }
+  lastCustKey=ckey;
   const key=eff.day+':'+eff.section;
-  if(booted && key!==lastEffKey && inClass){
+  if(booted && key!==lastEffKey && inClass && !cust){
     $('tk-title').textContent=sec.label;
     const p=profOf(sec);
     $('tk-prof').innerHTML=p?('with Professor · <b>'+p+'</b>'):'';
@@ -585,7 +605,8 @@ function applyOvCfg(){
 }
 async function pollOvCfg(){
   try{ const r=await fetch(API+'/api/overlay',{cache:'no-store'}); const j=await r.json();
-    if(j.ok){ ovCfg=(j.overlays&&j.overlays[OVKEY])||{}; applyOvCfg(); } }catch(e){}
+    if(j.ok){ ovCfg=(j.overlays&&j.overlays[OVKEY])||{}; applyOvCfg();
+      try{ if(SCHED&&eff) render(); }catch(e2){} } }catch(e){}
 }
 pollOvCfg(); setInterval(pollOvCfg,9000);
 </script>

@@ -360,6 +360,52 @@ function rRun(m){
     setClass(BD[di].id,i,BD[di].sections[i].label);
   };
 
+  // custom class: something live that is not on the schedule (e.g. Film Club)
+  const ccActive=OV&&OV.campus&&OV.campus.custom&&OV.campus.custom.title;
+  const ccs=document.createElement('div'); ccs.className='sect';
+  const cdet=document.createElement('details'); cdet.open=!!ccActive;
+  const csum=document.createElement('summary');
+  csum.textContent=ccActive?('🎬 Custom class LIVE: '+OV.campus.custom.title):'Custom class (something not on the schedule)';
+  cdet.appendChild(csum);
+  const chint=document.createElement('div'); chint.className='muted'; chint.style.margin='8px 0';
+  chint.textContent='Puts a class that is not on the schedule live everywhere at once: chat commands and the Campus Feed. End it to snap back to the normal schedule.';
+  cdet.appendChild(chint);
+  const cin=document.createElement('input'); cin.placeholder='Class title, e.g. Film Club'; cin.style.cssText='width:100%;margin-bottom:8px';
+  const pin2=document.createElement('input'); pin2.placeholder='Professor(s), e.g. DirectorOne & DirectorTwo'; pin2.style.cssText='width:100%;margin-bottom:8px';
+  const fin=document.createElement('input'); fin.placeholder='Follow handles/links, e.g. @director1 & @director2'; fin.style.cssText='width:100%;margin-bottom:10px';
+  if(ccActive){ cin.value=OV.campus.custom.title||''; pin2.value=OV.campus.custom.prof||''; fin.value=OV.campus.custom.follow||''; }
+  const crow=document.createElement('div'); crow.className='row';
+  const go=document.createElement('button'); go.className='btn sm'; go.textContent=ccActive?'Update custom class':'Go live with custom class';
+  go.onclick=()=>{
+    const t=cin.value.trim(); if(!t){toast('Enter a class title',true);return;}
+    const p2=pin2.value.trim(), f2=fin.value.trim();
+    const curTxt='🔔 CLASS IN SESSION: '+t+(p2?(' with '+p2):'')+(f2?('. Follow: '+f2):'');
+    const profTxt='👨‍🏫 Now teaching: '+(p2||t)+(p2?(' ('+t+')'):'')+(f2?('. Follow: '+f2):'');
+    go.textContent='Going live…';
+    Promise.all([
+      api('/api/cmd',{field:'current',value:curTxt}),
+      api('/api/cmd',{field:'professor',value:profTxt}),
+      api('/api/overlay',{name:'campus',cfg:{custom:{title:t,prof:p2,follow:f2}}})
+    ]).then(()=>{toast(t+' is live: chat + Campus Feed');refresh(true);})
+      .catch(e=>{if(e.message!=='Session expired')toast(e.message,true);})
+      .finally(()=>{go.textContent='Go live with custom class';});
+  };
+  const end=document.createElement('button'); end.className='btn sec sm'; end.textContent='End custom class (back to schedule)';
+  end.onclick=()=>{
+    end.textContent='Ending…';
+    Promise.all([
+      api('/api/cmd',{field:'current',value:''}),
+      api('/api/cmd',{field:'professor',value:''}),
+      api('/api/overlay',{name:'campus',cfg:{custom:null}})
+    ]).then(()=>{toast('Back to the normal schedule');refresh(true);})
+      .catch(e=>{if(e.message!=='Session expired')toast(e.message,true);})
+      .finally(()=>{end.textContent='End custom class (back to schedule)';});
+  };
+  crow.append(go,end);
+  cdet.append(cin,pin2,fin,crow);
+  ccs.appendChild(cdet);
+  m.appendChild(ccs);
+
   // live commands editor (collapsed until needed)
   const cs=document.createElement('div'); cs.className='sect';
   const det=document.createElement('details'); det.open=false;
