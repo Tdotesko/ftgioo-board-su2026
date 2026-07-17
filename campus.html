@@ -564,6 +564,7 @@ boot();
 /* ---------- live remote settings (Save live in ?edit=1 controls the on-air overlay) ---------- */
 
 const OVKEY='campus';
+let suLastReload;
 let ovCfg=null;
 const URLBGOP=(function(){const v=parseFloat(Q.get('bgop'));return isNaN(v)?1:Math.max(0,Math.min(1,v));})();
 document.getElementById('card').style.setProperty('--bgop',URLBGOP);
@@ -665,7 +666,7 @@ function applyOvCfg(){
 }
 async function pollOvCfg(){
   try{ const r=await fetch(API+'/api/overlay',{cache:'no-store'}); const j=await r.json();
-    if(j.ok){ ovCfg=(j.overlays&&j.overlays[OVKEY])||{}; applyOvCfg();
+    if(j.ok){ ovCfg=(j.overlays&&j.overlays[OVKEY])||{}; if(ovCfg.reload!==undefined){ if(suLastReload===undefined){ suLastReload=ovCfg.reload; } else if(ovCfg.reload!==suLastReload){ location.reload(); return; } } applyOvCfg();
       try{ if(SCHED&&eff) render(); }catch(e2){} } }catch(e){}
 }
 pollOvCfg(); setInterval(pollOvCfg,9000);
