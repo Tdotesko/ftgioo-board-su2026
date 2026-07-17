@@ -608,6 +608,25 @@ function rOverlays(m){
       .catch(e=>{if(e.message!=='Session expired')toast(e.message,true);});
     tr.append(tl2,rng,pv2);
     card.appendChild(tr);
+    // live style: restyle this overlay with CSS, no reload
+    const cssD=document.createElement('details'); cssD.style.marginTop='10px';
+    const cssS=document.createElement('summary'); cssS.style.cssText='cursor:pointer;font-weight:800;color:var(--gold-soft);font-size:12.5px;list-style:none';
+    cssS.textContent='🎨 Live style (advanced)';
+    cssD.appendChild(cssS);
+    const cssHint=document.createElement('div'); cssHint.className='muted'; cssHint.style.margin='7px 0';
+    cssHint.innerHTML='Type CSS to restyle this overlay on the fly. Example bigger Campus clock: <code>#clock{font-size:22px}</code>. Bigger sub number: <code>#num{font-size:56px}</code>.';
+    const cssTa=document.createElement('textarea'); cssTa.value=(cfg.css||''); cssTa.placeholder='#clock{font-size:22px}'; cssTa.style.width='100%'; cssTa.rows=3;
+    const cssRow=document.createElement('div'); cssRow.className='row'; cssRow.style.marginTop='6px';
+    const cssApply=document.createElement('button'); cssApply.className='btn sm'; cssApply.textContent='Apply live';
+    cssApply.onclick=()=>api('/api/overlay',{name:o.id,cfg:{css:cssTa.value}})
+      .then(()=>{toast(o.t+' style applied live');refresh(true);})
+      .catch(e=>{if(e.message!=='Session expired')toast(e.message,true);});
+    const cssClear=document.createElement('button'); cssClear.className='btn sec sm'; cssClear.textContent='Clear';
+    cssClear.onclick=()=>{cssTa.value='';api('/api/overlay',{name:o.id,cfg:{css:''}})
+      .then(()=>{toast(o.t+' style cleared');refresh(true);}).catch(e=>{});};
+    cssRow.append(cssApply,cssClear);
+    cssD.append(cssHint,cssTa,cssRow);
+    card.appendChild(cssD);
     if(o.al){
       const ax=document.createElement('div'); ax.className='alx';
       const selL=document.createElement('label'); selL.textContent='Sound';

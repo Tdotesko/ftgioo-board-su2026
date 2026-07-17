@@ -383,6 +383,7 @@ if(Q.get('test')==='1'){
 /* ---------- live remote settings ---------- */
 let ovStyle=null;
 const CAL_INFO={campus:{c:'#ff2d95',n:'CAMPUS FEED',i:0},socials:{c:'#12e0ff',n:'SOCIALS BAR',i:1},subs:{c:'#8dff3a',n:'SUB COUNTER',i:2},alerts:{c:'#ff9d00',n:'ALERTS',i:3}};
+function suLiveCss(){var s=document.getElementById('su-livecss');if(!s){s=document.createElement('style');s.id='su-livecss';document.head.appendChild(s);}s.textContent=(typeof ovCfg!=='undefined'&&ovCfg&&typeof ovCfg.css==='string')?ovCfg.css:'';}
 let suCalEl=null;
 function suCalib(on){
   if(on && !suCalEl){
@@ -400,7 +401,7 @@ function suCalib(on){
 }
 function applyOvCfg(){
   if(!ovCfg||Q.get('edit')==='1') return;
-  suCalib(!!ovCfg.calib);
+  suCalib(!!ovCfg.calib); suLiveCss();
   const el=document.getElementById('alert');
   el.style.setProperty('--bgop',(typeof ovCfg.bgop==='number')?ovCfg.bgop:URLBGOP);
   el.style.width=(typeof ovCfg.w==='number')?ovCfg.w+'px':'';
