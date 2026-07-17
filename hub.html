@@ -556,8 +556,9 @@ function rSubs(m){
     '<div class="big" style="font-size:40px">'+(su.count==null?'-':su.count.toLocaleString())+
     (su.goal?('<span class="muted" style="font-size:18px"> / goal '+su.goal.toLocaleString()+'</span>'):'')+'</div>'+
     '<div class="muted">'+
-      (su.source==='twitch'?'🟢 auto from Twitch':'updated by '+(su.by||'chat (!subs)'))+(su.at?(' · '+su.at):'')+
-      '. Chat typing <b>!subs</b> keeps this current automatically.</div>';
+      (su.source==='twitch'?'🟢 auto from Twitch':'base from '+(su.by||'chat (!subs)'))+(su.at?(' · '+su.at):'')+
+      (su.delta?(' · <b style="color:var(--green)">+'+su.delta+' live from chat</b> since last sync'):'')+
+      '. New subs and gifts in chat count instantly; every <b>!subs</b> re-syncs the exact number.</div>';
   m.appendChild(s);
 }
 
