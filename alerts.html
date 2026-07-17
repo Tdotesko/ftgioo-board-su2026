@@ -44,6 +44,10 @@
     overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .a3{font-weight:800;font-size:19px;color:var(--cream-dim);margin-top:8px}
   .a3 b{color:var(--cream)}
+  /* 1920x1080 logical canvas -> scaled to the real viewport so the editor and the
+     stream share ONE coordinate system (what you place is exactly what shows, any resolution) */
+  #su-stage{position:fixed;top:0;left:0;width:1920px;height:1080px;
+    transform-origin:top left;transform:scale(var(--suk,1));will-change:transform}
 </style>
 </head>
 <body>
@@ -59,6 +63,19 @@
 
 <script>
 const Q=new URLSearchParams(location.search);
+// ---- fidelity: normalize to a 1920x1080 stage scaled to the viewport ----
+(function(){
+  var st=document.getElementById('su-stage');
+  if(!st){ st=document.createElement('div'); st.id='su-stage'; document.body.insertBefore(st, document.body.firstChild); }
+  ["alert"].forEach(function(id){ var e=document.getElementById(id); if(e && e.parentNode!==st) st.appendChild(e); });
+  function suk(){
+    var k=Math.min(innerWidth/1920, innerHeight/1080);
+    if(!isFinite(k)||k<=0) k=1;
+    document.documentElement.style.setProperty('--suk', k);
+  }
+  suk(); addEventListener('resize', suk); addEventListener('orientationchange', suk);
+})();
+
 const CHANNEL=(Q.get('channel')||'ftgioo').toLowerCase();
 const SOUND=Q.get('sound')!=='0';
 const HOLD=Math.max(3,parseFloat(Q.get('hold')||'7'))*1000;
@@ -443,7 +460,7 @@ if(Q.get('edit')==='1'){
   ecss.textContent='#edittb{position:fixed;top:8px;left:50%;transform:translateX(-50%);z-index:99;display:flex;gap:6px;align-items:center;background:#1b1016;border:2px solid #ffb320;border-radius:10px;padding:8px 10px;font-family:Archivo,sans-serif;max-width:96vw;flex-wrap:wrap;justify-content:center}#edittb button{background:#ffb320;border:none;border-radius:6px;font-weight:800;font-size:15px;width:32px;height:32px;cursor:pointer}#edittb .cp{width:auto;padding:0 12px;font-size:12px}#edittb input{width:min(280px,40vw);font-size:11px;padding:7px;border-radius:6px;border:1px solid #7d2433;background:#2a161d;color:#f6e7c9}#edittb span{color:#ffb320;font-weight:800;font-size:13px;min-width:46px;text-align:center}';
   document.head.appendChild(ecss);
   const tb=document.createElement('div'); tb.id='edittb';
-  tb.innerHTML='<button id="eMinus">−</button><span id="eScale"></span><button id="ePlus">+</button><input id="eUrl" readonly><button id="eCopy" class="cp">Copy URL</button><button id="eSave" class="cp">💾 Save live</button><button id="eHide" class="cp">👁 Hide</button>';
+  tb.innerHTML='<button id="eMinus">−</button><span id="eScale"></span><button id="ePlus">+</button><span id="ecoord" style="color:#ffd6a0;font-weight:800;font-size:12px;min-width:150px;text-align:center"></span><input id="eUrl" readonly><button id="eCopy" class="cp">Copy URL</button><button id="eSave" class="cp">💾 Save live</button><button id="eHide" class="cp">👁 Hide</button>';
   document.body.appendChild(tb);
   function pcts(){ const r=el.getBoundingClientRect(), f=fw();
     return {px:+(((r.left-f.left)/f.width)*100).toFixed(2), py:+(((r.top-f.top)/f.height)*100).toFixed(2)}; }
@@ -456,7 +473,9 @@ if(Q.get('edit')==='1'){
     return location.origin+location.pathname+'?'+q.toString(); }
   function refresh(){ document.getElementById('eScale').textContent=s.toFixed(2)+'×';
     el.style.transform='scale('+(s*fscale())+')';
-    document.getElementById('eUrl').value=urlNow(); }
+    document.getElementById('eUrl').value=urlNow();
+    var _p=pcts(), _ec=document.getElementById('ecoord');
+    if(_ec) _ec.textContent='X '+_p.px+'%  ·  Y '+_p.py+'%  ·  '+Math.round(s*100)+'%'; }
   document.getElementById('ePlus').onclick=()=>{s=Math.min(3,+(s+0.05).toFixed(2));refresh();};
   document.getElementById('eMinus').onclick=()=>{s=Math.max(0.4,+(s-0.05).toFixed(2));refresh();};
   document.getElementById('eCopy').onclick=()=>{const i=document.getElementById('eUrl');
