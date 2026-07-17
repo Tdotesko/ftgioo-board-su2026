@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SU 2026 · Command Center</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E🎓%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Graduate&family=Archivo:wght@500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#190b10; --panel:#2a1219; --panel2:#33161f; --line:#4a2230; --line2:#5d2b3c;
+    --gold:#ffb320; --gold-soft:#ffc95e; --red:#c31f2f; --red-deep:#8f1622;
+    --cream:#f6e7c9; --dim:#c9ab9a; --grey:#8d7370; --green:#57c25f;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--cream);
+    font-family:'Archivo',-apple-system,'Segoe UI',Roboto,sans-serif;-webkit-font-smoothing:antialiased;line-height:1.45}
+  .wrap{max-width:1060px;margin:0 auto;padding:0 14px}
+  h1,h2,h3,.gr{font-family:'Graduate',serif;letter-spacing:1px}
+  button{font-family:inherit;cursor:pointer}
+  input,textarea,select{font-family:inherit;background:var(--panel2);border:1px solid var(--line2);
+    color:var(--cream);border-radius:9px;padding:10px 12px;font-size:14px}
+  textarea{width:100%;resize:vertical;min-height:52px;line-height:1.4}
+  input:focus,textarea:focus,select:focus{outline:2px solid var(--gold);outline-offset:0}
+  .btn{background:var(--gold);color:#2a1108;border:none;border-radius:9px;
+    padding:10px 16px;font-weight:800;font-size:13px}
+  .btn:hover{filter:brightness(1.07)}
+  .btn.sec{background:var(--panel2);color:var(--cream);border:1px solid var(--line2)}
+  .btn.danger{background:transparent;color:#ff8a8a;border:1px solid #c31f2f88}
+  .btn.sm{padding:7px 12px;font-size:12px}
+  .chip{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:800;
+    letter-spacing:1px;text-transform:uppercase;padding:4px 10px;border-radius:20px}
+  .chip .d{width:7px;height:7px;border-radius:50%}
+  .chip.on{background:#57c25f22;color:var(--green);border:1px solid #57c25f55}
+  .chip.on .d{background:var(--green)}
+  .chip.off{background:#8d737022;color:var(--grey);border:1px solid #8d737055}
+  .chip.off .d{background:var(--grey)}
+  .chip.live{background:var(--gold);color:#2a1108}
+  .chip.live .d{background:var(--red);animation:pulse 1.4s infinite}
+  .chip.man{background:#c31f2f22;color:#ff9a9a;border:1px solid #c31f2f66}
+  .chip.man .d{background:var(--red)}
+  @keyframes pulse{50%{opacity:.4}}
+
+  /* login */
+  #login{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+  .loginbox{width:100%;max-width:420px;background:var(--panel);border:2px solid var(--line2);
+    border-radius:20px;padding:34px 30px;text-align:center;
+    box-shadow:0 30px 80px -20px rgba(0,0,0,.8), inset 0 0 0 3px var(--bg), inset 0 0 0 5px var(--red-deep)}
+  .loginbox img{width:110px;height:110px;object-fit:contain;filter:drop-shadow(0 5px 10px rgba(0,0,0,.5))}
+  .loginbox h1{font-size:19px;color:var(--gold);margin:12px 0 2px;text-shadow:1px 1px 0 var(--red-deep)}
+  .loginbox .sub2{color:var(--dim);font-size:13px;margin-bottom:20px}
+  .users{display:flex;gap:8px;margin-bottom:14px}
+  .usr{flex:1;padding:13px 4px;border-radius:11px;border:2px solid var(--line2);background:var(--panel2);
+    color:var(--dim);font-family:'Graduate',serif;font-size:14px;letter-spacing:1px}
+  .usr.sel{border-color:var(--gold);color:var(--gold);background:#3d1c14}
+  #pass{width:100%;margin-bottom:14px;text-align:center;font-size:16px}
+  #loginbtn{width:100%;padding:13px;font-size:15px}
+  #loginerr{color:#ff8a8a;font-size:13px;font-weight:700;margin-top:10px;min-height:18px}
+
+  /* app shell */
+  #app{display:none}
+  header{background:linear-gradient(160deg,#3d1620,#24101a);border-bottom:2px solid var(--line);
+    padding:14px 0}
+  .hrow{display:flex;align-items:center;gap:13px}
+  .hrow img{width:46px;height:46px;object-fit:contain}
+  .hrow h1{font-size:16px;color:var(--gold);text-shadow:1px 1px 0 var(--red-deep);line-height:1.3}
+  .hrow h1 span{display:block;font-family:'Archivo';font-weight:700;font-size:11px;color:var(--dim);
+    letter-spacing:2px;text-transform:uppercase}
+  .me{margin-left:auto;display:flex;align-items:center;gap:10px}
+  .me .who{font-weight:800;font-size:13px;color:var(--cream)}
+  nav{position:sticky;top:0;z-index:20;background:#190b10f2;backdrop-filter:blur(8px);
+    border-bottom:1px solid var(--line)}
+  .tabs{display:flex;gap:4px;overflow-x:auto;padding:8px 0}
+  .tab{flex-shrink:0;padding:10px 16px;border-radius:9px;background:transparent;border:1px solid transparent;
+    color:var(--dim);font-weight:800;font-size:13px}
+  .tab.act{background:var(--panel);border-color:var(--line2);color:var(--gold)}
+  main{padding:18px 0 70px}
+  .grid{display:grid;gap:12px;grid-template-columns:repeat(auto-fill,minmax(235px,1fr))}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:15px}
+  .card h3{margin:0 0 8px;font-size:12px;color:var(--gold);letter-spacing:1.5px;text-transform:uppercase}
+  .big{font-size:26px;font-weight:800;line-height:1.2}
+  .muted{color:var(--dim);font-size:12.5px}
+  .row{display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+  .sect{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:14px}
+  .sect h2{margin:0 0 12px;font-size:14px;color:var(--gold);text-shadow:1px 1px 0 var(--red-deep)}
+  .list .it{display:flex;align-items:center;gap:11px;padding:11px 4px;border-top:1px solid var(--line);flex-wrap:wrap}
+  .list .it:first-child{border-top:none}
+  .tme{font-weight:800;min-width:64px;font-variant-numeric:tabular-nums}
+  .lbl2{flex:1;min-width:150px}
+  .lbl2 b{display:block}
+  .lbl2 span{color:var(--dim);font-size:12px}
+  .daychips{display:flex;gap:7px;margin-bottom:12px;flex-wrap:wrap}
+  .dch{padding:8px 15px;border-radius:20px;border:1px solid var(--line2);background:var(--panel2);
+    color:var(--dim);font-weight:800;font-size:13px}
+  .dch.act{background:var(--gold);color:#2a1108;border-color:var(--gold)}
+  .src{font-size:11.5px;font-weight:700;color:var(--green)}
+  .src.man{color:var(--gold-soft)}
+  .cmdrow{padding:13px 0;border-top:1px solid var(--line)}
+  .cmdrow:first-of-type{border-top:none}
+  .cmdrow .nm{font-family:ui-monospace,Consolas,monospace;font-weight:800;color:var(--gold);font-size:13.5px}
+  .ovgrid{display:grid;gap:12px;grid-template-columns:repeat(auto-fill,minmax(300px,1fr))}
+  .ovcard{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:15px}
+  .ovcard h3{margin:0;font-size:15px;color:var(--cream);font-family:'Archivo';font-weight:800}
+  .ovcard .desc{color:var(--dim);font-size:12.5px;margin:4px 0 10px}
+  .ovcard .cfg{font-size:11.5px;color:var(--grey);margin:8px 0;font-variant-numeric:tabular-nums}
+  .alx{display:grid;gap:8px;grid-template-columns:1fr 1fr;margin-top:10px;padding-top:10px;border-top:1px solid var(--line)}
+  .alx label{font-size:11px;color:var(--dim);font-weight:700;display:flex;flex-direction:column;gap:4px}
+  .actrow2{font-size:12.5px;color:var(--dim);padding:7px 0;border-top:1px solid var(--line)}
+  .actrow2:first-child{border-top:none}
+  .actrow2 b{color:var(--cream)}
+  #toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:var(--panel);
+    border:2px solid var(--gold);color:var(--cream);padding:11px 17px;border-radius:11px;
+    font-size:13.5px;font-weight:700;opacity:0;transition:opacity .25s;z-index:60;max-width:92%;text-align:center}
+  #toast.bad{border-color:var(--red)}
+  .qk{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
+</style>
+</head>
+<body>
+
+<div id="login">
+  <div class="loginbox">
+    <img src="crest.png" alt="">
+    <h1>Streamer University 2026</h1>
+    <div class="sub2">Command Center · mods only</div>
+    <div class="users">
+      <button class="usr" data-u="tdot">Tdot</button>
+      <button class="usr" data-u="haylee">Haylee</button>
+      <button class="usr" data-u="gio">Gio</button>
+    </div>
+    <input id="pass" type="password" placeholder="password" autocomplete="current-password">
+    <button class="btn" id="loginbtn">Enter the Hub 🎓</button>
+    <div id="loginerr"></div>
+  </div>
+</div>
+
+<div id="app">
+  <header><div class="wrap hrow">
+    <img src="crest.png" alt="">
+    <h1>SU 2026 Command Center<span>Streamer University · FTGIOO</span></h1>
+    <div class="me"><span class="who" id="who"></span><button class="btn sec sm" id="logout">Log out</button></div>
+  </div></header>
+  <nav><div class="wrap tabs" id="tabs"></div></nav>
+  <main class="wrap" id="main"></main>
+</div>
+
+<script>
+const API='https://ftgioo-su2026-api-production.up.railway.app';
+const PAGES='.'; // overlays live beside this page
+const $=id=>document.getElementById(id);
+const CMDS=[['current','!current'],['professor','!professor'],['next','!nextclass'],['today','!today']];
+const SOUNDS=['sparkle','chime','bell','coin','tada','pop','fanfare'];
+const OVS=[
+ {id:'campus',t:'Campus Feed',d:'All-in-one: class card, NOW STARTING takeover, countdown, rotating subs/socials.',u:'campus.html'},
+ {id:'classcard',t:'Class Card',d:'Lower-third with the current class + professor + follow link.',u:'overlay.html'},
+ {id:'socials',t:'Socials Bar',d:'Twitch · YouTube · IG · X handles with logos.',u:'socials.html'},
+ {id:'subs',t:'Sub Counter',d:'Live sub count with the gold goal bar.',u:'subs.html'},
+ {id:'alerts',t:'Alerts',d:'Sub / resub / gifted subs / raid pop-ups with confetti + sound.',u:'alerts.html',al:true}
+];
+let sess=null, ST=null, OV=null, SCHED=null, tab='dash', day=null;
+
+/* ---------- session ---------- */
+try{ sess=JSON.parse(localStorage.getItem('su_hub_sess')); }catch(e){}
+function saveSess(){ localStorage.setItem('su_hub_sess',JSON.stringify(sess)); }
+function logout(){ sess=null; localStorage.removeItem('su_hub_sess'); location.reload(); }
+
+function toast(m,bad){
+  let el=$('toast'); if(!el){el=document.createElement('div');el.id='toast';document.body.appendChild(el);}
+  el.textContent=m; el.className=bad?'bad':''; el.style.opacity='1';
+  clearTimeout(el._t); el._t=setTimeout(()=>el.style.opacity='0',2600);
+}
+async function api(path,body){
+  const r=await fetch(API+path,{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify(Object.assign({},body,{token:sess&&sess.token}))});
+  const j=await r.json().catch(()=>({}));
+  if(r.status===403){ toast('Session expired — log in again',true); setTimeout(logout,1200); throw new Error('auth'); }
+  if(!r.ok||!j.ok) throw new Error((j&&j.error)||('HTTP '+r.status));
+  return j;
+}
+
+/* ---------- login flow ---------- */
+let pickedUser='tdot';
+document.querySelectorAll('.usr').forEach(b=>{
+  b.addEventListener('click',()=>{ pickedUser=b.dataset.u;
+    document.querySelectorAll('.usr').forEach(x=>x.classList.toggle('sel',x===b)); });
+});
+document.querySelector('.usr').classList.add('sel');
+async function doLogin(){
+  $('loginerr').textContent='';
+  try{
+    const r=await fetch(API+'/api/login',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({user:pickedUser,pass:$('pass').value})});
+    const j=await r.json().catch(()=>({}));
+    if(!r.ok||!j.ok) throw new Error((j&&j.error)||'Login failed');
+    sess={token:j.token,user:j.user,exp:j.exp}; saveSess(); boot();
+  }catch(e){ $('loginerr').textContent=e.message; }
+}
+$('loginbtn').addEventListener('click',doLogin);
+$('pass').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
+
+/* ---------- helpers ---------- */
+const isClass=s=>!!(s&&s.current&&s.current.indexOf('🔔')===0);
+function profOf(s){const m=(s&&s.professor||'').match(/Now teaching:\s*([^(]+?)\s*\(/);return m?m[1].trim():'';}
+function fmtT(min){let h=Math.floor(min/60),m=min%60,ap=h>=12?'PM':'AM';h=h%12;if(!h)h=12;
+  return h+(m?(':'+String(m).padStart(2,'0')):':00')+' '+ap;}
+function ctStamp(){return new Intl.DateTimeFormat('en-US',{timeZone:'America/Chicago',hour:'numeric',minute:'2-digit',hour12:true}).format(new Date());}
+function editing(){ const a=document.activeElement;
+  return a&&(a.tagName==='TEXTAREA'||a.tagName==='INPUT'||a.tagName==='SELECT')&&$('main').contains(a); }
+
+/* ---------- data ---------- */
+async function refresh(force){
+  try{
+    const [s,o]=await Promise.all([
+      fetch(API+'/api/state',{cache:'no-store'}).then(r=>r.json()),
+      fetch(API+'/api/overlay',{cache:'no-store'}).then(r=>r.json())
+    ]);
+    if(s.ok) ST=s; if(o.ok) OV=o.overlays||{};
+    if(!SCHED) SCHED=await fetch(API+'/api/schedule').then(r=>r.json());
+    if(!day&&ST) day=ST.effective.day;
+    if(force||!editing()) render();
+  }catch(e){/* keep last */}
+}
+
+/* ---------- render shell ---------- */
+const TABS=[['dash','Dashboard'],['classes','Classes'],['commands','Commands'],['overlays','Overlays'],['subs','Subs'],['activity','Activity']];
+function renderTabs(){
+  $('tabs').innerHTML='';
+  TABS.forEach(([id,label])=>{
+    const b=document.createElement('button'); b.className='tab'+(tab===id?' act':''); b.textContent=label;
+    b.onclick=()=>{tab=id;render();window.scrollTo(0,0);};
+    $('tabs').appendChild(b);
+  });
+}
+function render(){
+  if(!ST||!SCHED) return;
+  renderTabs();
+  const m=$('main'); m.innerHTML='';
+  ({dash:rDash,classes:rClasses,commands:rCommands,overlays:rOverlays,subs:rSubs,activity:rActivity})[tab](m);
+}
+
+/* ---------- dashboard ---------- */
+function curSection(){
+  const d=SCHED.days.find(x=>x.id===ST.effective.day);
+  return {d,sec:d?d.sections[ST.effective.section]:null};
+}
+function rDash(m){
+  const {sec}=curSection();
+  const g=document.createElement('div'); g.className='grid';
+  const inCls=isClass(sec);
+  g.innerHTML=
+   '<div class="card"><h3>On air now</h3><div class="row">'+
+     (inCls?'<span class="chip live"><span class="d"></span>In class</span>':'<span class="chip off"><span class="d"></span>'+(sec?sec.label:'—')+'</span>')+
+   '</div><div class="big" style="margin-top:6px">'+(sec?sec.label:'—')+'</div>'+
+   (inCls?('<div class="muted">Professor · '+profOf(sec)+'</div>'):'')+'</div>'+
+   '<div class="card"><h3>Central Time</h3><div class="big">'+ST.serverCT.clock+'</div>'+
+   '<div class="row" style="margin-top:8px">'+
+     (ST.control.mode==='auto'?'<span class="chip on"><span class="d"></span>Auto by time</span>'
+       :'<span class="chip man"><span class="d"></span>Manual'+(ST.control.updated_by?(' · '+ST.control.updated_by):'')+'</span>')+
+   '<button class="btn sec sm" id="qauto">↺ Resume auto</button></div></div>'+
+   '<div class="card"><h3>!nextclass says</h3><div class="muted" style="font-size:13px">'+
+     (ST.commands.next.value||'')+' <b style="color:var(--gold-soft)">'+(ST.commands.next.suffix||'')+'</b></div></div>'+
+   '<div class="card"><h3>Subs</h3><div class="big">'+(ST.subs.count==null?'—':ST.subs.count.toLocaleString())+
+     (ST.subs.goal?('<span class="muted" style="font-size:15px"> / '+ST.subs.goal.toLocaleString()+'</span>'):'')+'</div>'+
+   '<div class="muted">'+(ST.subs.source==='twitch'?'auto from Twitch':'via '+(ST.subs.by||'chat / manual'))+(ST.subs.at?(' · '+ST.subs.at):'')+'</div></div>';
+  m.appendChild(g);
+  $('qauto').onclick=()=>api('/api/auto',{}).then(()=>{toast('Everything back to auto');refresh(true);}).catch(e=>toast(e.message,true));
+
+  const s2=document.createElement('div'); s2.className='sect';
+  s2.innerHTML='<h2>Quick links</h2><div class="qk">'+
+    '<a class="btn sec sm" href="./" target="_blank">🎛 Mod Board</a>'+
+    OVS.map(o=>'<a class="btn sec sm" href="'+o.u+'" target="_blank">'+o.t+'</a>').join('')+
+    '<a class="btn sec sm" href="'+API+'" target="_blank">API status</a></div>';
+  m.appendChild(s2);
+
+  const s3=document.createElement('div'); s3.className='sect';
+  s3.innerHTML='<h2>Recent activity</h2>'+
+    (ST.logs||[]).slice(0,7).map(l=>'<div class="actrow2">'+l.at+' · <b>'+(l.by||'—')+'</b> '+l.action+'</div>').join('');
+  m.appendChild(s3);
+}
+
+/* ---------- classes ---------- */
+function rClasses(m){
+  const s=document.createElement('div'); s.className='sect';
+  s.innerHTML='<h2>Schedule control</h2><div class="daychips" id="dch"></div><div class="list" id="dlist"></div>';
+  m.appendChild(s);
+  SCHED.days.forEach(d=>{
+    const b=document.createElement('button'); b.className='dch'+(day===d.id?' act':'');
+    b.textContent=d.id.toUpperCase()+' '+d.date;
+    b.onclick=()=>{day=d.id;render();};
+    $('dch').appendChild(b);
+  });
+  const d=SCHED.days.find(x=>x.id===day);
+  d.sections.forEach((sec,i)=>{
+    const live=ST.effective.day===d.id&&ST.effective.section===i;
+    const mk=ST.marks[d.id+':'+i];
+    const it=document.createElement('div'); it.className='it';
+    it.innerHTML='<span class="tme">'+fmtT(sec.min)+'</span>'+
+      '<span class="lbl2"><b>'+sec.label+'</b><span>'+(isClass(sec)?('Prof · '+profOf(sec)):'')+
+      (mk?(' · ✓ done '+(mk.at||'')+(mk.by?(' by '+mk.by):'')):'')+'</span></span>'+
+      (live?'<span class="chip live"><span class="d"></span>Live</span>':'');
+    const b1=document.createElement('button'); b1.className='btn sm'+(live?' sec':''); b1.textContent=live?'On air':'Set live';
+    b1.disabled=live;
+    b1.onclick=()=>api('/api/setclass',{day:d.id,section:i})
+      .then(()=>{toast(sec.label+' is live for chat + overlays');refresh(true);}).catch(e=>toast(e.message,true));
+    const b2=document.createElement('button'); b2.className='btn sec sm'; b2.textContent=mk?'Unmark':'✓ Done';
+    b2.onclick=()=>api('/api/mark',{day:d.id,section:i,at:ctStamp()})
+      .then(()=>{toast(mk?'Unmarked':'Marked done');refresh(true);}).catch(e=>toast(e.message,true));
+    it.append(b1,b2);
+    $('dlist').appendChild(it);
+  });
+}
+
+/* ---------- commands ---------- */
+function rCommands(m){
+  const s=document.createElement('div'); s.className='sect';
+  s.innerHTML='<h2>Live Fossabot commands</h2><div class="muted" style="margin-bottom:6px">What chat sees right now. Edit and Set — it changes instantly. Auto = follow the schedule.</div>';
+  CMDS.forEach(([f,label])=>{
+    const c=ST.commands[f];
+    const row=document.createElement('div'); row.className='cmdrow';
+    row.innerHTML='<div class="row" style="margin-bottom:7px"><span class="nm">'+label+'</span>'+
+      (c.source==='manual'
+        ?('<span class="src man">✏️ manual'+(c.by?(' by '+c.by):'')+(c.at?(' · '+c.at):'')+'</span>')
+        :'<span class="src">🟢 auto (by time)</span>')+
+      (f==='next'&&c.suffix?('<span class="muted">chat also sees '+c.suffix+'</span>'):'')+'</div>';
+    const ta=document.createElement('textarea'); ta.value=c.value||'';
+    const rr=document.createElement('div'); rr.className='row'; rr.style.marginTop='8px';
+    const b1=document.createElement('button'); b1.className='btn sm'; b1.textContent='Set live';
+    b1.onclick=()=>api('/api/cmd',{field:f,value:ta.value})
+      .then(()=>{toast(label+' updated for chat');refresh(true);}).catch(e=>toast(e.message,true));
+    const b2=document.createElement('button'); b2.className='btn sec sm'; b2.textContent='Auto';
+    b2.onclick=()=>api('/api/cmd',{field:f,value:''})
+      .then(()=>{toast(label+' back to auto');refresh(true);}).catch(e=>toast(e.message,true));
+    rr.append(b1,b2);
+    row.append(ta,rr);
+    s.appendChild(row);
+  });
+  m.appendChild(s);
+}
+
+/* ---------- overlays ---------- */
+function rOverlays(m){
+  const intro=document.createElement('div'); intro.className='sect';
+  intro.innerHTML='<h2>Stream overlays</h2><div class="muted">These control the pages inside TVU Go, live — changes land on stream within ~9 seconds. Use <b>Move &amp; resize</b> to drag an overlay on your phone, then hit 💾 Save live there.</div>';
+  m.appendChild(intro);
+  const g=document.createElement('div'); g.className='ovgrid';
+  OVS.forEach(o=>{
+    const cfg=(OV&&OV[o.id])||{};
+    const hidden=!!cfg.hidden;
+    const card=document.createElement('div'); card.className='ovcard';
+    card.innerHTML='<div class="row"><h3>'+o.t+'</h3>'+
+      (hidden?'<span class="chip off"><span class="d"></span>Hidden</span>':'<span class="chip on"><span class="d"></span>Visible</span>')+
+      '</div><div class="desc">'+o.d+'</div>'+
+      '<div class="cfg">'+((typeof cfg.px==='number')?('position '+cfg.px+'%, '+cfg.py+'% · '+(cfg.scale||1)+'×'):'default position')+
+      (o.al?((cfg.snd?' · sound: '+cfg.snd:' · sound: sparkle')+(typeof cfg.vol==='number'?(' · vol '+cfg.vol):'')):'')+'</div>';
+    const rr=document.createElement('div'); rr.className='row';
+    const mk=(t,fn,sec)=>{const b=document.createElement('button');b.className='btn sm'+(sec?' sec':'');b.textContent=t;b.onclick=fn;rr.appendChild(b);return b;};
+    mk(hidden?'👁 Show':'👁 Hide',()=>api('/api/overlay',{name:o.id,cfg:{hidden:!hidden}})
+      .then(()=>{toast(o.t+(hidden?' shown':' hidden')+' on stream');refresh(true);}).catch(e=>toast(e.message,true)));
+    const ed=document.createElement('a'); ed.className='btn sec sm'; ed.textContent='✥ Move & resize';
+    ed.href=o.u+'?edit=1'; ed.target='_blank'; rr.appendChild(ed);
+    const pv=document.createElement('a'); pv.className='btn sec sm'; pv.textContent='Preview';
+    pv.href=o.u+(o.al?'?test=1':''); pv.target='_blank'; rr.appendChild(pv);
+    mk('Reset pos',()=>api('/api/overlay',{name:o.id,cfg:{px:null,py:null,scale:null}})
+      .then(()=>{toast(o.t+' back to default position');refresh(true);}).catch(e=>toast(e.message,true)),true);
+    card.appendChild(rr);
+    if(o.al){
+      const ax=document.createElement('div'); ax.className='alx';
+      const selL=document.createElement('label'); selL.textContent='Sound';
+      const sel=document.createElement('select');
+      SOUNDS.forEach(s2=>{const op=document.createElement('option');op.value=s2;op.textContent=s2;
+        if((cfg.snd||'sparkle')===s2)op.selected=true;sel.appendChild(op);});
+      selL.appendChild(sel);
+      const volL=document.createElement('label'); volL.textContent='Volume';
+      const vol=document.createElement('input'); vol.type='number'; vol.min='0'; vol.max='2'; vol.step='0.1';
+      vol.value=(typeof cfg.vol==='number')?cfg.vol:1; volL.appendChild(vol);
+      const holdL=document.createElement('label'); holdL.textContent='Seconds on screen';
+      const hold=document.createElement('input'); hold.type='number'; hold.min='3'; hold.max='20';
+      hold.value=(typeof cfg.hold==='number')?cfg.hold:7; holdL.appendChild(hold);
+      const svL=document.createElement('label'); svL.textContent=' ';
+      const sv=document.createElement('button'); sv.className='btn sm'; sv.textContent='💾 Save alert settings';
+      sv.onclick=()=>api('/api/overlay',{name:'alerts',cfg:{snd:sel.value,vol:+vol.value,hold:+hold.value}})
+        .then(()=>{toast('Alert sound settings live');refresh(true);}).catch(e=>toast(e.message,true));
+      svL.appendChild(sv);
+      ax.append(selL,volL,holdL,svL);
+      card.appendChild(ax);
+    }
+    g.appendChild(card);
+  });
+  m.appendChild(g);
+}
+
+/* ---------- subs ---------- */
+function rSubs(m){
+  const s=document.createElement('div'); s.className='sect';
+  const su=ST.subs;
+  s.innerHTML='<h2>Sub count</h2>'+
+    '<div class="big" style="font-size:40px">'+(su.count==null?'—':su.count.toLocaleString())+
+    (su.goal?('<span class="muted" style="font-size:18px"> / goal '+su.goal.toLocaleString()+'</span>'):'')+'</div>'+
+    '<div class="muted" style="margin-bottom:14px">'+
+      (su.source==='twitch'?'🟢 auto from Twitch':'updated by '+(su.by||'chat (!subs)'))+(su.at?(' · '+su.at):'')+
+      ' — chat typing <b>!subs</b> refreshes this automatically.</div>';
+  const rr=document.createElement('div'); rr.className='row';
+  const cin=document.createElement('input'); cin.type='number'; cin.min='0'; cin.placeholder='fix count'; cin.style.width='130px';
+  const gin=document.createElement('input'); gin.type='number'; gin.min='0'; gin.placeholder='goal (0 = off)'; gin.style.width='130px';
+  const b=document.createElement('button'); b.className='btn sm'; b.textContent='Update';
+  b.onclick=()=>{
+    const body={};
+    if(cin.value!=='')body.count=parseInt(cin.value,10);
+    if(gin.value!=='')body.goal=parseInt(gin.value,10);
+    if(body.count===undefined&&body.goal===undefined){toast('Enter a count and/or goal',true);return;}
+    api('/api/subs',body).then(()=>{toast('Subs updated everywhere');cin.value='';gin.value='';refresh(true);})
+      .catch(e=>toast(e.message,true));
+  };
+  rr.append(cin,gin,b);
+  s.appendChild(rr);
+  m.appendChild(s);
+}
+
+/* ---------- activity ---------- */
+function rActivity(m){
+  const s=document.createElement('div'); s.className='sect';
+  s.innerHTML='<h2>Mod activity</h2>'+
+    ((ST.logs&&ST.logs.length)?ST.logs.map(l=>'<div class="actrow2">'+l.at+' · <b>'+(l.by||'—')+'</b> '+l.action+'</div>').join('')
+      :'<div class="muted">No activity yet.</div>');
+  m.appendChild(s);
+}
+
+/* ---------- boot ---------- */
+async function boot(){
+  if(!sess||!sess.token){ $('login').style.display=''; $('app').style.display='none'; return; }
+  const w=await fetch(API+'/api/whoami?token='+encodeURIComponent(sess.token)).then(r=>r.json()).catch(()=>({}));
+  if(!w.ok){ logout(); return; }
+  $('login').style.display='none'; $('app').style.display='';
+  $('who').textContent='🎓 '+sess.user;
+  $('logout').onclick=logout;
+  await refresh(true);
+  setInterval(()=>refresh(false),8000);
+}
+boot();
+</script>
+</body>
+</html>
