@@ -361,7 +361,7 @@ boot();
   const stage=document.createElement('div');
   stage.style.cssText='position:fixed;inset:0;background:#0c0d12;display:flex;align-items:center;justify-content:center;z-index:1';
   const frame=document.createElement('div');
-  frame.style.cssText='position:relative;aspect-ratio:16/9;width:min(100vw - 16px,(100svh - 116px)*16/9);background-color:#161a22;background-image:repeating-linear-gradient(0deg,transparent 0 59px,#ffffff0d 59px 60px),repeating-linear-gradient(90deg,transparent 0 59px,#ffffff0d 59px 60px);border:1px solid #3a3f4c;border-radius:6px;overflow:hidden;box-shadow:0 20px 60px -20px #000';
+  frame.style.cssText='position:relative;aspect-ratio:16/9;width:min(100vw - 16px,(100svh - 116px)*16/9);background-color:#161a22;background-image:repeating-linear-gradient(0deg,transparent 0 59px,#ffffff0d 59px 60px),repeating-linear-gradient(90deg,transparent 0 59px,#ffffff0d 59px 60px);border:1px solid #3a3f4c;border-radius:6px;overflow:visible;box-shadow:0 20px 60px -20px #000';
   const ftag=document.createElement('div');
   ftag.style.cssText='position:absolute;bottom:6px;right:10px;color:#5b6270;font:700 11px Archivo,sans-serif;letter-spacing:1px;pointer-events:none';
   ftag.textContent='STREAM FRAME · 1920 × 1080';
@@ -431,10 +431,19 @@ boot();
   snapBtn('\u21E4',function(){applyPos(0,pcts().py);},'Snap to left edge');
   snapBtn('\u21E5',function(){var e=elPct();applyPos(100-e.w,pcts().py);},'Snap to right edge');
   snapBtn('\u29C9',function(){var e=elPct();applyPos((100-e.w)/2,(100-e.h)/2);},'Center on screen');
+  function nudge(dx,dy){var c=pcts();applyPos(+(c.px+dx).toFixed(2),+(c.py+dy).toFixed(2));}
+  snapBtn('◀',function(){nudge(-1,0);},'Nudge left 1%');
+  snapBtn('▲',function(){nudge(0,-1);},'Nudge up 1% (can go above the top edge)');
+  snapBtn('▼',function(){nudge(0,1);},'Nudge down 1%');
+  snapBtn('▶',function(){nudge(1,0);},'Nudge right 1%');
   function numIn(lbl){var wrap=document.createElement('label');wrap.style.cssText='display:flex;align-items:center;gap:3px;color:#ffd6a0;font-size:11px;font-weight:800';var i=document.createElement('input');i.type='number';i.step='0.5';i.style.cssText='width:68px;font-size:12px;padding:6px;border-radius:5px;border:1px solid #7d2433;background:#2a161d;color:#f6e7c9';wrap.append(document.createTextNode(lbl),i);prow.appendChild(wrap);return i;}
   var xin=numIn('X%'), yin=numIn('Y%');
   function goNum(){var cur=pcts();var px=parseFloat(xin.value),py=parseFloat(yin.value);if(isNaN(px))px=cur.px;if(isNaN(py))py=cur.py;applyPos(px,py);}
   var goBtn=document.createElement('button');goBtn.textContent='Go';goBtn.style.cssText='background:#ffb320;color:#160a24;border:none;border-radius:6px;height:34px;padding:0 14px;font-weight:800;cursor:pointer';goBtn.onclick=goNum;prow.appendChild(goBtn);
+  function curPos(){var p=pcts();return{px:p.px,py:p.py,scale:+s.toFixed(3),w:el.style.width?Math.round(parseFloat(el.style.width)):null,h:el.style.height?Math.round(parseFloat(el.style.height)):null};}
+  function cpBtn(txt,title,fn){var b=document.createElement('button');b.textContent=txt;b.title=title;b.style.cssText='background:#33161f;color:#ffb320;border:1px solid #7d2433;border-radius:6px;height:34px;padding:0 12px;font-weight:800;font-size:12px;cursor:pointer';b.onclick=fn;prow.appendChild(b);return b;}
+  var copyB=cpBtn('Copy pos','Copy this exact position + size',function(){var j=JSON.stringify(curPos());try{localStorage.setItem('su_pos_clip',j);}catch(e){}if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(j);copyB.textContent='Copied \u2713';setTimeout(function(){copyB.textContent='Copy pos';},1200);});
+  cpBtn('Paste pos','Apply a copied position + size',function(){var j=null;try{j=localStorage.getItem('su_pos_clip');}catch(e){}if(!j){alert('Nothing copied yet. Press Copy pos first (on any overlay).');return;}var o;try{o=JSON.parse(j);}catch(e){return;}if(typeof o.scale==='number')s=o.scale;el.style.width=(typeof o.w==='number')?o.w+'px':'';el.style.height=(typeof o.h==='number')?o.h+'px':'';if(typeof o.px==='number'&&typeof o.py==='number')place(o.px,o.py);refresh();});
   xin.addEventListener('keydown',function(e){if(e.key==='Enter')goNum();});
   yin.addEventListener('keydown',function(e){if(e.key==='Enter')goNum();});
   tb.appendChild(prow);
