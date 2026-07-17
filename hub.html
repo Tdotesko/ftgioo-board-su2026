@@ -501,6 +501,25 @@ function rOverlays(m){
   const intro=document.createElement('div'); intro.className='sect';
   intro.innerHTML='<h2>Stream overlays</h2><div class="muted">These control the pages inside TVU Go, live; changes land on stream within ~9 seconds. <b>Move &amp; resize</b> opens the drag editor; hit 💾 Save live there.</div>';
   m.appendChild(intro);
+
+  // emergency controls: calibration + panic switches for every overlay at once
+  const em=document.createElement('div'); em.className='sect';
+  em.innerHTML='<h2>Emergency controls</h2><div class="muted" style="margin-bottom:10px"><b>Calibration</b> paints a pink border on every overlay. On the stream it must touch all 4 edges; if it floats or sits off-center, that layer was moved or resized inside TVU Go itself and needs its layer reset to full screen there. Our saved positions are untouched either way.</div>';
+  const er=document.createElement('div'); er.className='row';
+  function allPost(cfg,msg){
+    Promise.all(OVS.map(o=>api('/api/overlay',{name:o.id,cfg:cfg})))
+      .then(()=>{toast(msg);refresh(true);})
+      .catch(e=>{if(e.message!=='Session expired')toast(e.message,true);});
+  }
+  const mkE=(t,fn,sec)=>{const b=document.createElement('button');b.className='btn sm'+(sec?' sec':'');b.textContent=t;b.onclick=fn;er.appendChild(b);};
+  mkE('📐 Calibration ON',()=>allPost({calib:true},'Calibration frames showing on all overlays'));
+  mkE('Calibration OFF',()=>allPost({calib:null},'Calibration frames removed'),true);
+  mkE('🚨 Hide ALL overlays',()=>allPost({hidden:true},'All overlays hidden on stream'));
+  mkE('Show ALL overlays',()=>allPost({hidden:false},'All overlays visible again'),true);
+  mkE('↺ Reset ALL positions',()=>allPost({px:null,py:null,scale:null},'All overlays back to default positions'),true);
+  em.appendChild(er);
+  m.appendChild(em);
+
   const g=document.createElement('div'); g.className='ovgrid';
   OVS.forEach(o=>{
     const cfg=(OV&&OV[o.id])||{};
@@ -509,7 +528,7 @@ function rOverlays(m){
     card.innerHTML='<div class="row"><h3>'+o.t+'</h3>'+
       (hidden?'<span class="chip off"><span class="d"></span>Hidden</span>':'<span class="chip on"><span class="d"></span>Visible</span>')+
       '</div><div class="desc">'+o.d+'</div>'+
-      '<div class="cfg">'+((typeof cfg.px==='number')?('position '+cfg.px+'%, '+cfg.py+'% · '+(cfg.scale||1)+'×'):'default position')+
+      '<div class="cfg">'+((typeof cfg.px==='number')?('position '+cfg.px+'%, '+cfg.py+'% · '+(cfg.scale||1)+'×'):'default position')+(cfg.calib?' · 📐 CALIBRATING':'')+
       (o.al?((cfg.snd?' · sound: '+cfg.snd:' · sound: sparkle')+(typeof cfg.vol==='number'?(' · vol '+cfg.vol):'')):'')+'</div>';
     const rr=document.createElement('div'); rr.className='row';
     const mk=(t,fn,sec)=>{const b=document.createElement('button');b.className='btn sm'+(sec?' sec':'');b.textContent=t;b.onclick=fn;rr.appendChild(b);return b;};

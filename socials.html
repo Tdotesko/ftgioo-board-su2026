@@ -237,8 +237,18 @@ async function ovPost(cfg){
   if(!r.ok||!j.ok) throw new Error((j&&j.error)||('HTTP '+r.status));
   return j;
 }
+let suCalEl=null;
+function suCalib(on){
+  if(on && !suCalEl){
+    suCalEl=document.createElement('div');
+    suCalEl.style.cssText='position:fixed;inset:0;pointer-events:none;z-index:998;border:10px solid #ff2d95;box-sizing:border-box';
+    suCalEl.innerHTML='<div style="position:absolute;top:0;left:0;width:46px;height:46px;background:#ff2d95"></div><div style="position:absolute;top:0;right:0;width:46px;height:46px;background:#ff2d95"></div><div style="position:absolute;bottom:0;left:0;width:46px;height:46px;background:#ff2d95"></div><div style="position:absolute;bottom:0;right:0;width:46px;height:46px;background:#ff2d95"></div><div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:#14060b;border:3px solid #ff2d95;border-radius:14px;padding:18px 26px;font-family:Archivo,sans-serif;color:#fff;font-weight:800;font-size:20px;text-align:center;max-width:70%">CALIBRATION MODE<br><span style="font-size:15px;font-weight:700;color:#ffd6ec">The pink border must touch all 4 edges of the stream.<br>If it does not: in TVU Go, reset THIS overlay layer to full screen (no move, no resize).<br>Turn calibration off in the hub when done.</span></div>';
+    document.body.appendChild(suCalEl);
+  } else if(!on && suCalEl){ suCalEl.remove(); suCalEl=null; }
+}
 function applyOvCfg(){
   if(Q.get('edit')==='1'||!ovCfg) return;
+  suCalib(!!ovCfg.calib);
   const el=document.getElementById('bar');
   el.style.visibility=ovCfg.hidden?'hidden':'';
   if(typeof ovCfg.px==='number'&&typeof ovCfg.py==='number'){
