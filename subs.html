@@ -210,6 +210,25 @@ poll(); setInterval(poll,15000);
   document.getElementById('eHide').onclick=async()=>{const b=document.getElementById('eHide');
     try{hiddenNow=!hiddenNow;await ovPost({hidden:hiddenNow});b.textContent=hiddenNow?'👁 Show':'👁 Hide';}
     catch(err){hiddenNow=!hiddenNow;}};
+  // ---- precise placement: snap-to-edge + numeric X/Y (accepts negatives, go past edges) ----
+  function elPct(){var r=el.getBoundingClientRect(),f=fw();return{w:r.width/f.width*100,h:r.height/f.height*100};}
+  function applyPos(px,py){place(px,py);refresh();}
+  var prow=document.createElement('div');
+  prow.style.cssText='width:100%;display:flex;gap:5px;justify-content:center;align-items:center;flex-wrap:wrap;margin-top:7px';
+  function snapBtn(txt,fn,title){var b=document.createElement('button');b.textContent=txt;b.title=title;b.style.cssText='background:#33161f;color:#ffb320;border:1px solid #7d2433;border-radius:6px;min-width:36px;height:34px;font-size:16px;font-weight:800;cursor:pointer';b.onclick=fn;prow.appendChild(b);}
+  snapBtn('\u2B12',function(){applyPos(0,0);},'Snap to top-left corner');
+  snapBtn('\u2912',function(){applyPos(pcts().px,0);},'Snap to top edge');
+  snapBtn('\u2913',function(){var e=elPct();applyPos(pcts().px,100-e.h);},'Snap to bottom edge');
+  snapBtn('\u21E4',function(){applyPos(0,pcts().py);},'Snap to left edge');
+  snapBtn('\u21E5',function(){var e=elPct();applyPos(100-e.w,pcts().py);},'Snap to right edge');
+  snapBtn('\u29C9',function(){var e=elPct();applyPos((100-e.w)/2,(100-e.h)/2);},'Center on screen');
+  function numIn(lbl){var wrap=document.createElement('label');wrap.style.cssText='display:flex;align-items:center;gap:3px;color:#ffd6a0;font-size:11px;font-weight:800';var i=document.createElement('input');i.type='number';i.step='0.5';i.style.cssText='width:68px;font-size:12px;padding:6px;border-radius:5px;border:1px solid #7d2433;background:#2a161d;color:#f6e7c9';wrap.append(document.createTextNode(lbl),i);prow.appendChild(wrap);return i;}
+  var xin=numIn('X%'), yin=numIn('Y%');
+  function goNum(){var cur=pcts();var px=parseFloat(xin.value),py=parseFloat(yin.value);if(isNaN(px))px=cur.px;if(isNaN(py))py=cur.py;applyPos(px,py);}
+  var goBtn=document.createElement('button');goBtn.textContent='Go';goBtn.style.cssText='background:#ffb320;color:#160a24;border:none;border-radius:6px;height:34px;padding:0 14px;font-weight:800;cursor:pointer';goBtn.onclick=goNum;prow.appendChild(goBtn);
+  xin.addEventListener('keydown',function(e){if(e.key==='Enter')goNum();});
+  yin.addEventListener('keydown',function(e){if(e.key==='Enter')goNum();});
+  tb.appendChild(prow);
   el.style.cursor='move'; el.style.touchAction='none';
 
   // ---- selection box, 8 handles: SIDES stretch width/height, CORNERS scale ----
