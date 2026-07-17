@@ -524,7 +524,7 @@ function rOverlays(m){
   mkE('Calibration OFF',()=>allPost({calib:null},'Calibration frames removed'),true);
   mkE('🚨 Hide ALL overlays',()=>allPost({hidden:true},'All overlays hidden on stream'));
   mkE('Show ALL overlays',()=>allPost({hidden:false},'All overlays visible again'),true);
-  mkE('↺ Reset ALL positions',()=>allPost({px:null,py:null,scale:null},'All overlays back to default positions'),true);
+  mkE('↺ Reset ALL positions',()=>allPost({px:null,py:null,scale:null,w:null,h:null},'All overlays back to default positions'),true);
   em.appendChild(er);
   m.appendChild(em);
 
@@ -546,7 +546,7 @@ function rOverlays(m){
     ed.href=o.u+'?edit=1'; ed.target='_blank'; rr.appendChild(ed);
     const pv=document.createElement('a'); pv.className='btn sec sm'; pv.textContent='Preview';
     pv.href=o.u+(o.al?'?test=1':''); pv.target='_blank'; rr.appendChild(pv);
-    mk('Reset pos',()=>api('/api/overlay',{name:o.id,cfg:{px:null,py:null,scale:null}})
+    mk('Reset pos',()=>api('/api/overlay',{name:o.id,cfg:{px:null,py:null,scale:null,w:null,h:null}})
       .then(()=>{toast(o.t+' back to default position');refresh(true);}).catch(e=>{if(e.message!=='Session expired')toast(e.message,true);}),true);
     card.appendChild(rr);
     // live background transparency
