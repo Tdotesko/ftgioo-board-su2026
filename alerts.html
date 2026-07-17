@@ -365,12 +365,19 @@ if(Q.get('test')==='1'){
 
 /* ---------- live remote settings ---------- */
 let ovStyle=null;
+const CAL_INFO={campus:{c:'#ff2d95',n:'CAMPUS FEED',i:0},socials:{c:'#12e0ff',n:'SOCIALS BAR',i:1},subs:{c:'#8dff3a',n:'SUB COUNTER',i:2},alerts:{c:'#ff9d00',n:'ALERTS',i:3}};
 let suCalEl=null;
 function suCalib(on){
   if(on && !suCalEl){
+    const ci=CAL_INFO[OVKEY]||{c:'#ff2d95',n:(typeof OVKEY==='string'?OVKEY.toUpperCase():'OVERLAY'),i:0};
+    const ins=ci.i*9;
     suCalEl=document.createElement('div');
-    suCalEl.style.cssText='position:fixed;inset:0;pointer-events:none;z-index:998;border:10px solid #ff2d95;box-sizing:border-box';
-    suCalEl.innerHTML='<div style="position:absolute;top:0;left:0;width:46px;height:46px;background:#ff2d95"></div><div style="position:absolute;top:0;right:0;width:46px;height:46px;background:#ff2d95"></div><div style="position:absolute;bottom:0;left:0;width:46px;height:46px;background:#ff2d95"></div><div style="position:absolute;bottom:0;right:0;width:46px;height:46px;background:#ff2d95"></div><div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:#14060b;border:3px solid #ff2d95;border-radius:14px;padding:18px 26px;font-family:Archivo,sans-serif;color:#fff;font-weight:800;font-size:20px;text-align:center;max-width:70%">CALIBRATION MODE<br><span style="font-size:15px;font-weight:700;color:#ffd6ec">The pink border must touch all 4 edges of the stream.<br>If it does not: in TVU Go, reset THIS overlay layer to full screen (no move, no resize).<br>Turn calibration off in the hub when done.</span></div>';
+    suCalEl.style.cssText='position:fixed;left:'+ins+'px;top:'+ins+'px;right:'+ins+'px;bottom:'+ins+'px;pointer-events:none;z-index:2147483000;border:6px solid '+ci.c+';box-sizing:border-box;border-radius:2px';
+    const tick=p=>'<div style="position:absolute;'+p+';width:42px;height:42px;background:'+ci.c+'"></div>';
+    suCalEl.innerHTML=tick('top:-6px;left:-6px')+tick('top:-6px;right:-6px')+tick('bottom:-6px;left:-6px')+tick('bottom:-6px;right:-6px')+
+      '<div style="position:fixed;left:14px;top:'+(14+ci.i*42)+'px;display:flex;align-items:center;gap:10px;background:#0a0406e6;border:2px solid '+ci.c+';border-radius:11px;padding:9px 14px;font-family:Archivo,-apple-system,sans-serif;font-weight:800;font-size:15px;color:#fff;white-space:nowrap;text-shadow:0 1px 2px #000"><span style="width:16px;height:16px;border-radius:4px;background:'+ci.c+';box-shadow:0 0 0 2px #0007"></span>'+ci.n+' — its frame must touch all 4 screen edges. If not, reset THIS layer full-screen in TVU Go.</div>';
+    suCalEl.setAttribute('data-sucalib',ci.n);
+    suCalEl.dataset.calColor=ci.c;
     document.body.appendChild(suCalEl);
   } else if(!on && suCalEl){ suCalEl.remove(); suCalEl=null; }
 }

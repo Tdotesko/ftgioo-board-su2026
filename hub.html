@@ -558,7 +558,7 @@ function rOverlays(m){
 
   // emergency controls: calibration + panic switches for every overlay at once
   const em=document.createElement('div'); em.className='sect';
-  em.innerHTML='<h2>Emergency controls</h2><div class="muted" style="margin-bottom:10px"><b>Calibration</b> paints a pink border on every overlay. On the stream it must touch all 4 edges; if it floats or sits off-center, that layer was moved or resized inside TVU Go itself and needs its layer reset to full screen there. Our saved positions are untouched either way.</div>';
+  em.innerHTML='<h2>Emergency controls</h2><div class="muted" style="margin-bottom:10px"><b>Calibration</b> draws a labeled colored frame on each overlay (Campus=pink, Socials=cyan, Subs=green, Alerts=orange). On the stream every frame must touch all 4 screen edges. Any frame that floats, shrinks, or sits off-center = that named overlay was moved or resized inside TVU Go and needs its layer reset to full screen there. Our saved positions are untouched.</div>';
   const er=document.createElement('div'); er.className='row';
   function allPost(cfg,msg){
     Promise.all(OVS.map(o=>api('/api/overlay',{name:o.id,cfg:cfg})))
