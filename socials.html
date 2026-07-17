@@ -126,6 +126,7 @@ PLATFORMS.forEach(p=>{
   frame.appendChild(ftag);
   stage.appendChild(frame);
   document.body.appendChild(stage);
+  stage.style.touchAction='none';
   frame.appendChild(el);
   el.style.position='absolute'; el.style.zIndex='2'; el.style.visibility='';
   const fw=()=>frame.getBoundingClientRect();
@@ -169,6 +170,21 @@ PLATFORMS.forEach(p=>{
     try{hiddenNow=!hiddenNow;await ovPost({hidden:hiddenNow});b.textContent=hiddenNow?'👁 Show':'👁 Hide';}
     catch(err){hiddenNow=!hiddenNow;}};
   el.style.cursor='move'; el.style.touchAction='none';
+  // corner grip: drag THIS to resize; drag the card body to move
+  const grip=document.createElement('div');
+  grip.style.cssText='position:absolute;right:-16px;bottom:-16px;width:30px;height:30px;background:#ffb320;border:3px solid #8f1622;border-radius:8px;cursor:nwse-resize;touch-action:none;z-index:3;box-shadow:0 2px 8px rgba(0,0,0,.5)';
+  grip.title='Drag to resize';
+  el.appendChild(grip);
+  let gs=null;
+  grip.addEventListener('pointerdown',e=>{ e.stopPropagation(); e.preventDefault();
+    const r0=el.getBoundingClientRect();
+    gs={x:e.clientX,w:r0.width,s0:s};
+    grip.setPointerCapture(e.pointerId); });
+  grip.addEventListener('pointermove',e=>{ if(!gs) return;
+    const nw=Math.max(60,gs.w+(e.clientX-gs.x));
+    s=Math.max(0.4,Math.min(3,+(gs.s0*nw/gs.w).toFixed(3)));
+    refresh(); });
+  grip.addEventListener('pointerup',()=>{gs=null;refresh();});
   let moved=false;
   let drag=null;
   el.addEventListener('pointerdown',e=>{moved=true;const r=el.getBoundingClientRect();
