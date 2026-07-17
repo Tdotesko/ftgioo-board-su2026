@@ -169,14 +169,26 @@ PLATFORMS.forEach(p=>{
     try{hiddenNow=!hiddenNow;await ovPost({hidden:hiddenNow});b.textContent=hiddenNow?'👁 Show':'👁 Hide';}
     catch(err){hiddenNow=!hiddenNow;}};
   el.style.cursor='move'; el.style.touchAction='none';
+  let moved=false;
   let drag=null;
-  el.addEventListener('pointerdown',e=>{const r=el.getBoundingClientRect();
+  el.addEventListener('pointerdown',e=>{moved=true;const r=el.getBoundingClientRect();
     drag={dx:e.clientX-r.left,dy:e.clientY-r.top}; el.setPointerCapture(e.pointerId); e.preventDefault();});
   el.addEventListener('pointermove',e=>{ if(!drag)return; const f=fw();
     el.style.left=(e.clientX-drag.dx-f.left)+'px'; el.style.top=(e.clientY-drag.dy-f.top)+'px'; refresh();});
   el.addEventListener('pointerup',()=>{drag=null;refresh();});
   addEventListener('resize',()=>{ const p=pcts(); place(p.px,p.py); refresh(); });
   refresh();
+  // open the editor AT the live saved position so it matches the stream
+  fetch('https://ftgioo-su2026-api-production.up.railway.app/api/overlay',{cache:'no-store'})
+    .then(function(r){return r.json();})
+    .then(function(j){
+      if(!j.ok||moved||drag) return;
+      var c=(j.overlays&&j.overlays['socials'])||{};
+      if(typeof c.scale==='number') s=c.scale;
+      if(typeof c.px==='number'&&typeof c.py==='number') place(c.px,c.py);
+      else el.style.transform='scale('+(s*fscale())+')';
+      refresh();
+    }).catch(function(){});
 })();
 
 /* ---------- live remote settings (Save live in ?edit=1 controls the on-air overlay) ---------- */
