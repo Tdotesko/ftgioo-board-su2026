@@ -154,6 +154,24 @@
   .it.liverow{background:#33161f;border:1px solid #ffb32044;border-radius:11px;padding:11px 10px;margin-top:6px}
   .it.liverow+.mx{border-top:none}
   .mx{padding:2px 0 12px}
+  .setintro{color:var(--dim);font-size:13.5px;line-height:1.6;margin-bottom:14px}
+  .lnk{display:flex;align-items:center;gap:12px;padding:12px 0;border-top:1px solid var(--line);flex-wrap:wrap}
+  .lnk:first-of-type{border-top:none}
+  .lnk .ln{flex:1;min-width:180px}
+  .lnk .ln b{display:block;font-size:14px;margin-bottom:3px}
+  .lnk .ln code{font-family:ui-monospace,Consolas,monospace;font-size:11.5px;color:var(--gold-soft);
+    word-break:break-all;background:var(--panel2);border:1px solid var(--line);border-radius:6px;
+    padding:5px 8px;display:inline-block;line-height:1.5}
+  .steps{counter-reset:st;display:flex;flex-direction:column;gap:11px}
+  .steps .st{display:flex;gap:12px;align-items:flex-start;font-size:14px;line-height:1.55;color:var(--cream)}
+  .steps .st::before{counter-increment:st;content:counter(st);flex-shrink:0;width:26px;height:26px;
+    border-radius:50%;background:var(--gold);color:#2a1108;font-weight:800;font-size:13px;
+    display:flex;align-items:center;justify-content:center;margin-top:1px}
+  .steps .st code,.setbox code{font-family:ui-monospace,Consolas,monospace;font-size:12.5px;
+    background:var(--panel2);border:1px solid var(--line);border-radius:5px;padding:2px 6px;color:var(--gold-soft)}
+  .setbox{font-size:14px;line-height:1.7;color:var(--cream)}
+  .setbox b{color:var(--gold-soft)}
+  .setbox.gold{border-color:#ffb32066}
   .actrow2{font-size:12.5px;color:var(--dim);padding:7px 0;border-top:1px solid var(--line)}
   .actrow2:first-child{border-top:none}
   .actrow2 b{color:var(--cream)}
@@ -311,7 +329,7 @@ async function refresh(force){
 }
 
 /* ---------- shell ---------- */
-const TABS=[['dash','Dashboard'],['overlays','Overlays'],['help','Setup'],['run','Auto Commands'],['subs','Subs'],['activity','Activity']];
+const TABS=[['dash','Dashboard'],['help','Setup'],['overlays','Overlays'],['run','Auto Commands'],['subs','Subs'],['activity','Activity']];
 function renderTabs(){
   $('tabs').innerHTML='';
   TABS.forEach(([id,label])=>{
@@ -673,25 +691,27 @@ function rSubs(m){
 function rSetup(m){
   const base=location.href.replace(/[^/]*$/,'');
   const links=[
-    ['Campus Feed (main all-in-one)','campus.html'],
-    ['Socials Bar','socials.html'],
-    ['Sub Counter','subs.html'],
-    ['Alerts','alerts.html']
+    ['Campus Feed','The main all in one overlay','campus.html'],
+    ['Socials Bar','Twitch, YouTube, IG, TikTok, X','socials.html'],
+    ['Sub Counter','Live sub count with goal','subs.html'],
+    ['Alerts','Sub, gift, and raid pop ups','alerts.html']
   ];
   function copyBtn(url){
-    const b=document.createElement('button'); b.className='btn sec sm'; b.textContent='Copy link';
+    const b=document.createElement('button'); b.className='btn sm'; b.textContent='Copy link';
     b.onclick=()=>{ const t=base+url;
       if(navigator.clipboard&&navigator.clipboard.writeText) navigator.clipboard.writeText(t);
       else { const x=document.createElement('textarea'); x.value=t; document.body.appendChild(x); x.select(); try{document.execCommand('copy');}catch(e){} document.body.removeChild(x); }
-      b.textContent='Copied ✓'; setTimeout(()=>b.textContent='Copy link',1200); };
+      b.textContent='Copied ✓'; setTimeout(()=>b.textContent='Copy link',1300); };
     return b;
   }
+  function steps(arr){ return '<div class="steps">'+arr.map(t=>'<div class="st">'+t+'</div>').join('')+'</div>'; }
+
   // overlay links
   const s1=document.createElement('div'); s1.className='sect';
-  s1.innerHTML='<h2>Overlay links</h2><div class="muted" style="margin-bottom:8px">Add each of these as a browser/web source in OBS or TVU Go.</div>';
-  links.forEach(([name,file])=>{
-    const row=document.createElement('div'); row.className='it';
-    row.innerHTML='<span class="lbl2"><b>'+name+'</b><span style="font-family:ui-monospace,Consolas,monospace;font-size:11.5px;word-break:break-all">'+base+file+'</span></span>';
+  s1.innerHTML='<h2>Overlay links</h2><div class="setintro">Add each of these as a browser or web source in OBS or TVU Go. Tap Copy link, then paste it into your streaming software.</div>';
+  links.forEach(([name,desc,file])=>{
+    const row=document.createElement('div'); row.className='lnk';
+    row.innerHTML='<div class="ln"><b>'+name+'</b><span class="muted" style="display:block;margin-bottom:5px">'+desc+'</span><code>'+base+file+'</code></div>';
     row.appendChild(copyBtn(file));
     s1.appendChild(row);
   });
@@ -699,44 +719,43 @@ function rSetup(m){
 
   // OBS
   const s2=document.createElement('div'); s2.className='sect';
-  s2.innerHTML='<h2>Add to OBS (recommended)</h2><div class="list">'+
-    ['Sources → + → <b>Browser</b>.',
-     'Paste an overlay link above into the URL field.',
-     'Set <b>Width 1920</b>, <b>Height 1080</b>.',
-     'For the Alerts source, tick <b>Control audio via OBS</b> so alert sounds come through your mix.',
-     'Click OK. Transparency works automatically — no green screen needed.',
-     'Repeat for each overlay. Then position everything from the <b>Overlays</b> tab here.'
-    ].map((t,i)=>'<div class="actrow2"><b style="color:var(--gold)">'+(i+1)+'.</b> '+t+'</div>').join('')+'</div>';
+  s2.innerHTML='<h2>Add to OBS (recommended)</h2>'+steps([
+    'In Sources, click the plus and choose <b>Browser</b>.',
+    'Paste an overlay link from above into the URL field.',
+    'Set <b>Width</b> to <code>1920</code> and <b>Height</b> to <code>1080</code>.',
+    'For the Alerts source only, tick <b>Control audio via OBS</b> so alert sounds play in your mix.',
+    'Click OK. The transparent background works automatically, no green screen needed.',
+    'Repeat for each overlay, then position everything from the <b>Overlays</b> tab.'
+  ]);
   m.appendChild(s2);
 
   // TVU Go
   const s3=document.createElement('div'); s3.className='sect';
-  s3.innerHTML='<h2>Add to TVU Go</h2><div class="list">'+
-    ['Add a new web / browser overlay.',
-     'Paste an overlay link above as the URL.',
-     'If TVU does not show transparency, add <code>?bg=00ff00</code> to the end of the link and chroma-key the green.',
-     'Leave the layer <b>full screen</b> — do not move or resize it inside TVU.',
-     'Repeat for each overlay, then position from the <b>Overlays</b> tab here.'
-    ].map((t,i)=>'<div class="actrow2"><b style="color:var(--gold)">'+(i+1)+'.</b> '+t+'</div>').join('')+'</div>';
+  s3.innerHTML='<h2>Add to TVU Go</h2>'+steps([
+    'Add a new web or browser overlay.',
+    'Paste an overlay link from above as the URL.',
+    'If TVU does not show transparency, add <code>?bg=00ff00</code> to the end of the link and chroma key out the green.',
+    'Leave the layer at full screen. Do not move or resize it inside TVU.',
+    'Repeat for each overlay, then position everything from the <b>Overlays</b> tab.'
+  ]);
   m.appendChild(s3);
 
   // golden rule
   const s4=document.createElement('div'); s4.className='sect';
-  s4.style.borderColor='#ffb32066';
-  s4.innerHTML='<h2>⭐ The golden rule</h2><div class="muted" style="font-size:13.5px;line-height:1.6">'+
-    'In OBS/TVU, keep every overlay source <b>full 1920×1080 and never drag or resize it there</b>. '+
-    'Do ALL moving, resizing, hiding, transparency and styling from the <b>Overlays</b> tab in this hub. '+
-    'That keeps the editor 100% accurate to the stream and lets any of the 3 of you adjust things live from a phone. '+
-    'If something looks off, use <b>Overlays → 📐 Calibration ON</b> to find which layer got moved in the app.</div>';
+  s4.innerHTML='<h2>The golden rule</h2><div class="setbox gold">'+
+    'In OBS or TVU, keep every overlay source at <b>full 1920 by 1080 and never drag or resize it there</b>. '+
+    'Do all moving, sizing, hiding, transparency and styling from the <b>Overlays</b> tab in this hub. '+
+    'That keeps the editor perfectly accurate to the stream and lets any of the three of you adjust things live from a phone. '+
+    'If something looks off, open <b>Overlays</b>, tap <b>Calibration ON</b>, and check which layer is not hugging all four screen edges.</div>';
   m.appendChild(s4);
 
   // updates / reload
   const s5=document.createElement('div'); s5.className='sect';
-  s5.innerHTML='<h2>Applying updates</h2><div class="muted" style="font-size:13px;line-height:1.6">'+
-    '<b>Position, size, scale, hide/show, transparency</b> apply live instantly. '+
-    '<b>New features, fonts, Live Style/CSS</b> need the overlay to reload once. '+
-    'Use <b>Overlays → Emergency controls → 🔄 Reload all overlays</b> to refresh every source remotely (no touching OBS/TVU). '+
-    'One-time note: sources added before today must be reloaded manually in OBS/TVU once to gain the remote-reload ability.</div>';
+  s5.innerHTML='<h2>Applying updates</h2><div class="setbox">'+
+    '<b>Position, size, scale, hide, show and transparency</b> apply live right away. '+
+    '<b>Fonts, colors and Live Style changes</b> take effect after the overlay reloads once. '+
+    'To reload every source remotely without touching OBS or TVU, open <b>Overlays</b> and tap <b>Reload all overlays</b> under Emergency controls. '+
+    'Sources that were added before today need one manual reload in OBS or TVU first to gain that remote reload ability.</div>';
   m.appendChild(s5);
 }
 
