@@ -87,20 +87,20 @@ PLATFORMS.forEach(p=>{
 (function(){
   const bg=Q.get('bg');
   if(bg) document.body.style.background=/^[0-9a-fA-F]{6}$/.test(bg)?('#'+bg):bg;
-  const pos=(Q.get('pos')||'bc').toLowerCase();
+  const pos=(Q.get('pos')||'center').toLowerCase();
   const s=parseFloat(Q.get('scale')||'1')||1;
   const off='14px';
-  const P={bc:{bottom:off,left:'50%',o:'bottom center',x:true},
+  const P={center:{top:'50%',left:'50%',o:'center',cxy:true},bc:{bottom:off,left:'50%',o:'bottom center',x:true},
            bl:{bottom:off,left:off,o:'bottom left'},
            br:{bottom:off,right:off,o:'bottom right'},
            tl:{top:off,left:off,o:'top left'},
            tr:{top:off,right:off,o:'top right'},
            tc:{top:off,left:'50%',o:'top center',x:true}};
-  const p=P[pos]||P.bc;
+  const p=P[pos]||P.center;
   bar.style.top=bar.style.left=bar.style.right=bar.style.bottom='';
   ['top','left','right','bottom'].forEach(k=>{if(p[k])bar.style[k]=p[k];});
   bar.style.transformOrigin=p.o;
-  bar.style.transform=(p.x?'translateX(-50%) ':'')+(s!==1?('scale('+s+')'):'');
+  bar.style.transform=(p.cxy?'translate(-50%,-50%) ':(p.x?'translateX(-50%) ':''))+(s!==1?('scale('+s+')'):'');
 })();
 
 // Free positioning (?px=..&py=.. percent of screen) + drag/resize editor (?edit=1)
@@ -376,6 +376,11 @@ function applyOvCfg(){
     el.style.transformOrigin='top left';
     const sc=(typeof ovCfg.scale==='number')?ovCfg.scale:1;
     el.style.transform=sc!==1?('scale('+sc+')'):'';
+  }else{
+    el.style.left='50%'; el.style.top='50%'; el.style.right='';el.style.bottom='';
+    el.style.transformOrigin='center';
+    const sc2=(typeof ovCfg.scale==='number')?ovCfg.scale:1;
+    el.style.transform='translate(-50%,-50%)'+(sc2!==1?(' scale('+sc2+')'):'');
   }
 }
 async function pollOvCfg(){
