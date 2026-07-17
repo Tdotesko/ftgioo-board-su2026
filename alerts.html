@@ -110,12 +110,31 @@ function burst(n,dur){
 let SND=(Q.get('snd')||'sparkle').toLowerCase();
 const VOL=Math.max(0,Math.min(2,parseFloat(Q.get('vol')||'1')||1));
 const SNDURL=Q.get('sndurl')||'';
+const API='https://ftgioo-su2026-api-production.up.railway.app';
+const OVKEY='alerts';
+let ovCfg=null, VOLR=VOL, volTouched=false, sndTouched=false;
+function EVOL(){ return volTouched?VOLR:((ovCfg&&typeof ovCfg.vol==='number')?ovCfg.vol:VOL); }
+function ESND(){ return (!sndTouched&&ovCfg&&ovCfg.snd&&SYNTHS[ovCfg.snd])?ovCfg.snd:SND; }
+function EHOLD(){ return (ovCfg&&typeof ovCfg.hold==='number')?ovCfg.hold*1000:HOLD; }
+function modkey(){
+  let k=localStorage.getItem('ftgioo_ovkey');
+  if(!k){ k=prompt('Mod key (to control live overlays):')||''; if(k) localStorage.setItem('ftgioo_ovkey',k); }
+  return k;
+}
+async function ovPost(cfg){
+  const r=await fetch(API+'/api/overlay',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({name:OVKEY,cfg,by:'editor',key:modkey()})});
+  const j=await r.json().catch(()=>({}));
+  if(!r.ok||!j.ok){ if(r.status===403) localStorage.removeItem('ftgioo_ovkey');
+    throw new Error((j&&j.error)||('HTTP '+r.status)); }
+  return j;
+}
 function tone(a,t,f,type,peak,dur){
   const o=a.createOscillator(),g=a.createGain();
   o.type=type; o.frequency.value=f;
   o.connect(g); g.connect(a.destination);
   g.gain.setValueAtTime(0.0001,t);
-  g.gain.exponentialRampToValueAtTime(Math.max(0.001,peak*VOL),t+0.02);
+  g.gain.exponentialRampToValueAtTime(Math.max(0.001,peak*EVOL()),t+0.02);
   g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
   o.start(t); o.stop(t+dur+0.1);
 }
@@ -137,10 +156,10 @@ const SYNTHS={
 };
 function playSound(big){
   if(!SOUND) return;
-  if(SNDURL){ try{ const au=new Audio(SNDURL); au.volume=Math.min(1,VOL); au.play(); }catch(e){} return; }
+  if(SNDURL){ try{ const au=new Audio(SNDURL); au.volume=Math.min(1,EVOL()); au.play(); }catch(e){} return; }
   try{
     const a=new (window.AudioContext||window.webkitAudioContext)();
-    (SYNTHS[SND]||SYNTHS.chime)(a,a.currentTime,!!big);
+    (SYNTHS[ESND()]||SYNTHS.sparkle)(a,a.currentTime,!!big);
   }catch(e){}
 }
 
@@ -151,6 +170,7 @@ function pump(){
   if(showing||!queue.length) return;
   showing=true;
   const a=queue.shift();
+  if(ovCfg&&ovCfg.hidden){ showing=false; return pump(); }
   $('a1').innerHTML=a.label;
   $('a2').textContent=a.name;
   $('a3').innerHTML=a.detail||'';
@@ -161,7 +181,7 @@ function pump(){
   playSound(a.big);
   setTimeout(()=>{ el.classList.remove('show');
     setTimeout(()=>{ showing=false; pump(); },700);
-  },HOLD);
+  },EHOLD());
 }
 
 /* ---------- Twitch chat (anonymous) ---------- */
@@ -228,13 +248,33 @@ if(Q.get('test')==='1'){
     const b=document.createElement('button');
     b.textContent=name;
     b.style.cssText='background:'+(name===SND?'#ffb320':'#2a161d')+';color:'+(name===SND?'#160a24':'#f6e7c9')+';border:1px solid #7d2433;border-radius:7px;padding:7px 12px;font-weight:800;font-size:12px;cursor:pointer';
-    b.onclick=()=>{ SND=name;
+    b.onclick=()=>{ SND=name; sndTouched=true;
       [...sp.querySelectorAll('button')].forEach(x=>{x.style.background='#2a161d';x.style.color='#f6e7c9';});
       b.style.background='#ffb320'; b.style.color='#160a24';
       playSound(false); url.textContent=location.origin+location.pathname+'?snd='+name;
     };
     sp.appendChild(b);
   });
+  const ctr=document.createElement('div');
+  ctr.style.cssText='width:100%;display:flex;gap:6px;justify-content:center;margin-top:6px;flex-wrap:wrap';
+  function mkbtn(txt,fn){const b=document.createElement('button');b.textContent=txt;
+    b.style.cssText='background:#2a161d;color:#f6e7c9;border:1px solid #7d2433;border-radius:7px;padding:7px 12px;font-weight:800;font-size:12px;cursor:pointer';
+    b.onclick=fn;ctr.appendChild(b);return b;}
+  mkbtn('vol −',()=>{volTouched=true;VOLR=Math.max(0,+(VOLR-0.1).toFixed(2));playSound(false);});
+  mkbtn('vol +',()=>{volTouched=true;VOLR=Math.min(2,+(VOLR+0.1).toFixed(2));playSound(false);});
+  const sv=mkbtn('💾 Save live (sound + vol)',async()=>{
+    sv.textContent='Saving…';
+    try{ await ovPost({snd:ESND(),vol:+EVOL().toFixed(2)}); sv.textContent='Saved ✓ — live!'; }
+    catch(e){ sv.textContent='Failed: '+e.message; }
+    setTimeout(()=>{sv.textContent='💾 Save live (sound + vol)';},2200);
+  });
+  let hidNow=false;
+  const hd=mkbtn('👁 Hide alerts',async()=>{
+    try{ hidNow=!hidNow; await ovPost({hidden:hidNow});
+      hd.textContent=hidNow?'👁 Show alerts':'👁 Hide alerts';
+    }catch(e){ hidNow=!hidNow; }
+  });
+  sp.appendChild(ctr);
   const url=document.createElement('div');
   url.style.cssText='width:100%;text-align:center;color:#ffb320;font-size:11px;font-weight:700;margin-top:3px;user-select:all';
   url.textContent=location.origin+location.pathname+'?snd='+SND;
@@ -267,6 +307,23 @@ if(Q.get('test')==='1'){
     document.head.appendChild(style);
   }
 })();
+
+/* ---------- live remote settings ---------- */
+let ovStyle=null;
+function applyOvCfg(){
+  if(!ovCfg) return;
+  const el=document.getElementById('alert');
+  if(typeof ovCfg.y==='number') el.style.top=ovCfg.y+'%';
+  if(typeof ovCfg.scale==='number'){
+    if(!ovStyle){ ovStyle=document.createElement('style'); document.head.appendChild(ovStyle); }
+    ovStyle.textContent='#alert{transform:translateX(-50%) scale('+(ovCfg.scale*.6)+')}#alert.show{transform:translateX(-50%) scale('+ovCfg.scale+')}';
+  }
+}
+async function pollOvCfg(){
+  try{ const r=await fetch(API+'/api/overlay',{cache:'no-store'}); const j=await r.json();
+    if(j.ok){ ovCfg=(j.overlays&&j.overlays[OVKEY])||{}; applyOvCfg(); } }catch(e){}
+}
+pollOvCfg(); setInterval(pollOvCfg,9000);
 </script>
 </body>
 </html>

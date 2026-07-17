@@ -135,8 +135,23 @@ poll(); setInterval(poll,15000);
   css.textContent='#edittb{position:fixed;top:8px;left:50%;transform:translateX(-50%);z-index:99;display:flex;gap:6px;align-items:center;background:#1b1016;border:2px solid #ffb320;border-radius:10px;padding:8px 10px;font-family:Archivo,sans-serif;max-width:96vw;flex-wrap:wrap;justify-content:center}#edittb button{background:#ffb320;border:none;border-radius:6px;font-weight:800;font-size:15px;width:32px;height:32px;cursor:pointer}#edittb .cp{width:auto;padding:0 12px;font-size:12px}#edittb input{width:min(340px,50vw);font-size:11px;padding:7px;border-radius:6px;border:1px solid #7d2433;background:#2a161d;color:#f6e7c9}#edittb span{color:#ffb320;font-weight:800;font-size:13px;min-width:46px;text-align:center}';
   document.head.appendChild(css);
   const tb=document.createElement('div'); tb.id='edittb';
-  tb.innerHTML='<button id="eMinus">−</button><span id="eScale"></span><button id="ePlus">+</button><input id="eUrl" readonly><button id="eCopy" class="cp">Copy URL</button>';
+  tb.innerHTML='<button id="eMinus">−</button><span id="eScale"></span><button id="ePlus">+</button><input id="eUrl" readonly><button id="eCopy" class="cp">Copy URL</button><button id="eSave" class="cp">💾 Save live</button><button id="eHide" class="cp">👁 Hide</button>';
   document.body.appendChild(tb);
+  let hiddenNow=false;
+  document.getElementById('eSave').onclick=async()=>{
+    const b=document.getElementById('eSave'); b.textContent='Saving…';
+    try{ const r2=el.getBoundingClientRect();
+      await ovPost({px:+(r2.left/innerWidth*100).toFixed(2),py:+(r2.top/innerHeight*100).toFixed(2),scale:+s.toFixed(2)});
+      b.textContent='Saved ✓ — live!';
+    }catch(err){ b.textContent='Failed: '+err.message; }
+    setTimeout(()=>{b.textContent='💾 Save live';},2200);
+  };
+  document.getElementById('eHide').onclick=async()=>{
+    const b=document.getElementById('eHide');
+    try{ hiddenNow=!hiddenNow; await ovPost({hidden:hiddenNow});
+      b.textContent=hiddenNow?'👁 Show':'👁 Hide';
+    }catch(err){ hiddenNow=!hiddenNow; b.textContent='Failed'; setTimeout(()=>{b.textContent=hiddenNow?'👁 Show':'👁 Hide';},1600); }
+  };
   el.style.cursor='move'; el.style.touchAction='none';
   function fixPos(){const r=el.getBoundingClientRect();
     el.style.left=r.left+'px'; el.style.top=r.top+'px';
@@ -171,6 +186,41 @@ poll(); setInterval(poll,15000);
   el.addEventListener('pointerup',()=>{drag=null;refresh();});
   fixPos();refresh();
 })();
+
+/* ---------- live remote settings (Save live in ?edit=1 controls the on-air overlay) ---------- */
+
+const OVKEY='subs';
+let ovCfg=null;
+function modkey(){
+  let k=localStorage.getItem('ftgioo_ovkey');
+  if(!k){ k=prompt('Mod key (to control live overlays):')||''; if(k) localStorage.setItem('ftgioo_ovkey',k); }
+  return k;
+}
+async function ovPost(cfg){
+  const r=await fetch(API+'/api/overlay',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({name:OVKEY,cfg,by:'editor',key:modkey()})});
+  const j=await r.json().catch(()=>({}));
+  if(!r.ok||!j.ok){ if(r.status===403) localStorage.removeItem('ftgioo_ovkey');
+    throw new Error((j&&j.error)||('HTTP '+r.status)); }
+  return j;
+}
+function applyOvCfg(){
+  if(Q.get('edit')==='1'||!ovCfg) return;
+  const el=document.getElementById('card');
+  el.style.visibility=ovCfg.hidden?'hidden':'';
+  if(typeof ovCfg.px==='number'&&typeof ovCfg.py==='number'){
+    el.style.left=ovCfg.px+'%'; el.style.top=ovCfg.py+'%';
+    el.style.right='';el.style.bottom='';
+    el.style.transformOrigin='top left';
+    const sc=(typeof ovCfg.scale==='number')?ovCfg.scale:1;
+    el.style.transform=sc!==1?('scale('+sc+')'):'';
+  }
+}
+async function pollOvCfg(){
+  try{ const r=await fetch(API+'/api/overlay',{cache:'no-store'}); const j=await r.json();
+    if(j.ok){ ovCfg=(j.overlays&&j.overlays[OVKEY])||{}; applyOvCfg(); } }catch(e){}
+}
+pollOvCfg(); setInterval(pollOvCfg,9000);
 </script>
 </body>
 </html>
