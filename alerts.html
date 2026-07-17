@@ -46,6 +46,7 @@
   .a3 b{color:var(--cream)}
   /* 1920x1080 logical canvas -> scaled to the real viewport so the editor and the
      stream share ONE coordinate system (what you place is exactly what shows, any resolution) */
+  #su-custom{position:absolute;inset:0;pointer-events:none;z-index:50;font-family:Archivo,sans-serif}
   #su-stage{position:fixed;top:0;left:0;width:1920px;height:1080px;
     transform-origin:top left;transform:scale(var(--suk,1));will-change:transform}
 </style>
@@ -68,6 +69,7 @@ const Q=new URLSearchParams(location.search);
   var st=document.getElementById('su-stage');
   if(!st){ st=document.createElement('div'); st.id='su-stage'; document.body.insertBefore(st, document.body.firstChild); }
   ["alert"].forEach(function(id){ var e=document.getElementById(id); if(e && e.parentNode!==st) st.appendChild(e); });
+  var _cu=document.getElementById('su-custom'); if(!_cu){_cu=document.createElement('div');_cu.id='su-custom';st.appendChild(_cu);}
   function suk(){
     var k=Math.min(innerWidth/1920, innerHeight/1080);
     if(!isFinite(k)||k<=0) k=1;
@@ -384,7 +386,17 @@ if(Q.get('test')==='1'){
 /* ---------- live remote settings ---------- */
 let ovStyle=null;
 const CAL_INFO={campus:{c:'#ff2d95',n:'CAMPUS FEED',i:0},socials:{c:'#12e0ff',n:'SOCIALS BAR',i:1},subs:{c:'#8dff3a',n:'SUB COUNTER',i:2},alerts:{c:'#ff9d00',n:'ALERTS',i:3}};
-function suLiveCss(){var s=document.getElementById('su-livecss');if(!s){s=document.createElement('style');s.id='su-livecss';document.head.appendChild(s);}s.textContent=(typeof ovCfg!=='undefined'&&ovCfg&&typeof ovCfg.css==='string')?ovCfg.css:'';}
+var suLastHtml, suLastJs;
+function suLiveCss(){
+  var cf=(typeof ovCfg!=='undefined'&&ovCfg)?ovCfg:{};
+  var s=document.getElementById('su-livecss'); if(!s){s=document.createElement('style');s.id='su-livecss';document.head.appendChild(s);}
+  s.textContent=(typeof cf.css==='string')?cf.css:'';
+  var cu=document.getElementById('su-custom');
+  var html=(typeof cf.html==='string')?cf.html:'';
+  if(cu&&html!==suLastHtml){ suLastHtml=html; cu.innerHTML=html; }
+  var js=(typeof cf.js==='string')?cf.js:'';
+  if(js!==suLastJs){ suLastJs=js; if(js){ try{ (new Function('root','cfg',js))(cu,cf); }catch(e){ console.warn('live JS error:',e&&e.message); } } }
+}
 let suCalEl=null;
 function suCalib(on){
   if(on && !suCalEl){

@@ -233,6 +233,26 @@ const CMDS=[['current','!current'],['professor','!professor'],['next','!nextclas
 const FIELD={'!current':'current','!professor':'professor','!nextclass':'next','!today':'today'};
 const TAGS={set:['Pre-stream','set'],session:['In class','session'],break:['Break','break'],end:['End','end']};
 const SOUNDS=['sparkle','chime','bell','coin','tada','pop','fanfare'];
+const SU_TPL=[
+ {name:'Big announcement text',
+  css:'.anno{position:absolute;top:42%;left:50%;transform:translate(-50%,-50%);font-family:Graduate,serif;font-size:64px;color:#ffb320;text-shadow:3px 3px 0 #8f1622,4px 4px 0 rgba(0,0,0,.35);text-align:center;max-width:82%}',
+  html:'<div class="anno">BIG ANNOUNCEMENT!</div>'},
+ {name:'Countdown timer (5 min)',
+  css:'.cdw{position:absolute;top:8%;left:50%;transform:translateX(-50%);background:#6b1d29;border:3px solid #ffb320;border-radius:16px;padding:12px 28px;font-family:Graduate,serif;color:#ffb320;text-align:center;box-shadow:0 8px 24px rgba(0,0,0,.5)}.cdw .l{font-size:14px;letter-spacing:3px}.cdw .t{font-size:54px;line-height:1}',
+  html:'<div class="cdw"><div class="l">STARTING IN</div><div class="t" id="cd">5:00</div></div>',
+  js:"var mins=5;var end=Date.now()+mins*60000;function tk(){var d=Math.max(0,end-Date.now());var m=Math.floor(d/60000),s=Math.floor(d%60000/1000);var e=root&&root.querySelector('#cd');if(e)e.textContent=m+':'+('0'+s).slice(-2);}tk();setInterval(tk,1000);"},
+ {name:'Full-screen BRB scene',
+  css:'.brb{position:absolute;inset:0;background:linear-gradient(160deg,#6b1d29,#4e131d);display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:Graduate,serif;color:#ffb320;text-align:center}.brb h1{font-size:84px;margin:0;text-shadow:3px 3px 0 #8f1622}.brb p{font-size:26px;color:#f6e7c9;font-family:Archivo}',
+  html:'<div class="brb"><h1>BE RIGHT BACK</h1><p>Class resumes shortly. Stay in your seats!</p></div>'},
+ {name:'Scrolling ticker (bottom)',
+  css:'.tik{position:absolute;left:0;right:0;bottom:0;background:#6b1d29;border-top:3px solid #ffb320;color:#f6e7c9;font-family:Archivo;font-weight:800;font-size:24px;padding:10px 0;overflow:hidden;white-space:nowrap}.tik span{display:inline-block;padding-left:100%;animation:tikx 20s linear infinite}@keyframes tikx{to{transform:translateX(-100%)}}',
+  html:'<div class="tik"><span>Welcome to Streamer University 2026! Follow FTGIOO, drop a sub, and enjoy the classes!</span></div>'},
+ {name:'Lower-third name plate',
+  css:'.l3{position:absolute;left:5%;bottom:15%;background:#6b1d29;border-left:6px solid #ffb320;border-radius:6px;padding:13px 24px;color:#f6e7c9;font-family:Archivo;box-shadow:0 8px 24px rgba(0,0,0,.5)}.l3 b{display:block;font-size:30px;color:#ffb320}.l3 span{font-size:17px}',
+  html:'<div class="l3"><b>Guest Name</b><span>Title or handle</span></div>'},
+ {name:'Full-screen image',
+  html:'<img src="PASTE_IMAGE_URL_HERE" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover">'}
+];
 const OVS=[
  {id:'campus',t:'Campus Feed',d:'All-in-one: class card, NOW STARTING takeover, countdown, rotating subs/socials.',u:'campus.html'},
  {id:'socials',t:'Socials Bar',d:'Twitch · YouTube · IG · TikTok · X handles with logos.',u:'socials.html'},
@@ -627,24 +647,31 @@ function rOverlays(m){
       .catch(e=>{if(e.message!=='Session expired')toast(e.message,true);});
     tr.append(tl2,rng,pv2);
     card.appendChild(tr);
-    // live style: restyle this overlay with CSS, no reload
-    const cssD=document.createElement('details'); cssD.style.marginTop='10px';
-    const cssS=document.createElement('summary'); cssS.style.cssText='cursor:pointer;font-weight:800;color:var(--gold-soft);font-size:12.5px;list-style:none';
-    cssS.textContent='🎨 Live style (advanced)';
+    // live BUILDER: full custom overlays with CSS + HTML + JS, live
+    var cssD=document.createElement('details'); cssD.style.marginTop='10px';
+    var cssS=document.createElement('summary'); cssS.style.cssText='cursor:pointer;font-weight:800;color:var(--gold-soft);font-size:12.5px;list-style:none';
+    cssS.textContent='🎨 Live builder (custom CSS / HTML / JS)';
     cssD.appendChild(cssS);
-    const cssHint=document.createElement('div'); cssHint.className='muted'; cssHint.style.margin='7px 0';
-    cssHint.innerHTML='Type CSS to restyle this overlay on the fly. Example bigger Campus clock: <code>#clock{font-size:22px}</code>. Bigger sub number: <code>#num{font-size:56px}</code>.';
-    const cssTa=document.createElement('textarea'); cssTa.value=(cfg.css||''); cssTa.placeholder='#clock{font-size:22px}'; cssTa.style.width='100%'; cssTa.rows=3;
-    const cssRow=document.createElement('div'); cssRow.className='row'; cssRow.style.marginTop='6px';
-    const cssApply=document.createElement('button'); cssApply.className='btn sm'; cssApply.textContent='Apply live';
-    cssApply.onclick=()=>api('/api/overlay',{name:o.id,cfg:{css:cssTa.value}})
-      .then(()=>{toast(o.t+' style applied live');refresh(true);})
-      .catch(e=>{if(e.message!=='Session expired')toast(e.message,true);});
-    const cssClear=document.createElement('button'); cssClear.className='btn sec sm'; cssClear.textContent='Clear';
-    cssClear.onclick=()=>{cssTa.value='';api('/api/overlay',{name:o.id,cfg:{css:''}})
-      .then(()=>{toast(o.t+' style cleared');refresh(true);}).catch(e=>{});};
-    cssRow.append(cssApply,cssClear);
-    cssD.append(cssHint,cssTa,cssRow);
+    var bHint=document.createElement('div'); bHint.className='muted'; bHint.style.margin='7px 0';
+    bHint.innerHTML='Build anything on this overlay, live. <b>HTML</b> shows in a full 1920 by 1080 layer, <b>CSS</b> restyles, <b>JS</b> runs for dynamic behavior (the variable <code>root</code> is your HTML layer). Position custom elements with % so they map to the stream. Needs one overlay reload to activate.';
+    cssD.appendChild(bHint);
+    var tsel=document.createElement('select'); tsel.style.cssText='width:100%;margin-bottom:8px';
+    tsel.innerHTML='<option value="">Insert a starter template...</option>'+SU_TPL.map(function(tp,i){return '<option value="'+i+'">'+tp.name+'</option>';}).join('');
+    cssD.appendChild(tsel);
+    function bFld(lbl,ph){var w=document.createElement('label');w.style.cssText='display:block;font-size:11px;font-weight:800;color:var(--dim);margin:6px 0 3px;letter-spacing:.5px';w.textContent=lbl;var ta=document.createElement('textarea');ta.placeholder=ph;ta.rows=3;ta.spellcheck=false;ta.style.cssText='width:100%;font-family:ui-monospace,Consolas,monospace;font-size:12px;line-height:1.45';cssD.append(w,ta);return ta;}
+    var cssTa=bFld('CSS','#clock{font-size:22px}');
+    var htmlTa=bFld('HTML','<div class="anno">Hello</div>');
+    var jsTa=bFld('JS (advanced, optional)','// runs once. root = your HTML layer');
+    cssTa.value=cfg.css||''; htmlTa.value=cfg.html||''; jsTa.value=cfg.js||'';
+    tsel.onchange=function(){var tp=SU_TPL[tsel.value]; if(!tp)return; cssTa.value=tp.css||''; htmlTa.value=tp.html||''; jsTa.value=tp.js||''; tsel.value=''; toast('Template loaded, review then Apply live');};
+    var bRow=document.createElement('div'); bRow.className='row'; bRow.style.marginTop='9px';
+    var applyB=document.createElement('button'); applyB.className='btn sm'; applyB.textContent='Apply live';
+    applyB.onclick=function(){api('/api/overlay',{name:o.id,cfg:{css:cssTa.value,html:htmlTa.value,js:jsTa.value}}).then(function(){toast(o.t+' custom applied live');refresh(true);}).catch(function(e){if(e.message!=='Session expired')toast(e.message,true);});};
+    var clrB=document.createElement('button'); clrB.className='btn sec sm'; clrB.textContent='Clear all';
+    clrB.onclick=function(){cssTa.value='';htmlTa.value='';jsTa.value='';api('/api/overlay',{name:o.id,cfg:{css:'',html:'',js:''}}).then(function(){toast(o.t+' custom cleared');refresh(true);}).catch(function(e){});};
+    var openB=document.createElement('a'); openB.className='btn sec sm'; openB.textContent='Open overlay'; openB.href=o.u; openB.target='_blank';
+    bRow.append(applyB,clrB,openB);
+    cssD.appendChild(bRow);
     card.appendChild(cssD);
     if(o.al){
       const ax=document.createElement('div'); ax.className='alx';
