@@ -311,7 +311,7 @@ async function refresh(force){
 }
 
 /* ---------- shell ---------- */
-const TABS=[['dash','Dashboard'],['overlays','Overlays'],['run','Auto Commands'],['subs','Subs'],['activity','Activity']];
+const TABS=[['dash','Dashboard'],['overlays','Overlays'],['help','Setup'],['run','Auto Commands'],['subs','Subs'],['activity','Activity']];
 function renderTabs(){
   $('tabs').innerHTML='';
   TABS.forEach(([id,label])=>{
@@ -324,7 +324,7 @@ function render(){
   if(!ST) return;
   renderTabs();
   const m=$('main'); m.innerHTML='';
-  ({run:rRun,dash:rDash,overlays:rOverlays,subs:rSubs,activity:rActivity})[tab](m);
+  ({run:rRun,dash:rDash,overlays:rOverlays,help:rSetup,subs:rSubs,activity:rActivity})[tab](m);
 }
 
 /* ================= RUN SHOW ================= */
@@ -669,6 +669,77 @@ function rSubs(m){
 }
 
 /* ================= ACTIVITY ================= */
+/* ================= SETUP / HELP ================= */
+function rSetup(m){
+  const base=location.href.replace(/[^/]*$/,'');
+  const links=[
+    ['Campus Feed (main all-in-one)','campus.html'],
+    ['Socials Bar','socials.html'],
+    ['Sub Counter','subs.html'],
+    ['Alerts','alerts.html']
+  ];
+  function copyBtn(url){
+    const b=document.createElement('button'); b.className='btn sec sm'; b.textContent='Copy link';
+    b.onclick=()=>{ const t=base+url;
+      if(navigator.clipboard&&navigator.clipboard.writeText) navigator.clipboard.writeText(t);
+      else { const x=document.createElement('textarea'); x.value=t; document.body.appendChild(x); x.select(); try{document.execCommand('copy');}catch(e){} document.body.removeChild(x); }
+      b.textContent='Copied ✓'; setTimeout(()=>b.textContent='Copy link',1200); };
+    return b;
+  }
+  // overlay links
+  const s1=document.createElement('div'); s1.className='sect';
+  s1.innerHTML='<h2>Overlay links</h2><div class="muted" style="margin-bottom:8px">Add each of these as a browser/web source in OBS or TVU Go.</div>';
+  links.forEach(([name,file])=>{
+    const row=document.createElement('div'); row.className='it';
+    row.innerHTML='<span class="lbl2"><b>'+name+'</b><span style="font-family:ui-monospace,Consolas,monospace;font-size:11.5px;word-break:break-all">'+base+file+'</span></span>';
+    row.appendChild(copyBtn(file));
+    s1.appendChild(row);
+  });
+  m.appendChild(s1);
+
+  // OBS
+  const s2=document.createElement('div'); s2.className='sect';
+  s2.innerHTML='<h2>Add to OBS (recommended)</h2><div class="list">'+
+    ['Sources → + → <b>Browser</b>.',
+     'Paste an overlay link above into the URL field.',
+     'Set <b>Width 1920</b>, <b>Height 1080</b>.',
+     'For the Alerts source, tick <b>Control audio via OBS</b> so alert sounds come through your mix.',
+     'Click OK. Transparency works automatically — no green screen needed.',
+     'Repeat for each overlay. Then position everything from the <b>Overlays</b> tab here.'
+    ].map((t,i)=>'<div class="actrow2"><b style="color:var(--gold)">'+(i+1)+'.</b> '+t+'</div>').join('')+'</div>';
+  m.appendChild(s2);
+
+  // TVU Go
+  const s3=document.createElement('div'); s3.className='sect';
+  s3.innerHTML='<h2>Add to TVU Go</h2><div class="list">'+
+    ['Add a new web / browser overlay.',
+     'Paste an overlay link above as the URL.',
+     'If TVU does not show transparency, add <code>?bg=00ff00</code> to the end of the link and chroma-key the green.',
+     'Leave the layer <b>full screen</b> — do not move or resize it inside TVU.',
+     'Repeat for each overlay, then position from the <b>Overlays</b> tab here.'
+    ].map((t,i)=>'<div class="actrow2"><b style="color:var(--gold)">'+(i+1)+'.</b> '+t+'</div>').join('')+'</div>';
+  m.appendChild(s3);
+
+  // golden rule
+  const s4=document.createElement('div'); s4.className='sect';
+  s4.style.borderColor='#ffb32066';
+  s4.innerHTML='<h2>⭐ The golden rule</h2><div class="muted" style="font-size:13.5px;line-height:1.6">'+
+    'In OBS/TVU, keep every overlay source <b>full 1920×1080 and never drag or resize it there</b>. '+
+    'Do ALL moving, resizing, hiding, transparency and styling from the <b>Overlays</b> tab in this hub. '+
+    'That keeps the editor 100% accurate to the stream and lets any of the 3 of you adjust things live from a phone. '+
+    'If something looks off, use <b>Overlays → 📐 Calibration ON</b> to find which layer got moved in the app.</div>';
+  m.appendChild(s4);
+
+  // updates / reload
+  const s5=document.createElement('div'); s5.className='sect';
+  s5.innerHTML='<h2>Applying updates</h2><div class="muted" style="font-size:13px;line-height:1.6">'+
+    '<b>Position, size, scale, hide/show, transparency</b> apply live instantly. '+
+    '<b>New features, fonts, Live Style/CSS</b> need the overlay to reload once. '+
+    'Use <b>Overlays → Emergency controls → 🔄 Reload all overlays</b> to refresh every source remotely (no touching OBS/TVU). '+
+    'One-time note: sources added before today must be reloaded manually in OBS/TVU once to gain the remote-reload ability.</div>';
+  m.appendChild(s5);
+}
+
 function rActivity(m){
   const s=document.createElement('div'); s.className='sect';
   s.innerHTML='<h2>Mod activity</h2>'+
