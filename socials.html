@@ -183,17 +183,58 @@ PLATFORMS.forEach(p=>{
 const API='https://ftgioo-su2026-api-production.up.railway.app';
 const OVKEY='socials';
 let ovCfg=null;
-function modkey(){
-  let k=localStorage.getItem('ftgioo_ovkey');
-  if(!k){ k=prompt('Mod key (to control live overlays):')||''; if(k) localStorage.setItem('ftgioo_ovkey',k); }
-  return k;
+function getSess(){ try{return JSON.parse(localStorage.getItem('su_hub_sess'));}catch(e){return null;} }
+function askLogin(){
+  return new Promise(function(resolve,reject){
+    var old=document.getElementById('sulogin'); if(old) old.remove();
+    var css=document.getElementById('sulogincss');
+    if(!css){ css=document.createElement('style'); css.id='sulogincss';
+      css.textContent='#sulogin{position:fixed;inset:0;background:rgba(10,5,8,.78);display:flex;align-items:center;justify-content:center;z-index:999;font-family:Archivo,sans-serif}#sulogin .bx{width:min(360px,92vw);background:linear-gradient(160deg,#3d1620,#24101a);border:3px solid #ffb320;border-radius:16px;padding:22px;text-align:center;box-shadow:0 30px 80px -20px #000,inset 0 0 0 3px #24101a,inset 0 0 0 5px #c31f2f}#sulogin h3{margin:0 0 4px;font-family:Graduate,serif;color:#ffb320;font-size:15px;letter-spacing:1.5px;text-shadow:1px 1px 0 #8f1622}#sulogin .m{color:#dcc9a4;font-size:12px;margin-bottom:14px}#sulogin .us{display:flex;gap:7px;margin-bottom:11px}#sulogin .u{flex:1;padding:11px 2px;border-radius:9px;border:2px solid #5d2b3c;background:#33161f;color:#c9ab9a;font-family:Graduate,serif;font-size:12.5px;cursor:pointer}#sulogin .u.sel{border-color:#ffb320;color:#ffb320;background:#3d1c14}#sulogin input{width:100%;box-sizing:border-box;background:#33161f;border:1px solid #5d2b3c;color:#f6e7c9;border-radius:9px;padding:11px;font-size:16px;text-align:center;margin-bottom:11px}#sulogin .bt{display:flex;gap:8px}#sulogin button.go{flex:1;background:#ffb320;color:#2a1108;border:none;border-radius:9px;padding:11px;font-weight:800;font-size:13px;cursor:pointer}#sulogin button.cx{flex:1;background:#33161f;color:#f6e7c9;border:1px solid #5d2b3c;border-radius:9px;padding:11px;font-weight:800;font-size:13px;cursor:pointer}#sulogin .er{color:#ff8a8a;font-size:12px;font-weight:700;min-height:16px;margin-top:8px}';
+      document.head.appendChild(css);
+    }
+    var wrap=document.createElement('div'); wrap.id='sulogin';
+    wrap.innerHTML='<div class="bx"><h3>Streamer University</h3><div class="m">Confirm your identity to control the live stream</div><div class="us"><button class="u sel" data-u="tdot">Tdot</button><button class="u" data-u="haylee">Haylee</button><button class="u" data-u="gio">Gio</button></div><input type="password" placeholder="your password" autocomplete="current-password"><div class="bt"><button class="go">Confirm</button><button class="cx">Cancel</button></div><div class="er"></div></div>';
+    document.body.appendChild(wrap);
+    var user='tdot';
+    wrap.querySelectorAll('.u').forEach(function(b){ b.onclick=function(){ user=b.dataset.u;
+      wrap.querySelectorAll('.u').forEach(function(x){x.classList.toggle('sel',x===b);}); }; });
+    var inp=wrap.querySelector('input'), er=wrap.querySelector('.er'), go=wrap.querySelector('.go');
+    setTimeout(function(){ inp.focus(); },50);
+    function submit(){
+      if(!inp.value){ er.textContent='Enter your password.'; return; }
+      go.textContent='Checking…'; go.disabled=true;
+      fetch(API+'/api/login',{method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({user:user,pass:inp.value})})
+      .then(function(r){ return r.json().then(function(j){ return {r:r,j:j}; }); })
+      .then(function(x){
+        if(x.r.ok&&x.j.ok){
+          try{ localStorage.setItem('su_hub_sess',JSON.stringify({token:x.j.token,user:x.j.user,exp:x.j.exp})); }catch(e){}
+          wrap.remove(); resolve(x.j.token);
+        }else{
+          er.textContent=(x.j&&x.j.error)||'Login failed.';
+          go.textContent='Confirm'; go.disabled=false;
+        }
+      })
+      .catch(function(){ er.textContent='Cannot reach the server. Try again.'; go.textContent='Confirm'; go.disabled=false; });
+    }
+    go.onclick=submit;
+    inp.addEventListener('keydown',function(e){ if(e.key==='Enter') submit(); });
+    wrap.querySelector('.cx').onclick=function(){ wrap.remove(); reject(new Error('Cancelled')); };
+  });
 }
+async function ovToken(){ var s0=getSess(); if(s0&&s0.token) return s0.token; return askLogin(); }
 async function ovPost(cfg){
-  const r=await fetch(API+'/api/overlay',{method:'POST',headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({name:OVKEY,cfg,by:'editor',key:modkey()})});
-  const j=await r.json().catch(()=>({}));
-  if(!r.ok||!j.ok){ if(r.status===403) localStorage.removeItem('ftgioo_ovkey');
-    throw new Error((j&&j.error)||('HTTP '+r.status)); }
+  var token=await ovToken();
+  var r=await fetch(API+'/api/overlay',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({name:OVKEY,cfg:cfg,token:token})});
+  if(r.status===403){
+    try{ localStorage.removeItem('su_hub_sess'); }catch(e){}
+    token=await askLogin();
+    r=await fetch(API+'/api/overlay',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({name:OVKEY,cfg:cfg,token:token})});
+  }
+  var j=await r.json().catch(function(){ return {}; });
+  if(!r.ok||!j.ok) throw new Error((j&&j.error)||('HTTP '+r.status));
   return j;
 }
 function applyOvCfg(){
