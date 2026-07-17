@@ -219,7 +219,7 @@ const OVS=[
  {id:'subs',t:'Sub Counter',d:'Live sub count with the gold goal bar.',u:'subs.html'},
  {id:'alerts',t:'Alerts',d:'Sub / resub / gifted subs / raid pop-ups with confetti + sound.',u:'alerts.html',al:true}
 ];
-let sess=null, ST=null, OV=null, tab='run', day=null;
+let sess=null, ST=null, OV=null, tab='dash', day=null;
 
 /* ---------- session ---------- */
 try{ sess=JSON.parse(localStorage.getItem('su_hub_sess')); }catch(e){}
@@ -308,7 +308,7 @@ async function refresh(force){
 }
 
 /* ---------- shell ---------- */
-const TABS=[['run','Run Show'],['dash','Dashboard'],['overlays','Overlays'],['subs','Subs'],['activity','Activity']];
+const TABS=[['dash','Dashboard'],['overlays','Overlays'],['run','Auto Commands'],['subs','Subs'],['activity','Activity']];
 function renderTabs(){
   $('tabs').innerHTML='';
   TABS.forEach(([id,label])=>{
@@ -556,23 +556,9 @@ function rSubs(m){
   s.innerHTML='<h2>Sub count</h2>'+
     '<div class="big" style="font-size:40px">'+(su.count==null?'-':su.count.toLocaleString())+
     (su.goal?('<span class="muted" style="font-size:18px"> / goal '+su.goal.toLocaleString()+'</span>'):'')+'</div>'+
-    '<div class="muted" style="margin-bottom:14px">'+
+    '<div class="muted">'+
       (su.source==='twitch'?'🟢 auto from Twitch':'updated by '+(su.by||'chat (!subs)'))+(su.at?(' · '+su.at):'')+
-      '. Chat typing <b>!subs</b> refreshes this automatically.</div>';
-  const rr=document.createElement('div'); rr.className='row';
-  const cin=document.createElement('input'); cin.type='number'; cin.min='0'; cin.placeholder='fix count'; cin.style.cssText='flex:1;min-width:120px;max-width:220px';
-  const gin=document.createElement('input'); gin.type='number'; gin.min='0'; gin.placeholder='goal (0 = off)'; gin.style.cssText='flex:1;min-width:120px;max-width:220px';
-  const b=document.createElement('button'); b.className='btn sm'; b.textContent='Update';
-  b.onclick=()=>{
-    const body={};
-    if(cin.value!=='')body.count=parseInt(cin.value,10);
-    if(gin.value!=='')body.goal=parseInt(gin.value,10);
-    if(body.count===undefined&&body.goal===undefined){toast('Enter a count and/or goal',true);return;}
-    api('/api/subs',body).then(()=>{toast('Subs updated everywhere');cin.value='';gin.value='';refresh(true);})
-      .catch(e=>{if(e.message!=='Session expired')toast(e.message,true);});
-  };
-  rr.append(cin,gin,b);
-  s.appendChild(rr);
+      '. Chat typing <b>!subs</b> keeps this current automatically.</div>';
   m.appendChild(s);
 }
 
