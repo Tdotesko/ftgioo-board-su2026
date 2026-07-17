@@ -194,7 +194,21 @@ let sess=null, ST=null, OV=null, SCHED=null, tab='dash', day=null;
 /* ---------- session ---------- */
 try{ sess=JSON.parse(localStorage.getItem('su_hub_sess')); }catch(e){}
 function saveSess(){ localStorage.setItem('su_hub_sess',JSON.stringify(sess)); }
-function logout(){ sess=null; localStorage.removeItem('su_hub_sess'); location.reload(); }
+function showLogin(msg){
+  $('app').style.display='none';
+  $('login').style.display='flex';
+  if(msg!==undefined) $('loginerr').textContent=msg||'';
+}
+function logout(){
+  sess=null; try{localStorage.removeItem('su_hub_sess');}catch(e){}
+  showLogin('');
+}
+// surface any unexpected script error instead of a dead page
+window.addEventListener('error',ev=>{
+  try{ const el=$('loginerr');
+    if(el && $('login').style.display!=='none') el.textContent='Something went wrong: '+(ev.message||'unknown error');
+  }catch(e){}
+});
 
 function toast(m,bad){
   let el=$('toast'); if(!el){el=document.createElement('div');el.id='toast';document.body.appendChild(el);}
@@ -205,7 +219,7 @@ async function api(path,body){
   const r=await fetch(API+path,{method:'POST',headers:{'Content-Type':'application/json'},
     body:JSON.stringify(Object.assign({},body,{token:sess&&sess.token}))});
   const j=await r.json().catch(()=>({}));
-  if(r.status===403){ toast('Session expired — log in again',true); setTimeout(logout,1200); throw new Error('auth'); }
+  if(r.status===403){ toast('Session expired — log in again',true); logout(); $('loginerr').textContent='Session expired — please log in again.'; throw new Error('Session expired'); }
   if(!r.ok||!j.ok) throw new Error((j&&j.error)||('HTTP '+r.status));
   return j;
 }
@@ -218,14 +232,24 @@ document.querySelectorAll('.usr').forEach(b=>{
 });
 document.querySelector('.usr').classList.add('sel');
 async function doLogin(){
+  const btn=$('loginbtn');
   $('loginerr').textContent='';
+  if(!$('pass').value){ $('loginerr').textContent='Enter your password.'; return; }
+  btn.disabled=true; btn.textContent='Checking…';
   try{
     const r=await fetch(API+'/api/login',{method:'POST',headers:{'Content-Type':'application/json'},
       body:JSON.stringify({user:pickedUser,pass:$('pass').value})});
-    const j=await r.json().catch(()=>({}));
-    if(!r.ok||!j.ok) throw new Error((j&&j.error)||'Login failed');
-    sess={token:j.token,user:j.user,exp:j.exp}; saveSess(); boot();
-  }catch(e){ $('loginerr').textContent=e.message; }
+    let j={}; try{ j=await r.json(); }catch(e){}
+    if(r.ok&&j.ok){
+      sess={token:j.token,user:j.user,exp:j.exp}; saveSess(); $('pass').value='';
+      await enterApp();
+    }else{
+      $('loginerr').textContent=(j&&j.error)||('Login failed (HTTP '+r.status+') — try again.');
+    }
+  }catch(e){
+    $('loginerr').textContent='Can’t reach the server — check your connection and try again.';
+  }
+  btn.disabled=false; btn.textContent='Enter the Hub';
 }
 $('loginbtn').addEventListener('click',doLogin);
 $('pass').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
@@ -458,16 +482,21 @@ function rActivity(m){
 }
 
 /* ---------- boot ---------- */
-async function boot(){
-  if(!sess||!sess.token){ $('login').style.display=''; $('app').style.display='none'; return; }
-  const w=await fetch(API+'/api/whoami?token='+encodeURIComponent(sess.token)).then(r=>r.json()).catch(()=>({}));
-  if(!w.ok){ logout(); return; }
+async function enterApp(){
+  let w=null, netfail=false;
+  try{
+    const r=await fetch(API+'/api/whoami?token='+encodeURIComponent(sess.token));
+    if(r.status===403){ logout(); $('loginerr').textContent='Session expired — please log in again.'; return; }
+    w=await r.json();
+  }catch(e){ netfail=true; }
+  if(netfail||!w||!w.ok){ showLogin('Can’t reach the server right now — try again in a moment.'); return; }
   $('login').style.display='none'; $('app').style.display='';
-  $('who').textContent='🎓 '+sess.user;
+  $('who').textContent=sess.user;
   $('logout').onclick=logout;
   await refresh(true);
-  setInterval(()=>refresh(false),8000);
+  if(!window._hubPoll) window._hubPoll=setInterval(()=>refresh(false),8000);
 }
+function boot(){ if(sess&&sess.token){ enterApp(); } else { showLogin(''); } }
 boot();
 </script>
 </body>
