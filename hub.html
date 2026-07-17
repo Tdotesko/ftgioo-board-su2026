@@ -541,6 +541,19 @@ function rOverlays(m){
     mk('Reset pos',()=>api('/api/overlay',{name:o.id,cfg:{px:null,py:null,scale:null}})
       .then(()=>{toast(o.t+' back to default position');refresh(true);}).catch(e=>{if(e.message!=='Session expired')toast(e.message,true);}),true);
     card.appendChild(rr);
+    // live background transparency
+    const tr=document.createElement('div'); tr.className='row'; tr.style.cssText='margin-top:10px;gap:8px';
+    const tl2=document.createElement('span'); tl2.className='muted'; tl2.textContent='Background';
+    const rng=document.createElement('input'); rng.type='range'; rng.min='0'; rng.max='100'; rng.step='5';
+    rng.style.cssText='flex:1;min-width:110px;accent-color:var(--gold);padding:0;min-height:auto';
+    rng.value=(typeof cfg.bgop==='number')?Math.round(cfg.bgop*100):100;
+    const pv2=document.createElement('span'); pv2.className='muted'; pv2.style.minWidth='40px'; pv2.textContent=rng.value+'%';
+    rng.oninput=()=>{pv2.textContent=rng.value+'%';};
+    rng.onchange=()=>api('/api/overlay',{name:o.id,cfg:{bgop:+(rng.value/100).toFixed(2)}})
+      .then(()=>{toast(o.t+' background set to '+rng.value+'%');refresh(true);})
+      .catch(e=>{if(e.message!=='Session expired')toast(e.message,true);});
+    tr.append(tl2,rng,pv2);
+    card.appendChild(tr);
     if(o.al){
       const ax=document.createElement('div'); ax.className='alx';
       const selL=document.createElement('label'); selL.textContent='Sound';

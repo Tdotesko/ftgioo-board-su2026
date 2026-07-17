@@ -19,7 +19,7 @@
   #alert{
     position:fixed;top:8%;left:50%;
     display:flex;align-items:center;gap:20px;text-align:left;
-    background:linear-gradient(160deg,var(--maroon) 0%,var(--maroon-deep) 100%);
+    --bgop:1;background:linear-gradient(160deg,rgba(107,29,41,var(--bgop)) 0%,rgba(78,19,29,var(--bgop)) 100%);
     border:4px solid var(--gold);border-radius:22px;
     box-shadow:0 24px 70px -10px rgba(0,0,0,.7),
                inset 0 0 0 4px var(--maroon-deep),
@@ -113,6 +113,8 @@ const SNDURL=Q.get('sndurl')||'';
 const API='https://ftgioo-su2026-api-production.up.railway.app';
 const OVKEY='alerts';
 let ovCfg=null, VOLR=VOL, volTouched=false, sndTouched=false;
+const URLBGOP=(function(){const v=parseFloat(Q.get('bgop'));return isNaN(v)?1:Math.max(0,Math.min(1,v));})();
+document.getElementById('alert').style.setProperty('--bgop',URLBGOP);
 function EVOL(){ return volTouched?VOLR:((ovCfg&&typeof ovCfg.vol==='number')?ovCfg.vol:VOL); }
 function ESND(){ return (!sndTouched&&ovCfg&&ovCfg.snd&&SYNTHS[ovCfg.snd])?ovCfg.snd:SND; }
 function EHOLD(){ return (ovCfg&&typeof ovCfg.hold==='number')?ovCfg.hold*1000:HOLD; }
@@ -372,6 +374,7 @@ function applyOvCfg(){
   if(!ovCfg||Q.get('edit')==='1') return;
   suCalib(!!ovCfg.calib);
   const el=document.getElementById('alert');
+  el.style.setProperty('--bgop',(typeof ovCfg.bgop==='number')?ovCfg.bgop:URLBGOP);
   if(!ovStyle){ ovStyle=document.createElement('style'); document.head.appendChild(ovStyle); }
   const sc=(typeof ovCfg.scale==='number')?ovCfg.scale:1;
   if(typeof ovCfg.px==='number'&&typeof ovCfg.py==='number'){
