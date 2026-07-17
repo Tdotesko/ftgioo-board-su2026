@@ -490,7 +490,7 @@ async function enterApp(){
     w=await r.json();
   }catch(e){ netfail=true; }
   if(netfail||!w||!w.ok){ showLogin('Can’t reach the server right now — try again in a moment.'); return; }
-  $('login').style.display='none'; $('app').style.display='';
+  $('login').style.display='none'; $('app').style.display='block';
   $('who').textContent=sess.user;
   $('logout').onclick=logout;
   await refresh(true);
