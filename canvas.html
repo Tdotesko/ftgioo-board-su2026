@@ -84,7 +84,9 @@ if(Q.get('preview')==='1'){
   frame.appendChild(_tw);
 }
 
-function widgetSrc(name, cv){
+function widgetSrc(name, cv, c){
+  // chat widget can point at an external overlay (e.g. UChat) via its cfg.src
+  if(name==='chat' && c && typeof c.src==='string' && /^https?:\/\//i.test(c.src)) return c.src;
   var base=BUILTINS[name]?BUILTINS[name].src:('/scene?id='+encodeURIComponent(name));
   var p=new URLSearchParams();
   p.set('canvas','1'); // tells the overlay it is embedded in the canvas
@@ -123,7 +125,7 @@ function reconcile(ov){
   });
   // add, restack, or refresh the wanted frames
   Object.keys(want).forEach(function(name){
-    var c=want[name], f=frames[name], src=widgetSrc(name, cv);
+    var c=want[name], f=frames[name], src=widgetSrc(name, cv, c);
     if(!f){
       f=document.createElement('iframe');
       f.className='cv-w';
