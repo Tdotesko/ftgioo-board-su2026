@@ -761,6 +761,49 @@ function rBot(m){ pageHead(m,'her voice in chat','THE <span class="r">BOT</span>
   function loadBt(){ fetch(API+'/api/bot/blockterms',{cache:'no-store'}).then(function(r){return r.json();}).then(function(j){ btList.innerHTML=''; var ts=j.terms||[]; if(!ts.length){btList.innerHTML='<div class="muted" style="font-size:12px">No blocked terms yet.</div>';return;} btList.innerHTML='<div class="muted" style="font-size:11px;margin-bottom:4px">'+ts.length+' term'+(ts.length===1?'':'s')+' active</div>'; ts.forEach(function(t){ var row=document.createElement('div'); row.style.cssText='display:flex;align-items:center;gap:6px;padding:7px 0;border-bottom:1px solid #ffffff14'; var on=t.enabled!==false; row.innerHTML='<div style="flex:1;min-width:0"><code style="font-size:11.5px;color:#ffd97a;word-break:break-all">'+_besc(t.pattern)+'</code> <span class="muted" style="font-size:10.5px">'+(t.action==='timeout'?('timeout '+t.duration+'s'):'delete')+'</span></div>'; var tg=_bbtn(on?'On':'Off',(on?'sm':'sec sm'),function(){api('/api/bot/blockterms',{id:t.id,pattern:t.pattern,flags:t.flags,action:t.action,duration:t.duration,enabled:!on}).then(loadBt).catch(function(){});}); var dl=_bbtn('Del','sec sm',function(){if(!confirm('Remove this blocked term?'))return;api('/api/bot/blockterms',{del:true,id:t.id}).then(function(){toast('Removed');loadBt();}).catch(function(){});}); tg.style.flex='0 0 auto';dl.style.flex='0 0 auto'; row.append(tg,dl); btList.appendChild(row); }); }).catch(function(){}); }
   loadBt();
 
+  /* AutoMod filters */
+  var am=_bcard('🚦 AutoMod filters','Automatic spam and abuse filters, like Fossabot and StreamElements. Mods and Gio are always exempt. Turn on what you want, set the threshold, and Save.');
+  var amWrap=document.createElement('div'); am.appendChild(amWrap);
+  var FCONF=[
+    {k:'caps',label:'Excess CAPS',thr:'maxPct',thrLabel:'max % caps',def:70},
+    {k:'symbols',label:'Symbol spam',thr:'maxPct',thrLabel:'max % symbols',def:60},
+    {k:'length',label:'Max length',thr:'max',thrLabel:'max characters',def:400},
+    {k:'emotes',label:'Emote spam',thr:'max',thrLabel:'max emotes',def:8},
+    {k:'repeat',label:'Repetition',thr:'min',thrLabel:'repeat run',def:9},
+    {k:'links',label:'Block links',thr:'exemptLevel',thrLabel:'allow for',def:1,sel:true}
+  ];
+  var amInputs={};
+  function renderAm(f){ amWrap.innerHTML=''; FCONF.forEach(function(fc){ var cur=f[fc.k]||{};
+    var row=document.createElement('div'); row.style.cssText='display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:8px 0;border-top:1px solid #ffffff14';
+    var on=document.createElement('input'); on.type='checkbox'; on.checked=!!cur.on; on.style.cssText='width:18px;height:18px;flex:0 0 auto';
+    var lb=document.createElement('b'); lb.textContent=fc.label; lb.style.cssText='min-width:120px;flex:1';
+    var thrL=document.createElement('span'); thrL.className='muted'; thrL.style.fontSize='11px'; thrL.textContent=fc.thrLabel;
+    var thr;
+    if(fc.sel){ thr=_bsel([['0','everyone'],['1','subs+'],['2','VIPs+'],['3','mods only']],String(cur.exemptLevel!=null?cur.exemptLevel:1)); thr.style.width='110px'; thr.style.marginBottom='0'; }
+    else { thr=document.createElement('input'); thr.type='number'; thr.value=(cur[fc.thr]!=null?cur[fc.thr]:fc.def); thr.style.cssText='width:78px;padding:6px;border-radius:6px;border:1px solid #3a332d;background:#1d1815;color:#ece8dd'; }
+    var act=_bsel([['delete','delete'],['timeout','timeout']],cur.action||'delete'); act.style.width='96px'; act.style.marginBottom='0';
+    amInputs[fc.k]={on:on,thr:thr,act:act,sel:fc.sel,thrKey:fc.thr};
+    row.append(on,lb,thrL,thr,act); amWrap.appendChild(row); }); }
+  am.appendChild(_bbtn('Save AutoMod','sm',function(){ var out={}; FCONF.forEach(function(fc){ var i=amInputs[fc.k]; var o={on:i.on.checked,action:i.act.value}; if(i.sel){o.exemptLevel=parseInt(i.thr.value,10);}else{o[i.thrKey]=parseInt(i.thr.value,10);} out[fc.k]=o; }); api('/api/bot/filters',{filters:out}).then(function(){toast('AutoMod saved');}).catch(function(e){if(e.message!=='Session expired')toast(e.message,true);}); }));
+  m.appendChild(am);
+  fetch(API+'/api/bot/filters',{cache:'no-store'}).then(function(r){return r.json();}).then(function(j){renderAm(j.filters||{});}).catch(function(){renderAm({});});
+
+  /* chat mode + nuke */
+  var cm=_bcard('🔧 Chat mode + nuke','One-tap chat lockdowns and mass cleanup. Needs the bot connected as a mod.');
+  function mode(body,msg){ api('/api/bot/chatmode',body).then(function(){toast(msg);}).catch(function(e){if(e.message!=='Session expired')toast(e.message,true);}); }
+  var cmR=_brow();
+  cmR.appendChild(_bbtn('Emote-only ON','sm',function(){mode({emote:true},'Emote-only on');}));
+  cmR.appendChild(_bbtn('Emote OFF','sec sm',function(){mode({emote:false},'Emote-only off');}));
+  cmR.appendChild(_bbtn('Sub-only ON','sm',function(){mode({sub:true},'Sub-only on');}));
+  cmR.appendChild(_bbtn('Sub OFF','sec sm',function(){mode({sub:false},'Sub-only off');}));
+  cmR.appendChild(_bbtn('Followers-only','sm',function(){mode({follower:true,followerMin:10},'Followers-only on');}));
+  cmR.appendChild(_bbtn('Slow 30s','sm',function(){mode({slow:true,slowSec:30},'Slow mode on');}));
+  cmR.appendChild(_bbtn('All modes OFF','sec sm',function(){mode({emote:false,sub:false,follower:false,slow:false},'All chat modes off');}));
+  cm.appendChild(cmR);
+  var nk=_binp('Nuke: phrase to purge from recent chat'); cm.appendChild(nk);
+  cm.appendChild(_bbtn('☢ Nuke phrase','sm',function(){ var p=nk.value.trim(); if(!p){toast('Enter a phrase',true);return;} if(!confirm('Delete recent messages containing "'+p+'"?'))return; api('/api/bot/nuke',{phrase:p}).then(function(){toast('Nuked '+p);nk.value='';}).catch(function(e){if(e.message!=='Session expired')toast(e.message,true);}); }));
+  m.appendChild(cm);
+
   /* loyalty */
   var lb=_bcard('🏆 Loyalty leaderboard','Viewers earn points by watching + chatting. Give or take manually below.');
   var lTabs=_brow(); var lfield='points';
