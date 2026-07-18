@@ -616,9 +616,12 @@ function rCanvas(m){
   var list=[];
   OVS.forEach(function(o){ list.push({id:o.id,t:o.t,al:o.al,u:o.u,builtin:true}); });
   Object.keys(OV||{}).forEach(function(n){
-    if(n==='canvas') return;
+    if(n==='canvas'||n==='classcard') return;
     if(OVS.some(function(o){return o.id===n;})) return;
-    list.push({id:n,t:n,custom:true});
+    var c=OV[n]||{};
+    var isScene=(c.onCanvas===true)||(typeof c.sceneTitle==='string')||(typeof c.css==='string'&&c.css)||(typeof c.html==='string'&&c.html)||(typeof c.js==='string'&&c.js);
+    if(!isScene) return;
+    list.push({id:n,t:c.sceneTitle||n,custom:true});
   });
   list.forEach(function(o){
     var cfg=(OV&&OV[o.id])||{};
