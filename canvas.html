@@ -62,6 +62,16 @@ function suk(){
 }
 suk(); addEventListener('resize',suk); addEventListener('orientationchange',suk);
 
+// Optional true 1:1 preview: her live Twitch feed as the backdrop, so you see the
+// overlays exactly as they sit on the real broadcast. Opened from the hub.
+if(Q.get('preview')==='1'){
+  var _host=location.hostname||'ftgioo.live';
+  var _tw=document.createElement('iframe');
+  _tw.className='cv-w'; _tw.style.zIndex='0'; _tw.allow='autoplay';
+  _tw.src='https://player.twitch.tv/?channel='+(Q.get('channel')||'ftgioo')+'&parent='+_host+'&muted=true&autoplay=true&controls=false';
+  frame.appendChild(_tw);
+}
+
 function widgetSrc(name, cv){
   var base=BUILTINS[name]?BUILTINS[name].src:('/scene?id='+encodeURIComponent(name));
   var p=new URLSearchParams();
