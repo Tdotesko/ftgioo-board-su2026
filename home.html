@@ -1,0 +1,224 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>FTGIOO — Giovanna Ramos</title>
+<meta name="description" content="FTGIOO (Giovanna Ramos) — live on Twitch. Watch the stream, follow everywhere, and join the community.">
+<meta property="og:title" content="FTGIOO — Giovanna Ramos">
+<meta property="og:description" content="Watch live, follow everywhere, join the community.">
+<meta property="og:type" content="website">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%92%9C%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0a0912; --bg2:#130c1e; --card:rgba(255,255,255,.045); --card2:rgba(255,255,255,.07);
+  --line:rgba(255,255,255,.10); --tx:#f5f3fb; --mut:#a7a2bd;
+  --g1:#a855f7; --g2:#ec4899; --g3:#f59e0b;
+  --grad:linear-gradient(120deg,var(--g1),var(--g2) 55%,var(--g3));
+  --maxw:1080px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--tx);font-family:Inter,-apple-system,BlinkMacSystemFont,sans-serif;
+  line-height:1.55;overflow-x:hidden;-webkit-font-smoothing:antialiased}
+/* animated backdrop */
+.bgfx{position:fixed;inset:0;z-index:-2;background:
+  radial-gradient(50% 45% at 15% 12%,rgba(168,85,247,.22),transparent 60%),
+  radial-gradient(45% 40% at 88% 20%,rgba(236,72,153,.20),transparent 60%),
+  radial-gradient(55% 50% at 70% 95%,rgba(245,158,11,.14),transparent 60%),
+  var(--bg);animation:drift 22s ease-in-out infinite alternate}
+@keyframes drift{to{transform:translate3d(0,-2%,0) scale(1.05)}}
+.grain{position:fixed;inset:0;z-index:-1;opacity:.04;pointer-events:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence baseFrequency='.9'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+a{color:inherit;text-decoration:none}
+.wrap{max-width:var(--maxw);margin:0 auto;padding:0 20px}
+.grad-text{background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+/* nav */
+nav{position:sticky;top:0;z-index:50;backdrop-filter:blur(14px);
+  background:rgba(10,9,18,.72);border-bottom:1px solid var(--line)}
+nav .row{display:flex;align-items:center;gap:14px;height:62px}
+.logo{font-family:Sora,sans-serif;font-weight:800;font-size:20px;letter-spacing:.5px}
+.navsoc{margin-left:auto;display:flex;gap:6px}
+.navsoc a{width:38px;height:38px;display:grid;place-items:center;border-radius:10px;
+  border:1px solid var(--line);color:var(--mut);transition:.18s}
+.navsoc a:hover{color:#fff;border-color:transparent;background:var(--grad);transform:translateY(-2px)}
+.navsoc svg{width:19px;height:19px;fill:currentColor}
+.btn{display:inline-flex;align-items:center;gap:8px;font-weight:700;font-size:15px;
+  padding:12px 20px;border-radius:12px;border:1px solid var(--line);color:var(--tx);
+  background:var(--card);cursor:pointer;transition:.18s;white-space:nowrap}
+.btn:hover{transform:translateY(-2px);border-color:transparent;background:var(--card2)}
+.btn.primary{background:var(--grad);border:none;color:#fff;box-shadow:0 10px 30px rgba(236,72,153,.28)}
+.btn.primary:hover{box-shadow:0 14px 40px rgba(236,72,153,.42)}
+.btn.sm{padding:9px 15px;font-size:14px}
+/* hero */
+.hero{padding:70px 0 40px;text-align:center;position:relative}
+.livepill{display:inline-flex;align-items:center;gap:9px;font-weight:700;font-size:13px;
+  letter-spacing:.5px;text-transform:uppercase;padding:8px 16px;border-radius:999px;
+  border:1px solid var(--line);background:var(--card);margin-bottom:22px}
+.livepill .dot{width:9px;height:9px;border-radius:50%;background:#6b7280}
+.livepill.on{border-color:rgba(236,72,153,.5);color:#fff;background:rgba(236,72,153,.12)}
+.livepill.on .dot{background:#f0326e;box-shadow:0 0 0 0 rgba(240,50,110,.7);animation:pulse 1.6s infinite}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(240,50,110,.6)}70%{box-shadow:0 0 0 10px rgba(240,50,110,0)}100%{box-shadow:0 0 0 0 rgba(240,50,110,0)}}
+.hero h1{font-family:Sora,sans-serif;font-weight:800;line-height:.98;letter-spacing:-1px;
+  font-size:clamp(56px,15vw,140px);margin-bottom:14px}
+.hero .tag{font-size:clamp(16px,2.5vw,21px);color:var(--mut);max-width:560px;margin:0 auto 30px}
+.hero .cta{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+/* section */
+section.blk{padding:44px 0}
+.sec-h{display:flex;align-items:baseline;gap:12px;margin-bottom:20px}
+.sec-h h2{font-family:Sora,sans-serif;font-weight:700;font-size:clamp(24px,4vw,34px)}
+.sec-h .k{font-size:13px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--mut)}
+/* live embed */
+.player{position:relative;width:100%;aspect-ratio:16/9;border-radius:18px;overflow:hidden;
+  border:1px solid var(--line);background:#000;box-shadow:0 30px 80px rgba(0,0,0,.5)}
+.player iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+/* socials grid */
+.socgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px}
+.soc{position:relative;display:flex;flex-direction:column;gap:12px;padding:22px;border-radius:16px;
+  border:1px solid var(--line);background:var(--card);transition:.2s;overflow:hidden}
+.soc::before{content:"";position:absolute;inset:0;opacity:0;background:var(--grad);transition:.2s;z-index:0}
+.soc:hover{transform:translateY(-5px);border-color:transparent}
+.soc:hover::before{opacity:.16}
+.soc>*{position:relative;z-index:1}
+.soc .ic{width:44px;height:44px;border-radius:12px;display:grid;place-items:center;
+  background:var(--card2);border:1px solid var(--line)}
+.soc .ic svg{width:24px;height:24px;fill:#fff}
+.soc .nm{font-family:Sora,sans-serif;font-weight:700;font-size:17px}
+.soc .hd{font-size:13px;color:var(--mut)}
+/* support / sub goal */
+.support{display:grid;grid-template-columns:1.2fr 1fr;gap:20px;align-items:center;
+  padding:30px;border-radius:20px;border:1px solid var(--line);
+  background:linear-gradient(135deg,rgba(168,85,247,.10),rgba(236,72,153,.06))}
+.support h3{font-family:Sora,sans-serif;font-size:26px;margin-bottom:8px}
+.support p{color:var(--mut);margin-bottom:16px}
+.goalcard{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:22px;text-align:center}
+.goalnum{font-family:Sora,sans-serif;font-weight:800;font-size:44px;line-height:1}
+.goallbl{font-size:13px;color:var(--mut);letter-spacing:1px;text-transform:uppercase;margin-bottom:14px}
+.bar{height:12px;border-radius:8px;background:rgba(255,255,255,.08);overflow:hidden;margin:14px 0 6px}
+.bar > i{display:block;height:100%;width:0;border-radius:8px;background:var(--grad);transition:width 1s ease}
+.goalsub{font-size:13px;color:var(--mut)}
+/* event ribbon */
+.ribbon{display:flex;align-items:center;gap:10px;justify-content:center;flex-wrap:wrap;
+  font-size:14px;padding:11px 16px;background:rgba(255,255,255,.05);border-bottom:1px solid var(--line)}
+.ribbon b{color:#fff}
+.ribbon a{font-weight:700;border-bottom:1.5px solid var(--g2)}
+/* footer */
+footer{border-top:1px solid var(--line);padding:34px 0;margin-top:30px;color:var(--mut);font-size:14px}
+footer .row{display:flex;align-items:center;gap:16px;flex-wrap:wrap;justify-content:space-between}
+footer a:hover{color:#fff}
+.modlink{opacity:.7}
+@media(max-width:720px){
+  .support{grid-template-columns:1fr}
+  .hero{padding:48px 0 26px}
+  nav .navsoc a:nth-child(n+4){display:none}
+}
+</style>
+</head>
+<body>
+<div class="bgfx"></div><div class="grain"></div>
+
+<div class="ribbon" id="ribbon">🎓 <span>Live this week:</span> <b>Streamer University 2026</b> <a href="index.html">see the schedule →</a></div>
+
+<nav><div class="wrap row">
+  <a class="logo" href="#top">FT<span class="grad-text">GIOO</span></a>
+  <div class="navsoc">
+    <a href="https://twitch.tv/ftgioo" target="_blank" rel="noopener" aria-label="Twitch" data-soc="tw"></a>
+    <a href="https://youtube.com/@ftgioo" target="_blank" rel="noopener" aria-label="YouTube" data-soc="yt"></a>
+    <a href="https://instagram.com/ft.gioo" target="_blank" rel="noopener" aria-label="Instagram" data-soc="ig"></a>
+    <a href="https://tiktok.com/@giovannaramos" target="_blank" rel="noopener" aria-label="TikTok" data-soc="tt"></a>
+    <a href="https://x.com/sosaisbacc" target="_blank" rel="noopener" aria-label="X" data-soc="x"></a>
+  </div>
+</div></nav>
+
+<header class="hero wrap" id="top">
+  <div class="livepill" id="livepill"><span class="dot"></span><span id="livetxt">Checking status…</span></div>
+  <h1>FT<span class="grad-text">GIOO</span></h1>
+  <p class="tag">Giovanna Ramos. Content creator, streamer, community builder. Catch the stream live and follow along everywhere.</p>
+  <div class="cta">
+    <a class="btn primary" href="https://twitch.tv/ftgioo" target="_blank" rel="noopener">Watch Live</a>
+    <a class="btn" href="https://twitch.tv/subs/ftgioo" target="_blank" rel="noopener">Subscribe</a>
+  </div>
+</header>
+
+<section class="blk wrap" id="live">
+  <div class="sec-h"><span class="k">Stream</span><h2 id="livehead">Live Now</h2></div>
+  <div class="player">
+    <iframe id="tw" src="https://player.twitch.tv/?channel=ftgioo&parent=ftgioo.live&parent=www.ftgioo.live&parent=tdotesko.github.io&muted=true&autoplay=false" allowfullscreen title="FTGIOO live stream"></iframe>
+  </div>
+</section>
+
+<section class="blk wrap" id="socials">
+  <div class="sec-h"><span class="k">Everywhere</span><h2>Follow FTGIOO</h2></div>
+  <div class="socgrid">
+    <a class="soc" href="https://twitch.tv/ftgioo" target="_blank" rel="noopener"><span class="ic" data-soc="tw"></span><span class="nm">Twitch</span><span class="hd">@ftgioo</span></a>
+    <a class="soc" href="https://youtube.com/@ftgioo" target="_blank" rel="noopener"><span class="ic" data-soc="yt"></span><span class="nm">YouTube</span><span class="hd">@ftgioo</span></a>
+    <a class="soc" href="https://instagram.com/ft.gioo" target="_blank" rel="noopener"><span class="ic" data-soc="ig"></span><span class="nm">Instagram</span><span class="hd">@ft.gioo</span></a>
+    <a class="soc" href="https://tiktok.com/@giovannaramos" target="_blank" rel="noopener"><span class="ic" data-soc="tt"></span><span class="nm">TikTok</span><span class="hd">@giovannaramos</span></a>
+    <a class="soc" href="https://x.com/sosaisbacc" target="_blank" rel="noopener"><span class="ic" data-soc="x"></span><span class="nm">X</span><span class="hd">@sosaisbacc</span></a>
+  </div>
+</section>
+
+<section class="blk wrap" id="support">
+  <div class="sec-h"><span class="k">Support</span><h2>Join the movement</h2></div>
+  <div class="support">
+    <div>
+      <h3>Subscribe & help hit the goal</h3>
+      <p>Every sub supports the stream and gets you emotes, no ads, and a spot in the community. Watch the goal climb in real time.</p>
+      <a class="btn primary" href="https://twitch.tv/subs/ftgioo" target="_blank" rel="noopener">Subscribe on Twitch</a>
+    </div>
+    <div class="goalcard">
+      <div class="goalnum" id="subcount">—</div>
+      <div class="goallbl">Subscribers</div>
+      <div class="bar"><i id="subbar"></i></div>
+      <div class="goalsub" id="subgoal">Loading…</div>
+    </div>
+  </div>
+</section>
+
+<footer><div class="wrap row">
+  <div>© <span id="yr"></span> FTGIOO — Giovanna Ramos</div>
+  <div style="display:flex;gap:16px;flex-wrap:wrap">
+    <a href="https://twitch.tv/ftgioo" target="_blank" rel="noopener">Twitch</a>
+    <a href="https://youtube.com/@ftgioo" target="_blank" rel="noopener">YouTube</a>
+    <a href="https://instagram.com/ft.gioo" target="_blank" rel="noopener">Instagram</a>
+    <a class="modlink" href="hub.html">Mod Login</a>
+  </div>
+</div></footer>
+
+<script>
+const API='https://ftgioo-su2026-api-production.up.railway.app';
+document.getElementById('yr').textContent=new Date().getFullYear();
+
+/* brand SVG icons injected into [data-soc] slots */
+const ICONS={
+  tw:'<svg viewBox="0 0 24 24"><path d="M4 2 3 6v14h5v2h3l2-2h4l5-5V2H4zm16 12-3 3h-4l-2 2v-2H7V4h13v10zM15 7h-2v5h2V7zm-5 0H8v5h2V7z"/></svg>',
+  yt:'<svg viewBox="0 0 24 24"><path d="M23 7.5s-.2-1.6-.9-2.3c-.8-.9-1.7-.9-2.2-1C17.2 4 12 4 12 4s-5.2 0-7.9.2c-.5.1-1.4.1-2.2 1C1.2 5.9 1 7.5 1 7.5S.8 9.4.8 11.3v1.4c0 1.9.2 3.8.2 3.8s.2 1.6.9 2.3c.8.9 1.9.8 2.4.9 1.7.2 7.7.2 7.7.2s5.2 0 7.9-.2c.5-.1 1.4-.1 2.2-1 .7-.7.9-2.3.9-2.3s.2-1.9.2-3.8v-1.4c0-1.9-.2-3.8-.2-3.8zM9.8 15.1V8.9l5.3 3.1-5.3 3.1z"/></svg>',
+  ig:'<svg viewBox="0 0 24 24"><path d="M12 2c2.7 0 3 0 4.1.1 1.1 0 1.8.2 2.4.5.7.2 1.2.5 1.7 1s.8 1 1 1.7c.3.6.5 1.3.5 2.4C22 8.9 22 9.3 22 12s0 3-.1 4.1c0 1.1-.2 1.8-.5 2.4-.2.7-.5 1.2-1 1.7s-1 .8-1.7 1c-.6.3-1.3.5-2.4.5C15 22 14.7 22 12 22s-3 0-4.1-.1c-1.1 0-1.8-.2-2.4-.5-.7-.2-1.2-.5-1.7-1s-.8-1-1-1.7c-.3-.6-.5-1.3-.5-2.4C2 15 2 14.7 2 12s0-3 .1-4.1c0-1.1.2-1.8.5-2.4.2-.7.5-1.2 1-1.7s1-.8 1.7-1c.6-.3 1.3-.5 2.4-.5C9 2 9.3 2 12 2zm0 3.2c-1.8 0-2 0-2.7.1-.6 0-1 .2-1.2.3-.3.1-.5.3-.8.5-.2.3-.4.5-.5.8-.1.2-.3.6-.3 1.2C6.5 8.8 6.5 9 6.5 12s0 3.2.1 3.9c0 .6.2 1 .3 1.2.1.3.3.5.5.8.3.2.5.4.8.5.2.1.6.3 1.2.3.7.1.9.1 2.7.1s2 0 2.7-.1c.6 0 1-.2 1.2-.3.3-.1.5-.3.8-.5.2-.3.4-.5.5-.8.1-.2.3-.6.3-1.2.1-.7.1-.9.1-3.9s0-3.2-.1-3.9c0-.6-.2-1-.3-1.2-.1-.3-.3-.5-.5-.8-.3-.2-.5-.4-.8-.5-.2-.1-.6-.3-1.2-.3-.7-.1-.9-.1-2.7-.1zM12 7.8a4.2 4.2 0 1 0 0 8.4 4.2 4.2 0 0 0 0-8.4zm0 6.9a2.7 2.7 0 1 1 0-5.4 2.7 2.7 0 0 1 0 5.4zM17.6 6.4a1 1 0 1 0 0 2 1 1 0 0 0 0-2z"/></svg>',
+  tt:'<svg viewBox="0 0 24 24"><path d="M16.5 2c.3 2.3 1.6 3.9 3.9 4.1v2.7c-1.3.1-2.5-.3-3.9-1v6.6c0 5-3.6 7.6-7.3 6.4-3.9-1.3-4.6-6.3-1.5-8.7 1.1-.9 2.6-1.3 4.1-1.1v2.8c-.5-.1-1-.1-1.5.1-1.2.4-1.8 1.7-1.3 2.9.5 1.3 2.4 1.6 3.4.5.5-.5.6-1.1.6-1.8V2h3z"/></svg>',
+  x:'<svg viewBox="0 0 24 24"><path d="M18.9 2H22l-7 8 8.2 12h-6.4l-5-7.3L5.9 22H2.8l7.5-8.6L2.4 2h6.6l4.5 6.7L18.9 2zm-1.1 18h1.7L7.3 3.8H5.4L17.8 20z"/></svg>'
+};
+document.querySelectorAll('[data-soc]').forEach(function(el){ el.innerHTML=ICONS[el.getAttribute('data-soc')]||''; });
+
+/* live status */
+fetch(API+'/api/live',{cache:'no-store'}).then(function(r){return r.json();}).then(function(j){
+  var p=document.getElementById('livepill'), t=document.getElementById('livetxt'), h=document.getElementById('livehead');
+  if(j.live===true){ p.classList.add('on'); t.textContent='Live now'; h.textContent='Live Now'; }
+  else if(j.live===false){ t.textContent='Currently offline'; h.textContent='Recently streamed'; }
+  else { t.textContent='Watch on Twitch'; h.textContent='The Stream'; }
+}).catch(function(){ document.getElementById('livetxt').textContent='Watch on Twitch'; });
+
+/* live sub goal */
+fetch(API+'/api/subs',{cache:'no-store'}).then(function(r){return r.json();}).then(function(j){
+  var c=document.getElementById('subcount'), b=document.getElementById('subbar'), g=document.getElementById('subgoal');
+  if(j.count!=null){ c.textContent=Number(j.count).toLocaleString();
+    if(j.goal){ var pct=Math.min(100,j.count/j.goal*100); b.style.width=pct+'%';
+      var left=Math.max(0,j.goal-j.count); g.textContent=left>0?(left+' to go until '+Number(j.goal).toLocaleString()):'Goal smashed! 🎉'; }
+    else { b.style.width='100%'; g.textContent='Thanks for the support'; }
+  } else { c.textContent='—'; g.textContent='Subscribe to get us started'; }
+}).catch(function(){ document.getElementById('subgoal').textContent='Subscribe on Twitch'; });
+</script>
+</body>
+</html>
