@@ -322,7 +322,7 @@ async function refresh(force){
 }
 
 /* ---------- shell ---------- */
-const TABS=[['dash','Dashboard'],['help','Setup'],['overlays','Overlays'],['bot','Bot'],['run','Auto Commands'],['subs','Subs'],['activity','Activity']];
+const TABS=[['dash','Dashboard'],['help','Setup'],['canvas','Canvas'],['overlays','Overlays'],['bot','Bot'],['run','Auto Commands'],['subs','Subs'],['activity','Activity']];
 function renderTabs(){
   $('tabs').innerHTML='';
   TABS.forEach(([id,label])=>{
@@ -335,7 +335,7 @@ function render(){
   if(!ST) return;
   renderTabs();
   const m=$('main'); m.innerHTML='';
-  ({run:rRun,dash:rDash,overlays:rOverlays,bot:rBot,help:rSetup,subs:rSubs,activity:rActivity})[tab](m);
+  ({run:rRun,dash:rDash,canvas:rCanvas,overlays:rOverlays,bot:rBot,help:rSetup,subs:rSubs,activity:rActivity})[tab](m);
 }
 
 /* ================= RUN SHOW ================= */
@@ -572,6 +572,101 @@ function _bsel(opts,val){var s=document.createElement('select');s.style.cssText=
 function _bbtn(label,cls,fn){var b=document.createElement('button');b.className='btn '+(cls||'sm');b.textContent=label;b.onclick=fn;return b;}
 function _besc(x){return String(x==null?'':x).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
 function _brow(){var r=document.createElement('div');r.className='row';return r;}
+
+/* ===== Canvas: the single composited overlay ===== */
+function rCanvas(m){
+  var dir=location.pathname.replace(/[^/]*$/,'');
+  var canvasURL=location.origin+dir+'canvas.html';
+  var cv=(typeof OV!=='undefined'&&OV&&OV.canvas)||{};
+  var ferr=function(e){ if(e&&e.message!=='Session expired') toast(e.message,true); };
+
+  // --- the one url ---
+  var c1=_bcard('Your canvas','This is the ONE url you add to TVU Go. Add it once, stretch it to full frame, and never touch TVU again. Everything else is controlled from here.');
+  var box=document.createElement('div');
+  box.textContent=canvasURL;
+  box.style.cssText='font-family:monospace;background:#000;border:1px solid #7d2433;border-radius:8px;padding:11px;color:#ffb320;word-break:break-all;margin:2px 0 10px';
+  c1.appendChild(box);
+  var r1=_brow();
+  r1.appendChild(_bbtn('Copy URL','sm',function(ev){copyText(canvasURL,ev.target);}));
+  var openA=document.createElement('a'); openA.className='btn sec sm'; openA.textContent='Open canvas'; openA.href=canvasURL; openA.target='_blank'; r1.appendChild(openA);
+  c1.appendChild(r1);
+  m.appendChild(c1);
+
+  // --- one-time TVU setup + align/reload ---
+  var c2=_bcard('One time TVU setup','Do this once, before going live.');
+  var ol=document.createElement('ol'); ol.style.cssText='margin:2px 0 10px;padding-left:20px;line-height:1.7;color:#e8dcc0';
+  ['In TVU Go, add an HTML overlay using the url above.',
+   'Tap Align frame below. A gold border shows on the overlay.',
+   'In TVU, stretch the layer until that gold border touches all 4 screen edges.',
+   'Tap Align frame again to hide it, then lock the layer in TVU. Done forever.']
+   .forEach(function(t){var li=document.createElement('li');li.textContent=t;ol.appendChild(li);});
+  c2.appendChild(ol);
+  var r2=_brow();
+  r2.appendChild(_bbtn(cv.calib?'Hide align frame':'Align frame',cv.calib?'sm':'sm sec',function(){
+    api('/api/overlay',{name:'canvas',cfg:{calib:!cv.calib}}).then(function(){toast(cv.calib?'Align frame off':'Align frame on. Stretch until it touches all 4 edges');refresh(true);}).catch(ferr);
+  }));
+  r2.appendChild(_bbtn('Reload canvas','sm sec',function(){
+    api('/api/overlay',{name:'canvas',cfg:{reload:String(Date.now())}}).then(function(){toast('Canvas reloading in TVU (~10s)');}).catch(ferr);
+  }));
+  c2.appendChild(r2);
+  m.appendChild(c2);
+
+  // --- widgets living on the canvas ---
+  var c3=_bcard('Widgets on the canvas','Show, hide, stack, and position each overlay. They all live inside the one canvas.');
+  var list=[];
+  OVS.forEach(function(o){ list.push({id:o.id,t:o.t,al:o.al,u:o.u,builtin:true}); });
+  Object.keys(OV||{}).forEach(function(n){
+    if(n==='canvas') return;
+    if(OVS.some(function(o){return o.id===n;})) return;
+    list.push({id:n,t:n,custom:true});
+  });
+  list.forEach(function(o){
+    var cfg=(OV&&OV[o.id])||{};
+    var hidden=!!cfg.hidden;
+    var row=document.createElement('div'); row.className='row';
+    row.style.cssText='align-items:center;gap:8px;flex-wrap:wrap;border-top:1px solid #3a2129;padding:9px 0';
+    var nm=document.createElement('b'); nm.textContent=o.t; nm.style.cssText='min-width:112px;color:'+(hidden?'#8f8069':'#ffe8c0');
+    row.appendChild(nm);
+    if(hidden){ var chip=document.createElement('span'); chip.className='chip off'; chip.style.margin='0'; chip.textContent='hidden'; row.appendChild(chip); }
+    row.appendChild(_bbtn(hidden?'Show':'Hide','sm'+(hidden?'':' sec'),function(){
+      api('/api/overlay',{name:o.id,cfg:{hidden:!hidden}}).then(function(){toast(o.t+(hidden?' shown':' hidden'));refresh(true);}).catch(ferr);
+    }));
+    var zw=document.createElement('label'); zw.style.cssText='display:flex;align-items:center;gap:4px;color:#dcc9a4;font-size:12px';
+    zw.appendChild(document.createTextNode('layer'));
+    var zi=document.createElement('input'); zi.type='number'; zi.value=(typeof cfg.z==='number')?cfg.z:''; zi.placeholder='auto';
+    zi.style.cssText='width:62px;padding:5px;border-radius:5px;border:1px solid #7d2433;background:#2a161d;color:#f6e7c9';
+    zi.onchange=function(){ var v=zi.value===''?null:parseInt(zi.value,10); api('/api/overlay',{name:o.id,cfg:{z:v}}).then(function(){toast(o.t+' layer set');refresh(true);}).catch(ferr); };
+    zw.appendChild(zi); row.appendChild(zw);
+    if(o.builtin){
+      var ed=document.createElement('a'); ed.className='btn sec sm'; ed.textContent='Move & resize';
+      ed.href=dir+o.u+(o.u.indexOf('?')>=0?'&':'?')+'edit=1'; ed.target='_blank'; row.appendChild(ed);
+    }
+    if(o.al){ row.appendChild(_bbtn('Test','sm',function(){
+      api('/api/overlay',{name:o.id,cfg:{testAlert:String(Date.now())}}).then(function(){toast('Test alert sent');}).catch(ferr);
+    })); }
+    c3.appendChild(row);
+  });
+  m.appendChild(c3);
+
+  // --- socials handles (optional, live editable, no TVU change) ---
+  var h=cv.handles||{};
+  var c4=_bcard('Socials handles','Optional. The @handles shown on the socials bar. Saves live, no need to change the TVU url.');
+  var grid=document.createElement('div'); grid.style.cssText='display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin-bottom:8px';
+  var fields=[['ig','Instagram'],['x','X / Twitter'],['yt','YouTube'],['tt','TikTok'],['tw','Twitch'],['channel','Twitch channel']];
+  var ins={};
+  fields.forEach(function(f){
+    var w=document.createElement('label'); w.style.cssText='display:flex;flex-direction:column;gap:3px;font-size:12px;color:#dcc9a4';
+    w.appendChild(document.createTextNode(f[1]));
+    var i=_binp(f[0]==='channel'?'ftgioo':'@handle', h[f[0]]||''); i.style.marginBottom='0'; ins[f[0]]=i; w.appendChild(i);
+    grid.appendChild(w);
+  });
+  c4.appendChild(grid);
+  c4.appendChild(_bbtn('Save handles','sm',function(){
+    var handles={}; fields.forEach(function(f){ var v=ins[f[0]].value.trim(); if(v) handles[f[0]]=v; });
+    api('/api/overlay',{name:'canvas',cfg:{handles:handles}}).then(function(){toast('Socials handles saved');refresh(true);}).catch(ferr);
+  }));
+  m.appendChild(c4);
+}
 
 function rBot(m){
   /* status */
