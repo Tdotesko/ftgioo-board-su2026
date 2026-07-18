@@ -330,7 +330,7 @@ async function refresh(force){
 }
 
 /* ---------- shell ---------- */
-const TABS=[['dash','Dashboard'],['help','Setup'],['overlays','Overlays'],['run','Auto Commands'],['subs','Subs'],['activity','Activity']];
+const TABS=[['dash','Dashboard'],['help','Setup'],['overlays','Overlays'],['bot','Bot'],['run','Auto Commands'],['subs','Subs'],['activity','Activity']];
 function renderTabs(){
   $('tabs').innerHTML='';
   TABS.forEach(([id,label])=>{
@@ -343,7 +343,7 @@ function render(){
   if(!ST) return;
   renderTabs();
   const m=$('main'); m.innerHTML='';
-  ({run:rRun,dash:rDash,overlays:rOverlays,help:rSetup,subs:rSubs,activity:rActivity})[tab](m);
+  ({run:rRun,dash:rDash,overlays:rOverlays,bot:rBot,help:rSetup,subs:rSubs,activity:rActivity})[tab](m);
 }
 
 /* ================= RUN SHOW ================= */
@@ -571,6 +571,145 @@ function rDash(m){
 
 /* ================= OVERLAYS ================= */
 let __pollTimer=null;
+
+/* ===== bot dashboard helpers ===== */
+function _bcard(title,hint){var s=document.createElement('div');s.className='sect';var hh=document.createElement('h2');hh.textContent=title;s.appendChild(hh);if(hint){var d=document.createElement('div');d.className='muted';d.style.margin='6px 0 10px';d.innerHTML=hint;s.appendChild(d);}return s;}
+function _binp(ph,val){var i=document.createElement('input');i.placeholder=ph||'';if(val!=null)i.value=val;i.style.cssText='width:100%;margin-bottom:7px';return i;}
+function _bta(ph,val){var t=document.createElement('textarea');t.placeholder=ph||'';if(val!=null)t.value=val;t.rows=2;t.spellcheck=false;t.style.cssText='width:100%;margin-bottom:7px;font-family:inherit';return t;}
+function _bsel(opts,val){var s=document.createElement('select');s.style.cssText='width:100%;margin-bottom:7px';opts.forEach(function(o){var op=document.createElement('option');op.value=o[0];op.textContent=o[1];if(o[0]===val)op.selected=true;s.appendChild(op);});return s;}
+function _bbtn(label,cls,fn){var b=document.createElement('button');b.className='btn '+(cls||'sm');b.textContent=label;b.onclick=fn;return b;}
+function _besc(x){return String(x==null?'':x).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+function _brow(){var r=document.createElement('div');r.className='row';return r;}
+
+function rBot(m){
+  /* status */
+  var sc=_bcard('🤖 Bot status');
+  var stx=document.createElement('div'); stx.className='muted'; stx.textContent='Loading...'; sc.appendChild(stx);
+  var sr=_brow(); sr.style.marginTop='8px';
+  var ab=document.createElement('a'); ab.className='btn sm'; ab.textContent='Connect / re-auth'; ab.href=API+'/auth'; ab.target='_blank'; sr.appendChild(ab);
+  sc.appendChild(sr); m.appendChild(sc);
+  fetch(API+'/api/bot/status',{cache:'no-store'}).then(function(r){return r.json();}).then(function(j){
+    if(!j.ok)return; var chip=function(on,label){return '<span class="chip '+(on?'on':'man')+'" style="margin:2px"><span class="d"></span>'+label+'</span>';};
+    if(!j.configured){ stx.innerHTML='<b style="color:#ffb320">Not configured yet.</b> Add TWITCH_CLIENT_ID + TWITCH_CLIENT_SECRET in Railway, then click Connect and authorize Gio + the bot account.'; return; }
+    stx.innerHTML=chip(j.broadcaster,'Gio '+(j.broadcaster?('@'+j.broadcaster):'not connected'))+chip(j.bot,'Bot '+(j.bot?('@'+j.bot):'not connected'))+chip(j.eventsub,'Live events')+chip(j.chat,'Chat ready');
+    if(j.settings){ if(aAnn)aAnn.checked=j.settings.autoAnnounce; if(aSho)aSho.checked=j.settings.autoShoutout; }
+  }).catch(function(){});
+
+  /* send message */
+  var sm=_bcard('📣 Send a message');
+  var smT=_binp('Type a message for the bot to post in chat'); sm.appendChild(smT);
+  var smR=_brow(); smR.appendChild(_bbtn('Send to chat','sm',function(){ if(!smT.value.trim()){toast('Type a message',true);return;} api('/api/bot/say',{text:smT.value}).then(function(){toast('Sent');smT.value='';}).catch(function(e){if(e.message!=='Session expired')toast(e.message,true);}); }));
+  sm.appendChild(smR); m.appendChild(sm);
+
+  /* custom commands */
+  var cc=_bcard('💬 Custom commands','Chat commands like Fossabot. Use $(user) and $(channel) in the response. Built-ins already work: !current !professor !nextclass !today !classes !subs.');
+  var cList=document.createElement('div'); cList.style.margin='2px 0 12px'; cc.appendChild(cList);
+  var cName=_binp('Command name, e.g. discord (no !)'); var cResp=_bta('Response, e.g. Join our Discord: discord.gg/ftgioo');
+  var cLevel=_bsel([['everyone','Everyone'],['sub','Subscribers'],['vip','VIPs'],['mod','Mods'],['broadcaster','Broadcaster only']],'everyone');
+  var cCd=_binp('Cooldown seconds (default 5)'); cc.append(cName,cResp,cLevel,cCd);
+  var cR=_brow();
+  cR.appendChild(_bbtn('Save command','sm',function(){ var n=cName.value.trim(); if(!n){toast('Enter a name',true);return;} if(!cResp.value.trim()){toast('Enter a response',true);return;} api('/api/bot/commands',{name:n,response:cResp.value,level:cLevel.value,cooldown:parseInt(cCd.value,10)||5}).then(function(){toast('Command saved');cName.value='';cResp.value='';cCd.value='';loadCmds();}).catch(function(e){if(e.message!=='Session expired')toast(e.message,true);}); }));
+  cR.appendChild(_bbtn('Clear','sec sm',function(){cName.value='';cResp.value='';cCd.value='';})); cc.appendChild(cR); m.appendChild(cc);
+  function loadCmds(){ fetch(API+'/api/bot/commands',{cache:'no-store'}).then(function(r){return r.json();}).then(function(j){ cList.innerHTML=''; var cs=j.commands||[]; if(!cs.length){cList.innerHTML='<div class="muted" style="font-size:12px">No custom commands yet.</div>';return;} cs.forEach(function(c){ var row=document.createElement('div'); row.style.cssText='display:flex;align-items:flex-start;gap:6px;padding:7px 0;border-bottom:1px solid #ffffff14'; row.innerHTML='<div style="flex:1;min-width:0"><b style="color:#ffb320">!'+_besc(c.name)+'</b> <span class="muted" style="font-size:11px">'+_besc(c.level)+' · '+c.cooldown+'s</span><br><span style="font-size:12px;word-break:break-word">'+_besc(c.response)+'</span></div>'; var ed=_bbtn('Edit','sec sm',function(){cName.value=c.name;cResp.value=c.response;cLevel.value=c.level;cCd.value=c.cooldown;cName.scrollIntoView({block:'center'});}); var dl=_bbtn('Del','sec sm',function(){if(!confirm('Delete !'+c.name+'?'))return;api('/api/bot/commands',{action:'delete',name:c.name}).then(function(){toast('Deleted');loadCmds();});}); ed.style.flex='0 0 auto';dl.style.flex='0 0 auto'; row.append(ed,dl); cList.appendChild(row); }); }).catch(function(){}); }
+  loadCmds();
+
+  /* timers */
+  var tm=_bcard('⏱️ Timers','Auto-posted messages on a schedule (only while live). Great for follow reminders, Discord, socials.');
+  var tList=document.createElement('div'); tList.style.margin='2px 0 12px'; tm.appendChild(tList);
+  var tName=_binp('Timer name, e.g. follow_reminder'); var tMsg=_bta('Message to post'); var tIv=_binp('Every how many minutes (default 15)');
+  tm.append(tName,tMsg,tIv); var tR=_brow();
+  tR.appendChild(_bbtn('Save timer','sm',function(){ var n=tName.value.trim(); if(!n){toast('Enter a name',true);return;} if(!tMsg.value.trim()){toast('Enter a message',true);return;} api('/api/bot/timers',{name:n,message:tMsg.value,interval:parseInt(tIv.value,10)||15}).then(function(){toast('Timer saved');tName.value='';tMsg.value='';tIv.value='';loadTimers();}).catch(function(e){if(e.message!=='Session expired')toast(e.message,true);}); }));
+  tm.appendChild(tR); m.appendChild(tm);
+  function loadTimers(){ fetch(API+'/api/bot/timers',{cache:'no-store'}).then(function(r){return r.json();}).then(function(j){ tList.innerHTML=''; var ts=j.timers||[]; if(!ts.length){tList.innerHTML='<div class="muted" style="font-size:12px">No timers yet.</div>';return;} ts.forEach(function(c){ var row=document.createElement('div'); row.style.cssText='display:flex;align-items:flex-start;gap:6px;padding:7px 0;border-bottom:1px solid #ffffff14'; row.innerHTML='<div style="flex:1;min-width:0"><b style="color:#ffb320">'+_besc(c.name)+'</b> <span class="muted" style="font-size:11px">every '+c.interval_min+'m</span><br><span style="font-size:12px;word-break:break-word">'+_besc(c.message)+'</span></div>'; var ed=_bbtn('Edit','sec sm',function(){tName.value=c.name;tMsg.value=c.message;tIv.value=c.interval_min;tName.scrollIntoView({block:'center'});}); var dl=_bbtn('Del','sec sm',function(){if(!confirm('Delete timer '+c.name+'?'))return;api('/api/bot/timers',{action:'delete',name:c.name}).then(function(){toast('Deleted');loadTimers();});}); ed.style.flex='0 0 auto';dl.style.flex='0 0 auto'; row.append(ed,dl); tList.appendChild(row); }); }).catch(function(){}); }
+  loadTimers();
+
+  /* keyword responses */
+  var kw=_bcard('🔑 Keyword responses','Auto-reply when chat says a word or phrase (e.g. someone types "discord").');
+  var kList=document.createElement('div'); kList.style.margin='2px 0 12px'; kw.appendChild(kList);
+  var kTrig=_binp('Trigger word/phrase, e.g. discord'); var kResp=_bta('Auto-response');
+  var kMode=_bsel([['contains','Message contains it'],['exact','Message is exactly it']],'contains');
+  var kLevel=_bsel([['everyone','Everyone'],['sub','Subscribers'],['vip','VIPs'],['mod','Mods']],'everyone');
+  var kCd=_binp('Cooldown seconds (default 10)'); kw.append(kTrig,kResp,kMode,kLevel,kCd);
+  var kR=_brow();
+  kR.appendChild(_bbtn('Save keyword','sm',function(){ var t=kTrig.value.trim(); if(!t){toast('Enter a trigger',true);return;} if(!kResp.value.trim()){toast('Enter a response',true);return;} api('/api/bot/keywords',{trigger:t,response:kResp.value,contains:kMode.value==='contains',level:kLevel.value,cooldown:parseInt(kCd.value,10)||10}).then(function(){toast('Keyword saved');kTrig.value='';kResp.value='';kCd.value='';loadKw();}).catch(function(e){if(e.message!=='Session expired')toast(e.message,true);}); }));
+  kw.appendChild(kR); m.appendChild(kw);
+  function loadKw(){ fetch(API+'/api/bot/keywords',{cache:'no-store'}).then(function(r){return r.json();}).then(function(j){ kList.innerHTML=''; var ks=j.keywords||[]; if(!ks.length){kList.innerHTML='<div class="muted" style="font-size:12px">No keywords yet.</div>';return;} ks.forEach(function(c){ var row=document.createElement('div'); row.style.cssText='display:flex;align-items:flex-start;gap:6px;padding:7px 0;border-bottom:1px solid #ffffff14'; row.innerHTML='<div style="flex:1;min-width:0"><b style="color:#ffb320">'+_besc(c.trigger)+'</b> <span class="muted" style="font-size:11px">'+(c.contains!==false?'contains':'exact')+' · '+_besc(c.level)+'</span><br><span style="font-size:12px;word-break:break-word">'+_besc(c.response)+'</span></div>'; var ed=_bbtn('Edit','sec sm',function(){kTrig.value=c.trigger;kResp.value=c.response;kMode.value=c.contains!==false?'contains':'exact';kLevel.value=c.level;kCd.value=c.cooldown;kTrig.scrollIntoView({block:'center'});}); var dl=_bbtn('Del','sec sm',function(){if(!confirm('Delete keyword '+c.trigger+'?'))return;api('/api/bot/keywords',{action:'delete',trigger:c.trigger}).then(function(){toast('Deleted');loadKw();});}); ed.style.flex='0 0 auto';dl.style.flex='0 0 auto'; row.append(ed,dl); kList.appendChild(row); }); }).catch(function(){}); }
+  loadKw();
+
+  /* loyalty */
+  var lb=_bcard('🏆 Loyalty leaderboard','Viewers earn points by watching + chatting. Give or take manually below.');
+  var lTabs=_brow(); var lfield='points';
+  [['points','Points'],['gifts','Top gifters'],['bits','Top cheerers'],['subs','Subs']].forEach(function(f){ lTabs.appendChild(_bbtn(f[1],'sec sm',function(){lfield=f[0];loadLb();})); });
+  lb.appendChild(lTabs);
+  var lList=document.createElement('div'); lList.style.margin='8px 0'; lb.appendChild(lList);
+  var pLogin=_binp('Viewer login (no @)'); var pAmt=_binp('Amount (+ gives, - takes)'); lb.append(pLogin,pAmt);
+  var pR=_brow(); pR.appendChild(_bbtn('Adjust points','sm',function(){ var lg=pLogin.value.trim(); var a=parseInt(pAmt.value,10); if(!lg||isNaN(a)){toast('Enter login and amount',true);return;} api('/api/bot/points',{login:lg,amount:a}).then(function(){toast('Points updated');pLogin.value='';pAmt.value='';loadLb();}).catch(function(e){if(e.message!=='Session expired')toast(e.message,true);}); }));
+  lb.appendChild(pR); m.appendChild(lb);
+  function loadLb(){ fetch(API+'/api/bot/leaderboard?field='+lfield+'&limit=10',{cache:'no-store'}).then(function(r){return r.json();}).then(function(j){ var rows=j.rows||[]; lList.innerHTML=rows.length?rows.map(function(r,i){return '<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid #ffffff10"><span>'+(i+1)+'. '+_besc(r.display||r.login)+'</span><b style="color:#ffb320">'+(r[lfield]||0)+'</b></div>';}).join(''):'<div class="muted" style="font-size:12px">No data yet.</div>'; }).catch(function(){}); }
+  loadLb();
+
+  /* native poll + prediction */
+  var np=_bcard('📊 Native Twitch poll','Launches the real Twitch poll UI on stream. Needs Gio connected.');
+  var npT=_binp('Poll question'); var npC=_bta('One choice per line (2-5)'); var npD=_binp('Duration seconds (default 120)'); np.append(npT,npC,npD);
+  var npR=_brow(); npR.appendChild(_bbtn('Launch poll','sm',function(){ var ch=npC.value.split('\n').map(function(s){return s.trim();}).filter(Boolean); if(!npT.value.trim()||ch.length<2){toast('Question + 2 choices needed',true);return;} api('/api/bot/poll',{title:npT.value,choices:ch,duration:parseInt(npD.value,10)||120}).then(function(r){toast(r.ok?'Poll launched on Twitch':'Failed (is Gio connected?)',!r.ok);}).catch(function(e){if(e.message!=='Session expired')toast(e.message,true);}); }));
+  np.appendChild(npR); m.appendChild(np);
+  var pr=_bcard('🔮 Native prediction','Real Twitch channel-points prediction. Needs Gio connected.');
+  var prT=_binp('Prediction title'); var prO=_bta('One outcome per line (2-10)'); var prW=_binp('Window seconds (default 120)'); pr.append(prT,prO,prW);
+  var prR=_brow(); prR.appendChild(_bbtn('Start prediction','sm',function(){ var os=prO.value.split('\n').map(function(s){return s.trim();}).filter(Boolean); if(!prT.value.trim()||os.length<2){toast('Title + 2 outcomes needed',true);return;} api('/api/bot/prediction',{title:prT.value,outcomes:os,window:parseInt(prW.value,10)||120}).then(function(r){toast(r.ok?'Prediction started':'Failed (is Gio connected?)',!r.ok);}).catch(function(e){if(e.message!=='Session expired')toast(e.message,true);}); }));
+  pr.appendChild(prR); m.appendChild(pr);
+
+  /* settings */
+  var settc=_bcard('⚙️ Bot settings');
+  var aAnn=document.createElement('input'); aAnn.type='checkbox'; var aSho=document.createElement('input'); aSho.type='checkbox';
+  var mkTog=function(el,label){var w=document.createElement('label');w.style.cssText='display:flex;align-items:center;gap:9px;margin:6px 0;font-size:14px;cursor:pointer';el.style.width='18px';el.style.height='18px';w.append(el,document.createTextNode(label));return w;};
+  settc.appendChild(mkTog(aAnn,'Auto-announce class changes in chat'));
+  settc.appendChild(mkTog(aSho,'Auto-shoutout raiders'));
+  var setR=_brow(); setR.appendChild(_bbtn('Save settings','sm',function(){ api('/api/bot/settings',{autoAnnounce:aAnn.checked,autoShoutout:aSho.checked}).then(function(){toast('Settings saved');}).catch(function(e){if(e.message!=='Session expired')toast(e.message,true);}); }));
+  settc.appendChild(setR); m.appendChild(settc);
+}
+
+/* ===== scene creator (custom overlays with copy-paste URLs) ===== */
+function sceneBase(){ return location.origin+location.pathname.replace(/[^/]*$/,'')+'scene.html?id='; }
+function sceneCreator(m){
+  var builtins={}; (typeof OVS!=='undefined'?OVS:[]).forEach(function(o){builtins[o.id]=1;});
+  var s=_bcard('🎬 Custom overlays','Build your own overlays with the live editor, then paste the URL into OBS or TVU Go as a browser source. Works exactly like the built-in overlays.');
+  var nameIn=_binp('New overlay name, e.g. countdown (letters/numbers only)'); s.appendChild(nameIn);
+  var nR=_brow(); nR.appendChild(_bbtn('Create overlay','sm',function(){ var id=(nameIn.value||'').toLowerCase().replace(/[^a-z0-9_]/g,''); if(!id){toast('Enter a name (letters/numbers)',true);return;} if(builtins[id]){toast('That name is a built-in overlay, pick another',true);return;} api('/api/overlay',{name:id,cfg:{sceneTitle:nameIn.value.trim()||id}}).then(function(){toast('Overlay "'+id+'" created');nameIn.value='';refresh(true);}).catch(function(e){if(e.message!=='Session expired')toast(e.message,true);}); }));
+  s.appendChild(nR);
+  var list=document.createElement('div'); list.style.marginTop='12px'; s.appendChild(list);
+  var scenes=Object.keys(OV||{}).filter(function(k){return !builtins[k];});
+  if(!scenes.length){ list.innerHTML='<div class="muted" style="font-size:12px">No custom overlays yet. Create one above.</div>'; }
+  scenes.forEach(function(id){
+    var cfg=OV[id]||{}; var url=sceneBase()+id;
+    var card=document.createElement('div'); card.className='ovcard'; card.style.marginBottom='10px';
+    var head=document.createElement('div'); head.className='row'; head.style.justifyContent='space-between';
+    head.innerHTML='<h3 style="margin:0">'+_besc(cfg.sceneTitle||id)+' <span class="muted" style="font-size:11px">'+(cfg.hidden?'hidden':'live')+'</span></h3>';
+    card.appendChild(head);
+    var urlBox=document.createElement('div'); urlBox.style.cssText='font-size:11px;word-break:break-all;background:#00000030;border-radius:7px;padding:7px 9px;margin:8px 0;font-family:ui-monospace,monospace'; urlBox.textContent=url; card.appendChild(urlBox);
+    var r1=_brow();
+    r1.appendChild(_bbtn('Copy URL','sm',function(){copyText(url,this);}));
+    var open=document.createElement('a'); open.className='btn sec sm'; open.textContent='Preview'; open.href=url; open.target='_blank'; r1.appendChild(open);
+    r1.appendChild(_bbtn(cfg.hidden?'Show':'Hide','sec sm',function(){ api('/api/overlay',{name:id,cfg:{hidden:!cfg.hidden}}).then(function(){toast(cfg.hidden?'Shown':'Hidden');refresh(true);}); }));
+    r1.appendChild(_bbtn('Delete','sec sm',function(){ if(!confirm('Delete overlay "'+id+'"? This cannot be undone.'))return; api('/api/overlay',{name:id,del:true}).then(function(){toast('Deleted');refresh(true);}).catch(function(e){if(e.message!=='Session expired')toast(e.message,true);}); }));
+    card.appendChild(r1);
+    /* live builder for this scene */
+    var det=document.createElement('details'); det.style.marginTop='9px';
+    var sum=document.createElement('summary'); sum.style.cssText='cursor:pointer;font-weight:800;color:var(--gold-soft);font-size:12.5px'; sum.textContent='🎨 Edit content (CSS / HTML / JS + templates)'; det.appendChild(sum);
+    var tsel=document.createElement('select'); tsel.style.cssText='width:100%;margin:8px 0';
+    (function(){var gg={},order=[];SU_TPL.forEach(function(tp,i){var c=tp.cat||'Other';if(!gg[c]){gg[c]=[];order.push(c);}gg[c].push('<option value="'+i+'">'+tp.name+'</option>');});tsel.innerHTML='<option value="">Insert a template...</option>'+order.map(function(c){return '<optgroup label="'+c+'">'+gg[c].join('')+'</optgroup>';}).join('');})();
+    det.appendChild(tsel);
+    var css=_bta('CSS'); css.value=cfg.css||''; var html=_bta('HTML'); html.value=cfg.html||''; var js=_bta('JS (optional). root = your layer'); js.value=cfg.js||'';
+    css.rows=3;html.rows=3;js.rows=3; det.append(css,html,js);
+    tsel.onchange=function(){var tp=SU_TPL[tsel.value];if(!tp)return;css.value=tp.css||'';html.value=tp.html||'';js.value=tp.js||'';tsel.value='';toast('Template loaded, review then Apply');};
+    var bR=_brow();
+    bR.appendChild(_bbtn('Apply live','sm',function(){ api('/api/overlay',{name:id,cfg:{css:css.value,html:html.value,js:js.value}}).then(function(){toast('Applied to "'+id+'"');refresh(true);}).catch(function(e){if(e.message!=='Session expired')toast(e.message,true);}); }));
+    bR.appendChild(_bbtn('Clear','sec sm',function(){css.value='';html.value='';js.value='';api('/api/overlay',{name:id,cfg:{css:'',html:'',js:''}}).then(function(){toast('Cleared');refresh(true);});}));
+    det.appendChild(bR); card.appendChild(det);
+    list.appendChild(card);
+  });
+  m.appendChild(s);
+}
+
 function pollPanel(m){
   function esc(x){return String(x).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
   const s=document.createElement('div'); s.className='sect';
@@ -608,6 +747,7 @@ function rOverlays(m){
   m.appendChild(intro);
 
   pollPanel(m);
+  sceneCreator(m);
 
   // emergency controls: calibration + panic switches for every overlay at once
   const em=document.createElement('div'); em.className='sect';
