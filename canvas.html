@@ -85,11 +85,14 @@ function reconcile(ov){
   Object.keys(BUILTINS).forEach(function(name){
     var c=ov[name]||{}; if(!c.hidden) want[name]=c;
   });
-  // custom scenes: any other overlay key, present unless hidden or opted off canvas
+  // custom scenes: only real builder scenes, not leftover/legacy config keys
   Object.keys(ov).forEach(function(name){
-    if(BUILTINS[name]||name==='canvas') return;
+    if(BUILTINS[name]||name==='canvas'||name==='classcard') return;
     var c=ov[name]||{};
     if(c.hidden||c.onCanvas===false) return;
+    var isScene=(c.onCanvas===true)||(typeof c.sceneTitle==='string')||
+      (typeof c.css==='string'&&c.css)||(typeof c.html==='string'&&c.html)||(typeof c.js==='string'&&c.js);
+    if(!isScene) return;
     want[name]=c;
   });
   // drop frames no longer wanted (frees their chat sockets, timers, etc.)
