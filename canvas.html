@@ -12,6 +12,9 @@
   #cv-frame{position:fixed;top:0;left:0;width:1920px;height:1080px;
     transform-origin:top left;transform:scale(var(--cvkx,1),var(--cvky,1));
     will-change:transform}
+  /* preview mode letterboxes a clean 16:9 centered, so it looks correct in a browser */
+  #cv-frame.fit{top:50%;left:50%;transform-origin:center center;
+    transform:translate(-50%,-50%) scale(var(--cvkx,1))}
   /* each widget is its own overlay page, running at a true 1920x1080 inside its frame */
   .cv-w{position:absolute;left:0;top:0;width:1920px;height:1080px;border:0;
     background:transparent;pointer-events:none;display:block;color-scheme:normal}
@@ -58,13 +61,16 @@ const frames={}; // name -> iframe element
 // TVU then maps that webview onto the 16:9 broadcast, so filling here cancels the
 // side/letterbox bars that were showing up as a margin on stream when the phone's
 // webview was not exactly 16:9. The per-overlay editor stays a clean 16:9 = the final look.
+var PREVIEW=Q.get('preview')==='1';
 function suk(){
   var kx=(innerWidth||1920)/1920, ky=(innerHeight||1080)/1080;
   if(!isFinite(kx)||kx<=0) kx=1;
   if(!isFinite(ky)||ky<=0) ky=1;
+  if(PREVIEW){ kx=ky=Math.min(kx,ky); } // preview: uniform letterbox so a browser looks right
   document.documentElement.style.setProperty('--cvkx', kx);
   document.documentElement.style.setProperty('--cvky', ky);
 }
+if(PREVIEW) frame.classList.add('fit');
 suk(); addEventListener('resize',suk); addEventListener('orientationchange',suk);
 
 // Optional true 1:1 preview: her live Twitch feed as the backdrop, so you see the
