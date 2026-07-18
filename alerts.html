@@ -244,6 +244,7 @@ function pump(){
   $('a3').innerHTML=a.detail||'';
   const el=$('alert');
   el.classList.remove('show','shake'); void el.offsetWidth;
+  try{ if(typeof applyOvCfg==='function') applyOvCfg(); }catch(e){} // re-fit to this alert's size
   el.classList.add('show'); if(a.big) el.classList.add('shake');
   burst(a.big?320:160, a.big?Math.max(6000,HOLD*0.9):Math.max(4000,HOLD*0.6));
   playSound(a.big);
@@ -413,6 +414,13 @@ function suCalib(on){
     document.body.appendChild(suCalEl);
   } else if(!on && suCalEl){ suCalEl.remove(); suCalEl=null; }
 }
+// largest scale at which the current alert still fits the frame (never crops)
+function fitMax(){
+  var el=document.getElementById('alert');
+  var w=el.offsetWidth||620, h=el.offsetHeight||170, m=0.94;
+  var k=Math.min(1920*m/w, 1080*m/h);
+  return (isFinite(k)&&k>0)?k:1;
+}
 function applyOvCfg(){
   if(!ovCfg||Q.get('edit')==='1') return;
   suCalib(!!ovCfg.calib); suLiveCss();
@@ -421,7 +429,8 @@ function applyOvCfg(){
   el.style.width=(typeof ovCfg.w==='number')?ovCfg.w+'px':'';
   el.style.height=(typeof ovCfg.h==='number')?ovCfg.h+'px':'';
   if(!ovStyle){ ovStyle=document.createElement('style'); document.head.appendChild(ovStyle); }
-  const sc=(typeof ovCfg.scale==='number')?ovCfg.scale:1;
+  const sc0=(typeof ovCfg.scale==='number')?ovCfg.scale:1;
+  const sc=Math.min(sc0, fitMax()); // clamp so a big alert can never spill off the frame
   if(typeof ovCfg.px==='number'&&typeof ovCfg.py==='number'){
     el.style.left=ovCfg.px+'%'; el.style.top=ovCfg.py+'%';
     ovStyle.textContent='#alert{transform:translate(-50%,-50%) scale('+(sc*.6)+')}#alert.show{transform:translate(-50%,-50%) scale('+sc+')}';
@@ -438,6 +447,7 @@ async function pollOvCfg(){
     if(j.ok){ ovCfg=(j.overlays&&j.overlays[OVKEY])||{}; if(ovCfg.reload!==undefined){ if(suLastReload===undefined){ suLastReload=ovCfg.reload; } else if(ovCfg.reload!==suLastReload){ location.reload(); return; } } if(ovCfg.testAlert!==undefined){ if(suLastTest===undefined){ suLastTest=ovCfg.testAlert; } else if(ovCfg.testAlert!==suLastTest){ suLastTest=ovCfg.testAlert; fireTestAlert(); } } applyOvCfg(); } }catch(e){}
 }
 pollOvCfg(); setInterval(pollOvCfg,9000);
+addEventListener('resize',()=>{ try{ applyOvCfg(); }catch(e){} }); // keep the alert fitting if the layer is resized
 // drag/resize editor on the stream frame (?edit=1)
 if(Q.get('edit')==='1'){
   (function(){
