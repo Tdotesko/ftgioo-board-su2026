@@ -322,7 +322,7 @@ async function refresh(force){
 }
 
 /* ---------- shell ---------- */
-const TABS=[['dash','Dashboard'],['help','Setup'],['canvas','Canvas'],['overlays','Overlays'],['bot','Bot'],['run','Auto Commands'],['subs','Subs'],['activity','Activity']];
+const TABS=[['dash','Dashboard'],['help','Setup'],['overlays','Overlays'],['bot','Bot'],['run','Auto Commands'],['subs','Subs'],['activity','Activity']];
 function renderTabs(){
   $('tabs').innerHTML='';
   TABS.forEach(([id,label])=>{
@@ -335,7 +335,7 @@ function render(){
   if(!ST) return;
   renderTabs();
   const m=$('main'); m.innerHTML='';
-  ({run:rRun,dash:rDash,canvas:rCanvas,overlays:rOverlays,bot:rBot,help:rSetup,subs:rSubs,activity:rActivity})[tab](m);
+  ({run:rRun,dash:rDash,overlays:rOverlays,bot:rBot,help:rSetup,subs:rSubs,activity:rActivity})[tab](m);
 }
 
 /* ================= RUN SHOW ================= */
@@ -550,8 +550,10 @@ function rDash(m){
     .catch(e=>{if(e.message!=='Session expired')toast(e.message,true);});
 
   const s2=document.createElement('div'); s2.className='sect';
+  const cvURL=location.pathname.replace(/[^/]*$/,'')+'canvas.html';
   s2.innerHTML='<h2>Quick links</h2><div class="qk">'+
-    OVS.map(o=>'<a class="btn sec sm" href="'+o.u+'" target="_blank">'+o.t+'</a>').join('')+
+    '<a class="btn sm" href="'+cvURL+'" target="_blank">Open canvas (your overlay)</a>'+
+    '<a class="btn sec sm" href="'+location.origin+'" target="_blank">View public site</a>'+
     '<a class="btn sec sm" href="'+API+'" target="_blank">API status</a></div>';
   m.appendChild(s2);
 
@@ -574,7 +576,7 @@ function _besc(x){return String(x==null?'':x).replace(/[&<>"]/g,function(c){retu
 function _brow(){var r=document.createElement('div');r.className='row';return r;}
 
 /* ===== Canvas: the single composited overlay ===== */
-function rCanvas(m){
+function canvasTop(m){
   var dir=location.pathname.replace(/[^/]*$/,'');
   var canvasURL=location.origin+dir+'canvas.html';
   var cv=(typeof OV!=='undefined'&&OV&&OV.canvas)||{};
@@ -610,46 +612,6 @@ function rCanvas(m){
   }));
   c2.appendChild(r2);
   m.appendChild(c2);
-
-  // --- widgets living on the canvas ---
-  var c3=_bcard('Widgets on the canvas','Show, hide, stack, and position each overlay. They all live inside the one canvas.');
-  var list=[];
-  OVS.forEach(function(o){ list.push({id:o.id,t:o.t,al:o.al,u:o.u,builtin:true}); });
-  Object.keys(OV||{}).forEach(function(n){
-    if(n==='canvas'||n==='classcard') return;
-    if(OVS.some(function(o){return o.id===n;})) return;
-    var c=OV[n]||{};
-    var isScene=(c.onCanvas===true)||(typeof c.sceneTitle==='string')||(typeof c.css==='string'&&c.css)||(typeof c.html==='string'&&c.html)||(typeof c.js==='string'&&c.js);
-    if(!isScene) return;
-    list.push({id:n,t:c.sceneTitle||n,custom:true});
-  });
-  list.forEach(function(o){
-    var cfg=(OV&&OV[o.id])||{};
-    var hidden=!!cfg.hidden;
-    var row=document.createElement('div'); row.className='row';
-    row.style.cssText='align-items:center;gap:8px;flex-wrap:wrap;border-top:1px solid #3a2129;padding:9px 0';
-    var nm=document.createElement('b'); nm.textContent=o.t; nm.style.cssText='min-width:112px;color:'+(hidden?'#8f8069':'#ffe8c0');
-    row.appendChild(nm);
-    if(hidden){ var chip=document.createElement('span'); chip.className='chip off'; chip.style.margin='0'; chip.textContent='hidden'; row.appendChild(chip); }
-    row.appendChild(_bbtn(hidden?'Show':'Hide','sm'+(hidden?'':' sec'),function(){
-      api('/api/overlay',{name:o.id,cfg:{hidden:!hidden}}).then(function(){toast(o.t+(hidden?' shown':' hidden'));refresh(true);}).catch(ferr);
-    }));
-    var zw=document.createElement('label'); zw.style.cssText='display:flex;align-items:center;gap:4px;color:#dcc9a4;font-size:12px';
-    zw.appendChild(document.createTextNode('layer'));
-    var zi=document.createElement('input'); zi.type='number'; zi.value=(typeof cfg.z==='number')?cfg.z:''; zi.placeholder='auto';
-    zi.style.cssText='width:62px;padding:5px;border-radius:5px;border:1px solid #7d2433;background:#2a161d;color:#f6e7c9';
-    zi.onchange=function(){ var v=zi.value===''?null:parseInt(zi.value,10); api('/api/overlay',{name:o.id,cfg:{z:v}}).then(function(){toast(o.t+' layer set');refresh(true);}).catch(ferr); };
-    zw.appendChild(zi); row.appendChild(zw);
-    if(o.builtin){
-      var ed=document.createElement('a'); ed.className='btn sec sm'; ed.textContent='Move & resize';
-      ed.href=dir+o.u+(o.u.indexOf('?')>=0?'&':'?')+'edit=1'; ed.target='_blank'; row.appendChild(ed);
-    }
-    if(o.al){ row.appendChild(_bbtn('Test','sm',function(){
-      api('/api/overlay',{name:o.id,cfg:{testAlert:String(Date.now())}}).then(function(){toast('Test alert sent');}).catch(ferr);
-    })); }
-    c3.appendChild(row);
-  });
-  m.appendChild(c3);
 
   // --- socials handles (optional, live editable, no TVU change) ---
   var h=cv.handles||{};
@@ -832,8 +794,10 @@ function pollPanel(m){
   __pollTimer=setInterval(paint,3000);
 }
 function rOverlays(m){
+  canvasTop(m); // your one canvas url + one-time TVU setup + socials handles
+
   const intro=document.createElement('div'); intro.className='sect';
-  intro.innerHTML='<h2>Stream overlays</h2><div class="muted">These control the pages inside TVU Go, live; changes land on stream within ~9 seconds. <b>Move &amp; resize</b> opens the drag editor; hit 💾 Save live there.</div>';
+  intro.innerHTML='<h2>Adjust each overlay</h2><div class="muted">Everything below lives inside your one canvas. Show/hide, move, resize, restyle, and stack each piece; changes land on stream within ~9 seconds. <b>Move &amp; resize</b> opens the drag editor; hit 💾 Save live there.</div>';
   m.appendChild(intro);
 
   pollPanel(m);
@@ -841,7 +805,7 @@ function rOverlays(m){
 
   // emergency controls: calibration + panic switches for every overlay at once
   const em=document.createElement('div'); em.className='sect';
-  em.innerHTML='<h2>Emergency controls</h2><div class="muted" style="margin-bottom:10px"><b>🔄 Reload all overlays</b> refreshes every browser source in TVU Go remotely (activates new features / code updates, no touching TVU). <b>Calibration</b> draws a labeled colored frame on each overlay (Campus=pink, Socials=cyan, Subs=green, Alerts=orange). On the stream every frame must touch all 4 screen edges. Any frame that floats, shrinks, or sits off-center = that named overlay was moved or resized inside TVU Go and needs its layer reset to full screen there. Our saved positions are untouched.</div>';
+  em.innerHTML='<h2>Emergency controls</h2><div class="muted" style="margin-bottom:10px"><b>🔄 Reload canvas</b> refreshes the whole overlay in TVU remotely (activates new features or code updates, no touching TVU). <b>Hide ALL</b> and <b>Show ALL</b> flip every widget at once. <b>Reset ALL positions</b> returns every widget to its default spot. To check the one canvas layer is full frame, use <b>Align frame</b> at the top of this tab.</div>';
   const er=document.createElement('div'); er.className='row';
   function allPost(cfg,msg){
     Promise.all(OVS.map(o=>api('/api/overlay',{name:o.id,cfg:cfg})))
@@ -849,12 +813,10 @@ function rOverlays(m){
       .catch(e=>{if(e.message!=='Session expired')toast(e.message,true);});
   }
   const mkE=(t,fn,sec)=>{const b=document.createElement('button');b.className='btn sm'+(sec?' sec':'');b.textContent=t;b.onclick=fn;er.appendChild(b);};
-  mkE('📐 Calibration ON',()=>allPost({calib:true},'Calibration frames showing on all overlays'));
-  mkE('Calibration OFF',()=>allPost({calib:null},'Calibration frames removed'),true);
   mkE('🚨 Hide ALL overlays',()=>allPost({hidden:true},'All overlays hidden on stream'));
   mkE('Show ALL overlays',()=>allPost({hidden:false},'All overlays visible again'),true);
   mkE('↺ Reset ALL positions',()=>allPost({px:null,py:null,scale:null,w:null,h:null},'All overlays back to default positions'),true);
-  mkE('🔄 Reload all overlays',()=>{ if(!confirm('Refresh every overlay in TVU Go now? Use this to apply new features or after code updates.')) return; const rv=String(Date.now()); Promise.all(OVS.map(o=>api('/api/overlay',{name:o.id,cfg:{reload:rv}}))).then(()=>{toast('All overlays reloading in TVU (~10s)');refresh(true);}).catch(e=>{if(e.message!=='Session expired')toast(e.message,true);}); });
+  mkE('🔄 Reload canvas',()=>{ if(!confirm('Refresh the whole canvas in TVU now? Use this to apply new features or after code updates.')) return; api('/api/overlay',{name:'canvas',cfg:{reload:String(Date.now())}}).then(()=>{toast('Canvas reloading in TVU (~10s)');refresh(true);}).catch(e=>{if(e.message!=='Session expired')toast(e.message,true);}); });
   em.appendChild(er);
   m.appendChild(em);
 
