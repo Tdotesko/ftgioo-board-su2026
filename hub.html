@@ -965,10 +965,7 @@ function rSubs(m){
 function rSetup(m){
   const base=location.href.replace(/[^/]*$/,'');
   const links=[
-    ['Campus Feed','The main all in one overlay','campus.html'],
-    ['Socials Bar','Twitch, YouTube, IG, TikTok, X','socials.html'],
-    ['Sub Counter','Live sub count with goal','subs.html'],
-    ['Alerts','Sub, gift, and raid pop ups','alerts.html']
+    ['FT.GIOO Canvas','Everything in one. The ONLY link you add to TVU or OBS. All overlays live inside it.','canvas.html']
   ];
   function copyBtn(url){
     const b=document.createElement('button'); b.className='btn sm'; b.textContent='Copy link';
@@ -982,7 +979,7 @@ function rSetup(m){
 
   // overlay links
   const s1=document.createElement('div'); s1.className='sect';
-  s1.innerHTML='<h2>Overlay links</h2><div class="setintro">Add each of these as a browser or web source in OBS or TVU Go. Tap Copy link, then paste it into your streaming software.</div>';
+  s1.innerHTML='<h2>Your one overlay link</h2><div class="setintro">This single canvas holds every overlay. Add it ONCE as a web or browser source. Everything else is controlled from the <b>Canvas</b> and <b>Overlays</b> tabs in this hub.</div>';
   links.forEach(([name,desc,file])=>{
     const row=document.createElement('div'); row.className='lnk';
     row.innerHTML='<div class="ln"><b>'+name+'</b><span class="muted" style="display:block;margin-bottom:5px">'+desc+'</span><code>'+base+file+'</code></div>';
@@ -995,32 +992,32 @@ function rSetup(m){
   const s2=document.createElement('div'); s2.className='sect';
   s2.innerHTML='<h2>Add to OBS (recommended)</h2>'+steps([
     'In Sources, click the plus and choose <b>Browser</b>.',
-    'Paste an overlay link from above into the URL field.',
+    'Paste the canvas link above into the URL field.',
     'Set <b>Width</b> to <code>1920</code> and <b>Height</b> to <code>1080</code>.',
-    'For the Alerts source only, tick <b>Control audio via OBS</b> so alert sounds play in your mix.',
-    'Click OK. The transparent background works automatically, no green screen needed.',
-    'Repeat for each overlay, then position everything from the <b>Overlays</b> tab.'
+    'Tick <b>Control audio via OBS</b> so alert sounds play in your mix.',
+    'Click OK. Transparent background works automatically, no green screen needed.',
+    'That is the only source you need. Position each overlay from the <b>Canvas</b> or <b>Overlays</b> tab.'
   ]);
   m.appendChild(s2);
 
   // TVU Go
   const s3=document.createElement('div'); s3.className='sect';
-  s3.innerHTML='<h2>Add to TVU Go</h2>'+steps([
-    'Add a new web or browser overlay.',
-    'Paste an overlay link from above as the URL.',
-    'If TVU does not show transparency, add <code>?bg=00ff00</code> to the end of the link and chroma key out the green.',
-    'Leave the layer at full screen. Do not move or resize it inside TVU.',
-    'Repeat for each overlay, then position everything from the <b>Overlays</b> tab.'
+  s3.innerHTML='<h2>Add to TVU Go (one time)</h2>'+steps([
+    'Add a new HTML overlay and paste the canvas link above as the URL.',
+    'Open the <b>Canvas</b> tab in this hub and tap <b>Align frame</b>. A gold border shows on the overlay.',
+    'In TVU, stretch the layer until that gold border touches all 4 screen edges.',
+    'Tap <b>Align frame</b> again to hide it, then lock the layer in TVU.',
+    'Done forever. You never touch TVU again. Everything is controlled from this hub.'
   ]);
   m.appendChild(s3);
 
   // golden rule
   const s4=document.createElement('div'); s4.className='sect';
   s4.innerHTML='<h2>The golden rule</h2><div class="setbox gold">'+
-    'In OBS or TVU, keep every overlay source at <b>full 1920 by 1080 and never drag or resize it there</b>. '+
-    'Do all moving, sizing, hiding, transparency and styling from the <b>Overlays</b> tab in this hub. '+
+    'There is now <b>one</b> source: the canvas. Keep it at <b>full frame and never drag or resize it</b> in TVU or OBS after the one time setup. '+
+    'Do all moving, sizing, hiding and styling of each overlay from the <b>Canvas</b> and <b>Overlays</b> tabs in this hub. '+
     'That keeps the editor perfectly accurate to the stream and lets any of the three of you adjust things live from a phone. '+
-    'If something looks off, open <b>Overlays</b>, tap <b>Calibration ON</b>, and check which layer is not hugging all four screen edges.</div>';
+    'If something looks off, open the <b>Canvas</b> tab and tap <b>Align frame</b> to confirm the one layer still hugs all four screen edges.</div>';
   m.appendChild(s4);
 
   // updates / reload
