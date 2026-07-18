@@ -601,7 +601,7 @@ function rDash(m){ pageHead(m,'mission control','COMMAND <span class="r">CENTER<
   s2.innerHTML='<h2>Quick links</h2><div class="qk">'+
     '<a class="btn sm" href="'+cvURL+'" target="_blank">Open canvas (your overlay)</a>'+
     '<a class="btn sec sm" href="'+location.origin+'" target="_blank">View public site</a>'+
-    '<a class="btn sec sm" href="'+API+'" target="_blank">API status</a></div>';
+    '<a class="btn sec sm" href="/auth" target="_blank">Bot connection</a></div>';
   m.appendChild(s2);
 
   const s3=document.createElement('div'); s3.className='sect';
@@ -747,6 +747,19 @@ function rBot(m){ pageHead(m,'her voice in chat','THE <span class="r">BOT</span>
   kw.appendChild(kR); m.appendChild(kw);
   function loadKw(){ fetch(API+'/api/bot/keywords',{cache:'no-store'}).then(function(r){return r.json();}).then(function(j){ kList.innerHTML=''; var ks=j.keywords||[]; if(!ks.length){kList.innerHTML='<div class="muted" style="font-size:12px">No keywords yet.</div>';return;} ks.forEach(function(c){ var row=document.createElement('div'); row.style.cssText='display:flex;align-items:flex-start;gap:6px;padding:7px 0;border-bottom:1px solid #ffffff14'; row.innerHTML='<div style="flex:1;min-width:0"><b style="color:#f2c53d">'+_besc(c.trigger)+'</b> <span class="muted" style="font-size:11px">'+(c.contains!==false?'contains':'exact')+' · '+_besc(c.level)+'</span><br><span style="font-size:12px;word-break:break-word">'+_besc(c.response)+'</span></div>'; var ed=_bbtn('Edit','sec sm',function(){kTrig.value=c.trigger;kResp.value=c.response;kMode.value=c.contains!==false?'contains':'exact';kLevel.value=c.level;kCd.value=c.cooldown;kTrig.scrollIntoView({block:'center'});}); var dl=_bbtn('Del','sec sm',function(){if(!confirm('Delete keyword '+c.trigger+'?'))return;api('/api/bot/keywords',{action:'delete',trigger:c.trigger}).then(function(){toast('Deleted');loadKw();});}); ed.style.flex='0 0 auto';dl.style.flex='0 0 auto'; row.append(ed,dl); kList.appendChild(row); }); }).catch(function(){}); }
   loadKw();
+
+  /* moderation: blocked terms */
+  var bt=_bcard('🛡️ Blocked terms','Auto-moderate chat like Fossabot. Any message matching a pattern (regex supported) is deleted, and mods and Gio are exempt. Pick timeout to also time the user out.');
+  var btList=document.createElement('div'); btList.style.margin='2px 0 12px'; bt.appendChild(btList);
+  var btPat=_binp('Pattern or word, regex ok, e.g. (buy followers|free bits)');
+  var btAct=_bsel([['delete','Delete message'],['timeout','Delete + timeout user']],'delete');
+  var btDur=_binp('Timeout seconds (default 600)');
+  bt.append(btPat,btAct,btDur);
+  var btR=_brow();
+  btR.appendChild(_bbtn('Add blocked term','sm',function(){ var p=btPat.value.trim(); if(!p){toast('Enter a pattern',true);return;} api('/api/bot/blockterms',{pattern:p,action:btAct.value,duration:parseInt(btDur.value,10)||600}).then(function(){toast('Blocked term added');btPat.value='';btDur.value='';loadBt();}).catch(function(e){if(e.message!=='Session expired')toast(e.message,true);}); }));
+  bt.appendChild(btR); m.appendChild(bt);
+  function loadBt(){ fetch(API+'/api/bot/blockterms',{cache:'no-store'}).then(function(r){return r.json();}).then(function(j){ btList.innerHTML=''; var ts=j.terms||[]; if(!ts.length){btList.innerHTML='<div class="muted" style="font-size:12px">No blocked terms yet.</div>';return;} btList.innerHTML='<div class="muted" style="font-size:11px;margin-bottom:4px">'+ts.length+' term'+(ts.length===1?'':'s')+' active</div>'; ts.forEach(function(t){ var row=document.createElement('div'); row.style.cssText='display:flex;align-items:center;gap:6px;padding:7px 0;border-bottom:1px solid #ffffff14'; var on=t.enabled!==false; row.innerHTML='<div style="flex:1;min-width:0"><code style="font-size:11.5px;color:#ffd97a;word-break:break-all">'+_besc(t.pattern)+'</code> <span class="muted" style="font-size:10.5px">'+(t.action==='timeout'?('timeout '+t.duration+'s'):'delete')+'</span></div>'; var tg=_bbtn(on?'On':'Off',(on?'sm':'sec sm'),function(){api('/api/bot/blockterms',{id:t.id,pattern:t.pattern,flags:t.flags,action:t.action,duration:t.duration,enabled:!on}).then(loadBt).catch(function(){});}); var dl=_bbtn('Del','sec sm',function(){if(!confirm('Remove this blocked term?'))return;api('/api/bot/blockterms',{del:true,id:t.id}).then(function(){toast('Removed');loadBt();}).catch(function(){});}); tg.style.flex='0 0 auto';dl.style.flex='0 0 auto'; row.append(tg,dl); btList.appendChild(row); }); }).catch(function(){}); }
+  loadBt();
 
   /* loyalty */
   var lb=_bcard('🏆 Loyalty leaderboard','Viewers earn points by watching + chatting. Give or take manually below.');
