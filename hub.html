@@ -591,7 +591,11 @@ function canvasTop(m){
   var r1=_brow();
   r1.appendChild(_bbtn('Copy URL','sm',function(ev){copyText(canvasURL,ev.target);}));
   var openA=document.createElement('a'); openA.className='btn sec sm'; openA.textContent='Open canvas'; openA.href=canvasURL; openA.target='_blank'; r1.appendChild(openA);
+  var prevA=document.createElement('a'); prevA.className='btn sec sm'; prevA.textContent='📺 Preview over live stream'; prevA.href=canvasURL+'?preview=1'; prevA.target='_blank'; r1.appendChild(prevA);
   c1.appendChild(r1);
+  var pnote=document.createElement('div'); pnote.className='muted'; pnote.style.cssText='font-size:12px;margin-top:6px';
+  pnote.innerHTML='<b>Preview over live stream</b> shows your overlays on top of her real Twitch feed, so what you see is exactly 1:1 with the broadcast. The drag editor (Move &amp; resize) also has a <b>📺 Live feed</b> button for the same reason.';
+  c1.appendChild(pnote);
   m.appendChild(c1);
 
   // --- one-time TVU setup + align/reload ---
