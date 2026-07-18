@@ -131,7 +131,7 @@ const VOL=Math.max(0,Math.min(2,parseFloat(Q.get('vol')||'1')||1));
 const SNDURL=Q.get('sndurl')||'';
 const API='https://ftgioo-su2026-api-production.up.railway.app';
 const OVKEY='alerts';
-let suLastReload;
+let suLastReload, suLastTest;
 let ovCfg=null, VOLR=VOL, volTouched=false, sndTouched=false;
 const URLBGOP=(function(){const v=parseFloat(Q.get('bgop'));return isNaN(v)?1:Math.max(0,Math.min(1,v));})();
 document.getElementById('alert').style.setProperty('--bgop',URLBGOP);
@@ -233,6 +233,7 @@ function playSound(big){
 /* ---------- alert queue ---------- */
 let queue=[],showing=false;
 function enqueue(a){ queue.push(a); pump(); }
+function fireTestAlert(){ enqueue({label:'✨ <span class="hl">Test Alert</span>', name:'test', detail:'Alerts are working'}); }
 function pump(){
   if(showing||!queue.length) return;
   showing=true;
@@ -434,7 +435,7 @@ function applyOvCfg(){
 }
 async function pollOvCfg(){
   try{ const r=await fetch(API+'/api/overlay',{cache:'no-store'}); const j=await r.json();
-    if(j.ok){ ovCfg=(j.overlays&&j.overlays[OVKEY])||{}; if(ovCfg.reload!==undefined){ if(suLastReload===undefined){ suLastReload=ovCfg.reload; } else if(ovCfg.reload!==suLastReload){ location.reload(); return; } } applyOvCfg(); } }catch(e){}
+    if(j.ok){ ovCfg=(j.overlays&&j.overlays[OVKEY])||{}; if(ovCfg.reload!==undefined){ if(suLastReload===undefined){ suLastReload=ovCfg.reload; } else if(ovCfg.reload!==suLastReload){ location.reload(); return; } } if(ovCfg.testAlert!==undefined){ if(suLastTest===undefined){ suLastTest=ovCfg.testAlert; } else if(ovCfg.testAlert!==suLastTest){ suLastTest=ovCfg.testAlert; fireTestAlert(); } } applyOvCfg(); } }catch(e){}
 }
 pollOvCfg(); setInterval(pollOvCfg,9000);
 // drag/resize editor on the stream frame (?edit=1)
