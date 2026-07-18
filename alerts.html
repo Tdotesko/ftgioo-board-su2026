@@ -17,7 +17,7 @@
   body{font-family:'Archivo',-apple-system,'Segoe UI',Roboto,sans-serif;-webkit-font-smoothing:antialiased}
   #confetti{position:fixed;inset:0;pointer-events:none}
   #alert{
-    position:absolute;top:50%;left:50%;
+    position:fixed;top:50%;left:50%;z-index:100;
     display:flex;align-items:center;gap:20px;text-align:left;
     --bgop:1;background:linear-gradient(160deg,rgba(107,29,41,var(--bgop)) 0%,rgba(78,19,29,var(--bgop)) 100%);
     border:4px solid var(--gold);border-radius:22px;
@@ -68,7 +68,10 @@ const Q=new URLSearchParams(location.search);
 (function(){
   var st=document.getElementById('su-stage');
   if(!st){ st=document.createElement('div'); st.id='su-stage'; document.body.insertBefore(st, document.body.firstChild); }
-  ["alert"].forEach(function(id){ var e=document.getElementById(id); if(e && e.parentNode!==st) st.appendChild(e); });
+  // NOTE: the #alert is deliberately NOT moved into the stage. It centers on the
+  // real viewport (see #alert position:fixed) so it stays dead-center on any screen
+  // shape TVU Go hands us (phones are not 16:9). The stage is only for #su-custom.
+  [].forEach(function(id){ var e=document.getElementById(id); if(e && e.parentNode!==st) st.appendChild(e); });
   var _cu=document.getElementById('su-custom'); if(!_cu){_cu=document.createElement('div');_cu.id='su-custom';st.appendChild(_cu);}
   function suk(){
     var k=Math.min(innerWidth/1920, innerHeight/1080);
@@ -418,7 +421,8 @@ function suCalib(on){
 function fitMax(){
   var el=document.getElementById('alert');
   var w=el.offsetWidth||620, h=el.offsetHeight||170, m=0.94;
-  var k=Math.min(1920*m/w, 1080*m/h);
+  // alert is centered on the REAL viewport now, so fit to the actual screen TVU gives us
+  var k=Math.min((innerWidth||1920)*m/w, (innerHeight||1080)*m/h);
   return (isFinite(k)&&k>0)?k:1;
 }
 function applyOvCfg(){
