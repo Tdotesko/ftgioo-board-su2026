@@ -692,6 +692,16 @@ function canvasTop(m){
     api('/api/overlay',{name:'canvas',cfg:{handles:handles}}).then(function(){toast('Socials handles saved');refresh(true);}).catch(ferr);
   }));
   m.appendChild(c4);
+
+  // --- chat overlay source (built-in or UChat) ---
+  var chatCfg=(typeof OV!=='undefined'&&OV&&OV.chat)||{};
+  var c5=_bcard('Chat overlay','Use the built-in chat, or paste a <b>UChat</b> URL for a 1:1 UChat overlay. Set it up at chat.unii.dev for <b>ftgioo</b>, copy its browser-source URL, and paste it here. It shows inside your one canvas either way.');
+  var chatIn=_binp('Paste UChat URL, or leave blank for built-in', chatCfg.src||''); chatIn.style.marginBottom='7px'; c5.appendChild(chatIn);
+  var c5r=_brow();
+  c5r.appendChild(_bbtn('Use this chat','sm',function(){ var v=chatIn.value.trim(); api('/api/overlay',{name:'chat',cfg:{src:v||null,reload:String(Date.now())}}).then(function(){toast(v?'Chat set to UChat':'Using built-in chat');refresh(true);}).catch(ferr); }));
+  c5r.appendChild(_bbtn('Use built-in','sm sec',function(){ chatIn.value=''; api('/api/overlay',{name:'chat',cfg:{src:null,reload:String(Date.now())}}).then(function(){toast('Using built-in chat');refresh(true);}).catch(ferr); }));
+  var openU=document.createElement('a'); openU.className='btn sec sm'; openU.textContent='Open UChat setup ↗'; openU.href='https://chat.unii.dev/'; openU.target='_blank'; c5r.appendChild(openU);
+  c5.appendChild(c5r); m.appendChild(c5);
 }
 
 function rBot(m){ pageHead(m,'her voice in chat','THE <span class="r">BOT</span>');
