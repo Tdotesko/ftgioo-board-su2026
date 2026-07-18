@@ -9,8 +9,8 @@
   /* The whole show is ONE 1920x1080 composite, scaled to fit whatever layer TVU
      gives us and always CENTERED, so a non 16:9 webview letterboxes instead of
      clipping to a corner. This is the single thing you add to TVU. */
-  #cv-frame{position:fixed;left:50%;top:50%;width:1920px;height:1080px;
-    transform:translate(-50%,-50%) scale(var(--cvk,1));transform-origin:center center;
+  #cv-frame{position:fixed;top:0;left:0;width:1920px;height:1080px;
+    transform-origin:top left;transform:scale(var(--cvkx,1),var(--cvky,1));
     will-change:transform}
   /* each widget is its own overlay page, running at a true 1920x1080 inside its frame */
   .cv-w{position:absolute;left:0;top:0;width:1920px;height:1080px;border:0;
@@ -54,11 +54,16 @@ const frame=document.getElementById('cv-frame');
 const align=document.getElementById('cv-align');
 const frames={}; // name -> iframe element
 
-// Scale the 1920x1080 composite to fit the real layer, centered.
+// Stretch the 1920x1080 composite to FILL the exact webview TVU gives us (non-uniform).
+// TVU then maps that webview onto the 16:9 broadcast, so filling here cancels the
+// side/letterbox bars that were showing up as a margin on stream when the phone's
+// webview was not exactly 16:9. The per-overlay editor stays a clean 16:9 = the final look.
 function suk(){
-  var k=Math.min((innerWidth||1920)/1920, (innerHeight||1080)/1080);
-  if(!isFinite(k)||k<=0) k=1;
-  document.documentElement.style.setProperty('--cvk', k);
+  var kx=(innerWidth||1920)/1920, ky=(innerHeight||1080)/1080;
+  if(!isFinite(kx)||kx<=0) kx=1;
+  if(!isFinite(ky)||ky<=0) ky=1;
+  document.documentElement.style.setProperty('--cvkx', kx);
+  document.documentElement.style.setProperty('--cvky', ky);
 }
 suk(); addEventListener('resize',suk); addEventListener('orientationchange',suk);
 
