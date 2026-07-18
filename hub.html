@@ -21,6 +21,7 @@
   :root{
     --bg:#0c0a09; --panel:#151110; --panel2:#1d1815; --line:#2a2320; --line2:#3a332d;
     --gold:#f2c53d; --gold-soft:#ffd97a; --red:#c23a1f; --red-deep:#8d2f2f;
+    --rust:#c23a1f; --rustdeep:#8d2f2f; --pink:#ff4d7d; --blue:#4d7bff;
     --cream:#ece8dd; --dim:#9a9086; --grey:#7a7168; --green:#54b23e;
   }
   *{box-sizing:border-box}
@@ -230,6 +231,25 @@
   .pwfall .users{display:flex;gap:8px;margin:12px 0}
   #loginmsg{margin-top:12px;font-size:13px;line-height:1.4}
   #loginmsg.deny,#loginmsg.err{color:var(--red)}
+
+  /* ===== editorial / sticker system ===== */
+  .phead{margin:10px 0 24px;position:relative}
+  .phead .kick{font-family:'Permanent Marker',cursive;font-size:clamp(16px,3.2vw,25px);color:var(--pink);
+    display:inline-block;transform:rotate(-2deg);text-shadow:0 0 18px rgba(255,77,125,.55);margin-bottom:2px}
+  .phead .title{font-family:'Baloo 2',sans-serif;font-weight:800;text-transform:uppercase;
+    font-size:clamp(34px,6.2vw,62px);line-height:.85;letter-spacing:-.02em;color:var(--cream);margin:0;text-shadow:0 6px 30px rgba(0,0,0,.5)}
+  .phead .title .r{color:var(--rust);text-shadow:0 0 30px rgba(194,58,31,.6)}
+  .phead .sub{color:var(--dim);font-size:13.5px;margin-top:12px;max-width:64ch;line-height:1.55}
+  .dots{display:flex;gap:9px;margin-top:15px}
+  .dots i{width:15px;height:15px;border-radius:50%;border:2px solid #000;box-shadow:0 0 12px currentColor;flex:0 0 auto}
+  .pbar{height:16px;border:2px solid var(--cream);border-radius:20px;background:#0c0a09;overflow:hidden;margin:10px 0 4px}
+  .pbar i{display:block;height:100%;width:0;background:repeating-linear-gradient(45deg,var(--rust) 0 12px,var(--pink) 12px 24px);transition:width 1s ease}
+  .tilt{transform:rotate(-1.1deg)} .tilt2{transform:rotate(1deg)}
+  .hero-num{font-family:'Baloo 2',sans-serif;font-weight:800;font-size:clamp(50px,9vw,88px);line-height:.88;color:var(--rust);text-shadow:0 0 34px rgba(194,58,31,.55)}
+  .kickmono{font-family:HackX,ui-monospace,monospace;text-transform:uppercase;letter-spacing:.2em;font-size:11px;color:var(--gold)}
+  /* feature (hero) card in the bento/editorial grids */
+  .feat{grid-column:1 / -1}
+  @media(min-width:720px){ .feat{grid-column:span 2} }
 </style>
 </head>
 <body>
@@ -372,7 +392,7 @@ function setClass(dayId,idx,label){
     .then(()=>{toast((label||'Class')+' is live for chat + overlays');refresh(true);})
     .catch(e=>{if(e.message!=='Session expired')toast(e.message,true);});
 }
-function rRun(m){
+function rRun(m){ pageHead(m,'streamer university','AUTO <span class="r">COMMANDS</span>');
   const eff=effSection();
 
   // NOW bar
@@ -550,7 +570,7 @@ function rRun(m){
 }
 
 /* ================= DASHBOARD ================= */
-function rDash(m){
+function rDash(m){ pageHead(m,'mission control','COMMAND <span class="r">CENTER</span>');
   const eff=effSection();
   const inCls=eff.sec&&eff.sec.tag==='session';
   const g=document.createElement('div'); g.className='grid';
@@ -566,9 +586,12 @@ function rDash(m){
    '<button class="btn sec sm" id="qauto">↺ Resume auto</button></div></div>'+
    '<div class="card"><h3>!nextclass says</h3><div class="muted" style="font-size:13px">'+
      (ST.commands.next.value||'')+' <b style="color:var(--gold-soft)">'+(ST.commands.next.suffix||'')+'</b></div></div>'+
-   '<div class="card"><h3>Subs</h3><div class="big">'+(ST.subs.count==null?'-':ST.subs.count.toLocaleString())+
-     (ST.subs.goal?('<span class="muted" style="font-size:15px"> / '+ST.subs.goal.toLocaleString()+'</span>'):'')+'</div>'+
-   '<div class="muted">'+(ST.subs.source==='twitch'?'auto from Twitch':'via '+(ST.subs.by||'chat / manual'))+(ST.subs.at?(' · '+ST.subs.at):'')+'</div></div>';
+   '<div class="card feat"><h3>Sub goal</h3>'+
+   '<div style="display:flex;align-items:flex-end;gap:14px;flex-wrap:wrap">'+
+     '<div class="hero-num">'+(ST.subs.count==null?'-':ST.subs.count.toLocaleString())+'</div>'+
+     (ST.subs.goal?('<div style="font-family:\'Baloo 2\',sans-serif;font-weight:800;color:var(--dim);font-size:28px;padding-bottom:12px">/ '+ST.subs.goal.toLocaleString()+'</div>'):'')+'</div>'+
+   (ST.subs.goal?('<div class="pbar"><i style="width:'+Math.min(100,Math.round((ST.subs.count||0)/ST.subs.goal*100))+'%"></i></div>'):'')+
+   '<div class="muted" style="margin-top:6px">'+(ST.subs.source==='twitch'?'🟢 auto from Twitch':'via '+(ST.subs.by||'chat / manual'))+(ST.subs.at?(' · '+ST.subs.at):'')+'</div></div>';
   m.appendChild(g);
   $('qauto').onclick=()=>api('/api/auto',{}).then(()=>{toast('Everything back to auto');refresh(true);})
     .catch(e=>{if(e.message!=='Session expired')toast(e.message,true);});
@@ -598,6 +621,15 @@ function _bsel(opts,val){var s=document.createElement('select');s.style.cssText=
 function _bbtn(label,cls,fn){var b=document.createElement('button');b.className='btn '+(cls||'sm');b.textContent=label;b.onclick=fn;return b;}
 function _besc(x){return String(x==null?'':x).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
 function _brow(){var r=document.createElement('div');r.className='row';return r;}
+/* editorial page header: marker kicker + big Baloo title + color dots */
+function pageHead(m,kick,title,sub){
+  var d=document.createElement('div'); d.className='phead';
+  var h='<span class="kick">'+kick+'</span><div class="title">'+title+'</div>';
+  if(sub) h+='<div class="sub">'+sub+'</div>';
+  h+='<div class="dots"><i style="background:#f2c53d;color:#f2c53d"></i><i style="background:#ff4d7d;color:#ff4d7d"></i>'+
+     '<i style="background:#c23a1f;color:#c23a1f"></i><i style="background:#54b23e;color:#54b23e"></i><i style="background:#4d7bff;color:#4d7bff"></i></div>';
+  d.innerHTML=h; m.appendChild(d);
+}
 
 /* ===== Canvas: the single composited overlay ===== */
 function canvasTop(m){
@@ -661,7 +693,7 @@ function canvasTop(m){
   m.appendChild(c4);
 }
 
-function rBot(m){
+function rBot(m){ pageHead(m,'her voice in chat','THE <span class="r">BOT</span>');
   /* status */
   var sc=_bcard('🤖 Bot status');
   var stx=document.createElement('div'); stx.className='muted'; stx.textContent='Loading...'; sc.appendChild(stx);
@@ -821,7 +853,7 @@ function pollPanel(m){
   if(__pollTimer)clearInterval(__pollTimer);
   __pollTimer=setInterval(paint,3000);
 }
-function rOverlays(m){
+function rOverlays(m){ pageHead(m,'one canvas, endless overlays','STREAM <span class="r">OVERLAYS</span>');
   canvasTop(m); // your one canvas url + one-time TVU setup + socials handles
 
   const intro=document.createElement('div'); intro.className='sect';
@@ -937,7 +969,7 @@ function rOverlays(m){
 }
 
 /* ================= SUBS ================= */
-function rSubs(m){
+function rSubs(m){ pageHead(m,'the goal','<span class="r">SUBS</span>');
   const s=document.createElement('div'); s.className='sect';
   const su=ST.subs;
   s.innerHTML='<h2>Sub count</h2>'+
@@ -952,7 +984,7 @@ function rSubs(m){
 
 /* ================= ACTIVITY ================= */
 /* ================= SETUP / HELP ================= */
-function rSetup(m){
+function rSetup(m){ pageHead(m,'get it on stream','<span class="r">SETUP</span>');
   const base=location.href.replace(/[^/]*$/,'');
   const links=[
     ['FT.GIOO Canvas','Everything in one. The ONLY link you add to TVU or OBS. All overlays live inside it.','canvas.html']
@@ -1020,7 +1052,7 @@ function rSetup(m){
   m.appendChild(s5);
 }
 
-function rActivity(m){
+function rActivity(m){ pageHead(m,'who did what','<span class="r">ACTIVITY</span>');
   const s=document.createElement('div'); s.className='sect';
   s.innerHTML='<h2>Mod activity</h2>'+
     ((ST.logs&&ST.logs.length)?ST.logs.map(l=>'<div class="actrow2">'+l.at+' · <b>'+(l.by||'-')+'</b> '+l.action+'</div>').join('')
