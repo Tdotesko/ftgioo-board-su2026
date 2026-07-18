@@ -3,22 +3,22 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<meta name="theme-color" content="#190b10">
+<meta name="theme-color" content="#0c0a09">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="SU 2026 Hub">
-<link rel="apple-touch-icon" href="crest.png">
-<title>SU 2026 · Command Center</title>
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E🎓%3C/text%3E%3C/svg%3E">
+<meta name="apple-mobile-web-app-title" content="FT.GIOO Hub">
+<link rel="apple-touch-icon" href="/logo.png">
+<title>FT.GIOO Command Center</title>
+<link rel="icon" href="/logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Graduate&family=Archivo:wght@500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Inter:wght@400;500;600;700&family=Archivo:wght@500;600;700;800&display=swap" rel="stylesheet">
 <style>
   :root{
-    --bg:#190b10; --panel:#2a1219; --panel2:#33161f; --line:#4a2230; --line2:#5d2b3c;
-    --gold:#ffb320; --gold-soft:#ffc95e; --red:#c31f2f; --red-deep:#8f1622;
-    --cream:#f6e7c9; --dim:#c9ab9a; --grey:#8d7370; --green:#57c25f;
+    --bg:#0c0a09; --panel:#151110; --panel2:#1d1815; --line:#2a2320; --line2:#3a332d;
+    --gold:#f2c53d; --gold-soft:#ffd97a; --red:#c23a1f; --red-deep:#8d2f2f;
+    --cream:#ece8dd; --dim:#9a9086; --grey:#7a7168; --green:#54b23e;
   }
   *{box-sizing:border-box}
   body{margin:0;background:var(--bg);color:var(--cream);
@@ -193,30 +193,39 @@
     .sect,.card,.mcard{padding:12px}
     .mcmd{width:74px;font-size:10.5px}
   }
+  /* hero-vibe login */
+  #login{font-family:Inter,sans-serif}
+  .loginbox{text-align:center;box-shadow:0 30px 80px -20px rgba(0,0,0,.8);border-radius:22px}
+  .lchip{width:74px;height:74px;margin:0 auto 14px;background:var(--cream);border-radius:18px;display:grid;place-items:center;box-shadow:4px 4px 0 var(--red)}
+  .lchip img{width:58px;height:58px;object-fit:contain}
+  .loginbox h1{font-family:'Baloo 2',sans-serif;font-weight:800;text-transform:uppercase;color:var(--cream);font-size:26px;letter-spacing:-.01em;text-shadow:none;margin:6px 0 2px}
+  .loginbox .sub2{font-family:'Baloo 2',sans-serif;text-transform:uppercase;letter-spacing:.12em;font-size:12px;color:var(--dim);margin-bottom:22px}
+  .btn.tw{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;background:#9146ff;color:#fff;font-family:'Baloo 2',sans-serif;font-weight:800;text-transform:uppercase;font-size:16px;border-radius:12px;padding:15px;border:none;cursor:pointer;box-shadow:4px 4px 0 #000;transition:transform .12s,box-shadow .12s}
+  .btn.tw:hover{transform:translate(-2px,-2px);box-shadow:6px 6px 0 #000;color:#fff}
+  .pwfall{margin-top:18px;text-align:left}
+  .pwfall summary{cursor:pointer;color:var(--grey);font-size:12px;list-style:none;text-align:center;padding:6px}
+  .pwfall .users{display:flex;gap:8px;margin:12px 0}
+  #loginmsg{margin-top:12px;font-size:13px;line-height:1.4}
+  #loginmsg.deny,#loginmsg.err{color:var(--red)}
 </style>
 </head>
 <body>
 
 <div id="login">
   <div class="loginbox">
-    <img src="crest.png" alt="">
-    <h1>Streamer University 2026</h1>
-    <div class="sub2">Command Center · mods only</div>
-    <div class="users">
-      <button class="usr" data-u="tdot">Tdot</button>
-      <button class="usr" data-u="haylee">Haylee</button>
-      <button class="usr" data-u="gio">Gio</button>
-    </div>
-    <input id="pass" type="password" placeholder="password" autocomplete="current-password" autocapitalize="off" autocorrect="off" spellcheck="false">
-    <button class="btn" id="loginbtn">Enter the Hub</button>
+    <div class="lchip"><img src="/logo.png" alt="FT.GIOO"></div>
+    <h1>Command Center</h1>
+    <div class="sub2">Lead mods only</div>
+    <a class="btn tw" href="https://ftgioo.live/auth/hub"><svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M4 2 3 6v14h5v2h3l2-2h4l5-5V2H4zm16 12-3 3h-4l-2 2v-2H7V4h13v10zM15 7h-2v5h2V7zm-5 0H8v5h2V7z"/></svg> Login with Twitch</a>
+    <div id="loginmsg"></div>
     <div id="loginerr"></div>
   </div>
 </div>
 
 <div id="app">
   <header><div class="wrap hrow">
-    <img src="crest.png" alt="">
-    <h1>SU 2026 Command Center<span>Streamer University · FTGIOO</span></h1>
+    <img src="/logo.png" alt="">
+    <h1>FT.GIOO Hub<span>Command Center</span></h1>
     <div class="me"><span class="who" id="who"></span><button class="btn sec sm" id="logout">Log out</button></div>
   </div></header>
   <nav><div class="wrap tabs" id="tabs"></div></nav>
@@ -246,10 +255,21 @@ const openLines=new Set();
 /* ---------- session ---------- */
 try{ sess=JSON.parse(localStorage.getItem('su_hub_sess')); }catch(e){}
 function saveSess(){ localStorage.setItem('su_hub_sess',JSON.stringify(sess)); }
+let pendingMsg=null;
+(function(){
+  try{
+    var q=new URLSearchParams(location.search); var lg=q.get('login');
+    if(lg==='ok'&&q.get('token')){ sess={token:q.get('token'),role:q.get('role')||'lead',user:q.get('who')||''}; saveSess(); }
+    else if(lg==='denied'){ var who=q.get('who')||'That account'; var rs=q.get('reason'); var tx=(rs==='notmod')?(who+" does not moderate this channel, so there is no hub access."):(who+" is a mod but not a lead mod. Ask Gio to add you to the lead list."); pendingMsg={type:'deny',text:tx}; sess=null; try{localStorage.removeItem('su_hub_sess');}catch(e){} }
+    else if(lg==='error'){ pendingMsg={type:'err',text:'Twitch login failed. Please try again.'}; }
+    if(lg) history.replaceState({},'',location.pathname);
+  }catch(e){}
+})();
 function showLogin(msg){
   $('app').style.display='none';
   $('login').style.display='flex';
   if(msg!==undefined) $('loginerr').textContent=msg||'';
+  var lm=$('loginmsg'); if(lm){ lm.textContent=pendingMsg?pendingMsg.text:''; lm.className=pendingMsg?pendingMsg.type:''; }
 }
 function logout(){
   sess=null; try{localStorage.removeItem('su_hub_sess');}catch(e){}
@@ -274,35 +294,7 @@ async function api(path,body){
   return j;
 }
 
-/* ---------- login ---------- */
-let pickedUser='tdot';
-document.querySelectorAll('.usr').forEach(b=>{
-  b.addEventListener('click',()=>{ pickedUser=b.dataset.u;
-    document.querySelectorAll('.usr').forEach(x=>x.classList.toggle('sel',x===b)); });
-});
-document.querySelector('.usr').classList.add('sel');
-async function doLogin(){
-  const btn=$('loginbtn');
-  $('loginerr').textContent='';
-  if(!$('pass').value){ $('loginerr').textContent='Enter your password.'; return; }
-  btn.disabled=true; btn.textContent='Checking…';
-  try{
-    const r=await fetch(API+'/api/login',{method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({user:pickedUser,pass:$('pass').value})});
-    let j={}; try{ j=await r.json(); }catch(e){}
-    if(r.ok&&j.ok){
-      sess={token:j.token,user:j.user,exp:j.exp}; saveSess(); $('pass').value='';
-      await enterApp();
-    }else{
-      $('loginerr').textContent=(j&&j.error)||('Login failed (HTTP '+r.status+'). Try again.');
-    }
-  }catch(e){
-    $('loginerr').textContent='Can’t reach the server. Check your connection and try again.';
-  }
-  btn.disabled=false; btn.textContent='Enter the Hub';
-}
-$('loginbtn').addEventListener('click',doLogin);
-$('pass').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
+/* password login removed - Twitch auth only */
 
 /* ---------- helpers ---------- */
 function ctStamp(){return new Intl.DateTimeFormat('en-US',{timeZone:'America/Chicago',hour:'numeric',minute:'2-digit',hour12:true}).format(new Date());}
@@ -788,6 +780,8 @@ function rOverlays(m){
     pv.href=o.u+(o.al?'?test=1':''); pv.target='_blank'; rr.appendChild(pv);
     mk('Reset pos',()=>api('/api/overlay',{name:o.id,cfg:{px:null,py:null,scale:null,w:null,h:null}})
       .then(()=>{toast(o.t+' back to default position');refresh(true);}).catch(e=>{if(e.message!=='Session expired')toast(e.message,true);}),true);
+    if(o.al){ mk('🔔 Test alert',()=>api('/api/overlay',{name:o.id,cfg:{testAlert:String(Date.now())}}).then(()=>{toast('Test alert sent to the overlay');}).catch(e=>{if(e.message!=='Session expired')toast(e.message,true);})); }
+    if(o.al){ mk(cfg.calib?'📐 Hide frame':'📐 Align frame',()=>api('/api/overlay',{name:o.id,cfg:{calib:!cfg.calib}}).then(()=>{toast(cfg.calib?'Alignment frame off':'Frame on — in TVU its border must touch all 4 screen edges');refresh(true);}).catch(e=>{if(e.message!=='Session expired')toast(e.message,true);}),true); }
     card.appendChild(rr);
     // live background transparency
     const tr=document.createElement('div'); tr.className='row'; tr.style.cssText='margin-top:10px;gap:8px';
@@ -959,7 +953,7 @@ async function enterApp(){
   }catch(e){ netfail=true; }
   if(netfail||!w||!w.ok){ showLogin('Can’t reach the server right now. Try again in a moment.'); return; }
   $('login').style.display='none'; $('app').style.display='block';
-  $('who').textContent=sess.user;
+  $('who').textContent=(w.role==='creator'?'Creator':'Lead Mod')+' · '+(w.user||sess.user);
   $('logout').onclick=logout;
   await refresh(true);
   if(!window._hubPoll) window._hubPoll=setInterval(()=>refresh(false),8000);
