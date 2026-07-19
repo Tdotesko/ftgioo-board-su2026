@@ -26,6 +26,14 @@
     border-radius:11px;padding:9px 14px;font:800 15px/1.3 Archivo,-apple-system,Segoe UI,sans-serif;
     color:#fff;max-width:80vw;text-shadow:0 1px 2px #000}
   #cv-align i{position:absolute;width:44px;height:44px;background:#ffb320}
+  /* unified layout editor */
+  #cv-etb{position:fixed;top:10px;left:50%;transform:translateX(-50%);z-index:2147483001;display:flex;gap:8px;align-items:center;
+    background:#1b1016;border:2px solid #c23a1f;border-radius:12px;padding:8px 13px;font:700 12px Inter,-apple-system,sans-serif;color:#ece8dd;box-shadow:4px 4px 0 #000;max-width:96vw;flex-wrap:wrap;justify-content:center}
+  #cv-etb b{font-family:'Baloo 2',sans-serif;text-transform:uppercase;color:#f2c53d;font-size:12px}
+  #cv-etb button{font-family:'Baloo 2',sans-serif;font-weight:800;text-transform:uppercase;font-size:11.5px;border:2px solid #c23a1f;background:#c23a1f;color:#fff;border-radius:16px;padding:6px 13px;cursor:pointer}
+  .cv-h{position:absolute;border:2px dashed #f2c53d;background:rgba(242,197,61,.05);cursor:move;z-index:2147482000;box-sizing:border-box;touch-action:none}
+  .cv-h .cv-lb{position:absolute;top:-20px;left:-2px;background:#c23a1f;color:#fff;font:800 10px/1 'Baloo 2',sans-serif;text-transform:uppercase;padding:3px 7px;border-radius:6px;white-space:nowrap;pointer-events:none}
+  .cv-h .cv-grip{position:absolute;right:-9px;bottom:-9px;width:20px;height:20px;background:#f2c53d;border:2px solid #000;border-radius:3px;cursor:nwse-resize}
 </style>
 </head>
 <body>
@@ -63,15 +71,18 @@ const frames={}; // name -> iframe element
 // side/letterbox bars that were showing up as a margin on stream when the phone's
 // webview was not exactly 16:9. The per-overlay editor stays a clean 16:9 = the final look.
 var PREVIEW=Q.get('preview')==='1';
+var EDITMODE=Q.get('edit')==='1';
+var FIT=PREVIEW||EDITMODE;
 function suk(){
   var kx=(innerWidth||1920)/1920, ky=(innerHeight||1080)/1080;
   if(!isFinite(kx)||kx<=0) kx=1;
   if(!isFinite(ky)||ky<=0) ky=1;
-  if(PREVIEW){ kx=ky=Math.min(kx,ky); } // preview: uniform letterbox so a browser looks right
+  if(FIT){ kx=ky=Math.min(kx,ky); } // preview/edit: uniform letterbox so a browser looks right
   document.documentElement.style.setProperty('--cvkx', kx);
   document.documentElement.style.setProperty('--cvky', ky);
 }
-if(PREVIEW) frame.classList.add('fit');
+if(FIT) frame.classList.add('fit');
+var lastOv={};
 suk(); addEventListener('resize',suk); addEventListener('orientationchange',suk);
 
 // Optional true 1:1 preview: her live Twitch feed as the backdrop, so you see the
@@ -155,7 +166,7 @@ async function poll(){
     var r=await fetch(API+'/api/overlay',{cache:'no-store'});
     var j=await r.json();
     if(j&&j.ok){
-      var ov=j.overlays||{};
+      var ov=j.overlays||{}; lastOv=ov;
       var cv=ov.canvas||{};
       // hub can reload the whole canvas at once
       if(cv.reload!==undefined){
@@ -168,6 +179,67 @@ async function poll(){
   }catch(e){}
 }
 poll(); setInterval(poll,6000);
+
+// ===== unified layout editor (?edit=1): move/resize every overlay at once =====
+if(EDITMODE){
+  document.title='FT.GIOO Canvas - Layout editor';
+  var CE={ alerts:{sel:'#alert',anchor:'center'}, subs:{sel:'#card',anchor:'topleft'}, campus:{sel:'#card',anchor:'topleft'}, socials:{sel:'#bar',anchor:'topleft'} };
+  var handles={};
+  function tkn(){ try{ return (JSON.parse(localStorage.getItem('su_hub_sess')||'{}').token)||''; }catch(e){ return ''; } }
+  function emsg(m){ var e=document.getElementById('cv-emsg'); if(e){ e.textContent=m; clearTimeout(e._t); e._t=setTimeout(function(){ e.textContent='drag any piece, corner to resize'; },1600); } }
+  function save(name,cfg){ var t=tkn(); if(!t){ emsg('Log in at the hub first'); return; } fetch(API+'/api/overlay',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:t,name:name,cfg:cfg})}).then(function(r){return r.json();}).then(function(j){ emsg(j.ok?('Saved '+name):'Save error'); }).catch(function(){ emsg('Save error'); }); }
+  var tb=document.createElement('div'); tb.id='cv-etb';
+  tb.innerHTML='<b>Layout editor</b><span id="cv-emsg" style="color:#ffd6a0;min-width:150px;text-align:center">drag any piece, corner to resize</span>';
+  var done=document.createElement('button'); done.textContent='Done'; done.onclick=function(){ location.href='/hub'; }; tb.appendChild(done);
+  document.body.appendChild(tb);
+  function fscale(){ var r=frame.getBoundingClientRect(); return (r.width/1920)||1; }
+  function contentEl(name){ var f=frames[name]; if(!f) return null; try{ var d=f.contentDocument; return d?d.querySelector(CE[name].sel):null; }catch(e){ return null; } }
+  function ensureHandle(name){ var h=handles[name]; if(!h){ h=document.createElement('div'); h.className='cv-h'; h.innerHTML='<span class="cv-lb">'+name+'</span><div class="cv-grip"></div>'; frame.appendChild(h); handles[name]=h; wire(name,h); } return h; }
+  function put(h,l,t,w,ht){ h.style.left=l+'px'; h.style.top=t+'px'; h.style.width=w+'px'; h.style.height=ht+'px'; }
+  function layout(){
+    Object.keys(CE).forEach(function(name){
+      var el=contentEl(name), h=handles[name];
+      if(!el){ if(h) h.style.display='none'; return; }
+      h=ensureHandle(name); if(h.dataset.busy) return; h.style.display='block';
+      var r=el.getBoundingClientRect(); put(h, r.left, r.top, r.width, r.height);
+    });
+    if(frames.chat){ var hc=ensureHandle('chat'); hc.style.display='block'; if(!hc.dataset.busy){ var c=lastOv.chat||{}; put(hc,(typeof c.px==='number'?c.px:0)/100*1920,(typeof c.py==='number'?c.py:0)/100*1080,(typeof c.w==='number'?c.w:1920),(typeof c.h==='number'?c.h:1080)); } }
+  }
+  setInterval(layout, 700);
+  function applyMove(name,l,t,w,ht){
+    if(name==='chat'){ var f=frames.chat; if(f){ f.style.left=l+'px'; f.style.top=t+'px'; } return; }
+    var el=contentEl(name); if(!el) return;
+    if(CE[name].anchor==='center'){ el.style.left=((l+w/2)/1920*100)+'%'; el.style.top=((t+ht/2)/1080*100)+'%'; }
+    else { el.style.left=(l/1920*100)+'%'; el.style.top=(t/1080*100)+'%'; el.style.transformOrigin='top left'; el.style.right=''; el.style.bottom=''; }
+  }
+  function applyResize(name,w,ht){
+    if(name==='chat'){ var f=frames.chat; if(f){ f.style.width=w+'px'; f.style.height=ht+'px'; } return; }
+    var el=contentEl(name); if(!el) return; var base=el.offsetWidth||w; var sc=w/base;
+    el.style.transform=(CE[name].anchor==='center'?'translate(-50%,-50%) ':'')+'scale('+sc.toFixed(3)+')'; el.dataset.osc=sc.toFixed(3);
+  }
+  function commit(name,h){
+    var l=parseFloat(h.style.left),t=parseFloat(h.style.top),w=parseFloat(h.style.width),ht=parseFloat(h.style.height);
+    if(name==='chat'){ save('chat',{px:+(l/1920*100).toFixed(2),py:+(t/1080*100).toFixed(2),w:Math.round(w),h:Math.round(ht)}); return; }
+    var el=contentEl(name), cfg={};
+    if(CE[name].anchor==='center'){ cfg.px=+((l+w/2)/1920*100).toFixed(2); cfg.py=+((t+ht/2)/1080*100).toFixed(2); }
+    else { cfg.px=+(l/1920*100).toFixed(2); cfg.py=+(t/1080*100).toFixed(2); }
+    if(el&&el.dataset.osc) cfg.scale=parseFloat(el.dataset.osc);
+    save(name,cfg);
+  }
+  function wire(name,h){
+    var grip=h.querySelector('.cv-grip');
+    h.addEventListener('pointerdown',function(e){ if(e.target===grip) return; h.dataset.busy='1'; var sc=fscale(),sx=e.clientX,sy=e.clientY,l0=parseFloat(h.style.left),t0=parseFloat(h.style.top); h.setPointerCapture(e.pointerId);
+      function mv(ev){ var nl=l0+(ev.clientX-sx)/sc, nt=t0+(ev.clientY-sy)/sc; h.style.left=nl+'px'; h.style.top=nt+'px'; applyMove(name,nl,nt,parseFloat(h.style.width),parseFloat(h.style.height)); }
+      function up(){ h.removeEventListener('pointermove',mv); h.removeEventListener('pointerup',up); delete h.dataset.busy; commit(name,h); }
+      h.addEventListener('pointermove',mv); h.addEventListener('pointerup',up); e.preventDefault();
+    });
+    grip.addEventListener('pointerdown',function(e){ h.dataset.busy='1'; var sc=fscale(),sx=e.clientX,sy=e.clientY,w0=parseFloat(h.style.width),h0=parseFloat(h.style.height); grip.setPointerCapture(e.pointerId);
+      function mv(ev){ var nw=Math.max(60,w0+(ev.clientX-sx)/sc), nh=Math.max(40,h0+(ev.clientY-sy)/sc); h.style.width=nw+'px'; h.style.height=nh+'px'; applyResize(name,nw,nh); }
+      function up(){ grip.removeEventListener('pointermove',mv); grip.removeEventListener('pointerup',up); delete h.dataset.busy; commit(name,h); }
+      grip.addEventListener('pointermove',mv); grip.addEventListener('pointerup',up); e.stopPropagation(); e.preventDefault();
+    });
+  }
+}
 </script>
 </body>
 </html>
