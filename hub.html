@@ -974,7 +974,27 @@ function rChat(m){ pageHead(m,'live chat control','CHAT <span class="r">STYLE</s
   var pbl=_binp('e.g. ! ? (prefixes)', val('prefixBL')); pbl.style.cssText='width:210px;margin:0'; pbl.oninput=function(){ us.prefixBL=pbl.value; applyDebounced(); }; field('Hide prefixes', pbl);
   m.appendChild(st);
 
-  var note=document.createElement('div'); note.className='muted'; note.style.cssText='font-size:12px;margin-top:4px'; note.textContent='Everything here drives the self-hosted UChat overlay in your canvas. Changes reload the chat overlay within a few seconds, no config page needed.';
+  // position & size on the canvas (move/resize the chat box like other overlays)
+  var ps=_bcard('Position & size on canvas','Move and resize the chat box anywhere. Full frame lets UChat place it; shrink it into a column and drag it where you want. Watch your stream or canvas to see it move.');
+  var posAcc={}, posT=null;
+  function posDeb(o){ Object.assign(posAcc,o); if(posT)clearTimeout(posT); posT=setTimeout(function(){ var send=posAcc; posAcc={}; api('/api/overlay',{name:'chat',cfg:send}).then(function(){}).catch(ferr); },400); }
+  function posF(label,k,min,max,dflt,unit){
+    var wrap=document.createElement('div'); wrap.style.cssText='padding:9px 0;border-top:1px solid #ffffff12';
+    var top=document.createElement('div'); top.style.cssText='display:flex;justify-content:space-between;font-size:13px;font-weight:600;margin-bottom:5px';
+    var cur=(cfg[k]!=null?cfg[k]:dflt); var vs=document.createElement('span'); vs.className='muted'; vs.textContent=cur+(unit||'');
+    top.innerHTML='<span>'+label+'</span>'; top.appendChild(vs);
+    var r=document.createElement('input'); r.type='range'; r.min=min; r.max=max; r.value=cur; r.style.width='100%';
+    r.oninput=function(){ vs.textContent=r.value+(unit||''); var o={}; o[k]=parseInt(r.value,10); posDeb(o); };
+    wrap.append(top,r); ps.appendChild(wrap);
+  }
+  posF('X position','px',0,100,0,'%');
+  posF('Y position','py',0,100,0,'%');
+  posF('Width','w',200,1920,1920,'px');
+  posF('Height','h',200,1080,1080,'px');
+  ps.appendChild(_bbtn('↺ Full frame','sm sec',function(){ api('/api/overlay',{name:'chat',cfg:{px:null,py:null,w:null,h:null}}).then(function(){toast('Chat set to full frame');refresh(true);}).catch(ferr); }));
+  m.appendChild(ps);
+
+  var note=document.createElement('div'); note.className='muted'; note.style.cssText='font-size:12px;margin-top:4px'; note.textContent='Everything here drives the self-hosted UChat overlay in your canvas. Style changes reload the chat within a few seconds; position changes are instant. No config page needed.';
   m.appendChild(note);
 }
 
