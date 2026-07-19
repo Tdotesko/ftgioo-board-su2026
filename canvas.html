@@ -97,12 +97,15 @@ if(Q.get('preview')==='1'){
 
 function widgetSrc(name, cv, c){
   // chat widget can point at an external overlay (e.g. UChat) via its cfg.src
-  if(name==='chat' && c && typeof c.src==='string' && /^https?:\/\//i.test(c.src)) return c.src;
+  if(name==='chat' && c && typeof c.src==='string' && /^https?:\/\//i.test(c.src)){
+    var cs=c.src; if(EDITMODE) cs+=(cs.indexOf('?')>=0?'&':'?')+'demo=1'; return cs;
+  }
   var base=BUILTINS[name]?BUILTINS[name].src:('/scene?id='+encodeURIComponent(name));
   var p=new URLSearchParams();
   p.set('canvas','1'); // tells the overlay it is embedded in the canvas
-  // pass through any params on the canvas URL itself
-  if(PASS){ new URLSearchParams(PASS).forEach(function(v,k){ p.set(k,v); }); }
+  // pass through canvas-url params, but NOT edit/preview (those are for the canvas, not each overlay)
+  if(PASS){ new URLSearchParams(PASS).forEach(function(v,k){ if(k==='edit'||k==='preview') return; p.set(k,v); }); }
+  if(EDITMODE && name==='alerts') p.set('demo','1'); // show a sample alert so it is visible to place
   // inject socials handles from server config (so the canvas URL stays clean and
   // handles stay editable live from the hub) for the widgets that show them
   if((name==='socials'||name==='campus') && cv && cv.handles){
