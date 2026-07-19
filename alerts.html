@@ -306,7 +306,15 @@ function handle(line){
       detail:'arrived with <b>'+n.toLocaleString()+' students</b>! Welcome to SU!',big:n>=50});
   }
 }
-connect();
+if(Q.get('demo')!=='1') connect();
+
+// demo: show one persistent sample alert (for the canvas layout editor) with no sound/loop
+if(Q.get('demo')==='1'){
+  $('a1').innerHTML='💜 <span class="hl">New Sub</span>';
+  $('a2').textContent='PixelPanda';
+  $('a3').innerHTML='just subscribed! · <b>Tier 1</b>';
+  var _da=$('alert'); _da.classList.add('show'); _da.style.opacity='1';
+}
 
 /* ---------- test + edit modes ---------- */
 if(Q.get('test')==='1'){
