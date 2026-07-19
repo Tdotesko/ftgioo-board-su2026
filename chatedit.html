@@ -57,8 +57,9 @@ addEventListener('resize',draw);
 // load current cfg
 fetch(API+'/api/overlay',{cache:'no-store'}).then(r=>r.json()).then(j=>{
   const c=(j.overlays&&j.overlays.chat)||{};
-  if(typeof c.px==='number')S.px=c.px; if(typeof c.py==='number')S.py=c.py;
-  if(typeof c.w==='number')S.w=c.w; if(typeof c.h==='number')S.h=c.h;
+  const has=(typeof c.px==='number'||typeof c.py==='number'||typeof c.w==='number'||typeof c.h==='number');
+  if(has){ if(typeof c.px==='number')S.px=c.px; if(typeof c.py==='number')S.py=c.py; if(typeof c.w==='number')S.w=c.w; if(typeof c.h==='number')S.h=c.h; }
+  else { S={px:6,py:8,w:560,h:800}; } // start as a movable box so you can drag/shrink it right away
   draw();
 }).catch(draw);
 draw();
