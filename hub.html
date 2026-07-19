@@ -772,8 +772,8 @@ function rBot(m){ pageHead(m,'her voice in chat','THE <span class="r">BOT</span>
   var bt=_bcard('🛡️ Blocked terms','Auto-moderate chat like Fossabot. Any message matching a pattern (regex supported) is deleted, and mods and Gio are exempt. Pick timeout to also time the user out.');
   var btList=document.createElement('div'); btList.style.margin='2px 0 12px'; bt.appendChild(btList);
   var btPat=_binp('Pattern or word, regex ok, e.g. (buy followers|free bits)');
-  var btAct=_bsel([['delete','Delete message'],['timeout','Delete + timeout user']],'delete');
-  var btDur=_binp('Timeout seconds (default 600)');
+  var btAct=_bsel([['delete','Delete only'],['timeout','Delete + timeout'],['ban','Delete + ban']],'timeout');
+  var btDur=_binp('Timeout seconds (default 600)','600');
   bt.append(btPat,btAct,btDur);
   var btEditId=null;
   var btR=_brow();
@@ -781,7 +781,7 @@ function rBot(m){ pageHead(m,'her voice in chat','THE <span class="r">BOT</span>
   var btCancel=_bbtn('Cancel','sec sm',function(){btEditId=null;btPat.value='';btDur.value='';btAct.value='delete';btAdd.textContent='Add blocked term';btCancel.style.display='none';}); btCancel.style.display='none';
   btR.appendChild(btAdd); btR.appendChild(btCancel);
   bt.appendChild(btR); m.appendChild(bt);
-  function loadBt(){ fetch(API+'/api/bot/blockterms',{cache:'no-store'}).then(function(r){return r.json();}).then(function(j){ btList.innerHTML=''; var ts=j.terms||[]; if(!ts.length){btList.innerHTML='<div class="muted" style="font-size:12px">No blocked terms yet.</div>';return;} btList.innerHTML='<div class="muted" style="font-size:11px;margin-bottom:4px">'+ts.length+' term'+(ts.length===1?'':'s')+' active</div>'; ts.forEach(function(t){ var row=document.createElement('div'); row.style.cssText='display:flex;align-items:center;gap:6px;padding:7px 0;border-bottom:1px solid #ffffff14'; var on=t.enabled!==false; row.innerHTML='<div style="flex:1;min-width:0"><code style="font-size:11.5px;color:#ffd97a;word-break:break-all">'+_besc(t.pattern)+'</code> <span class="muted" style="font-size:10.5px">'+(t.action==='timeout'?('timeout '+t.duration+'s'):'delete')+'</span></div>'; var tg=_bbtn(on?'On':'Off',(on?'sm':'sec sm'),function(){api('/api/bot/blockterms',{id:t.id,pattern:t.pattern,flags:t.flags,action:t.action,duration:t.duration,enabled:!on}).then(loadBt).catch(function(){});}); var ed=_bbtn('Edit','sec sm',function(){btEditId=t.id;btPat.value=t.pattern;btAct.value=t.action||'delete';btDur.value=t.duration||600;btAdd.textContent='Update term';btCancel.style.display='';btPat.scrollIntoView({block:'center'});}); var dl=_bbtn('Del','sec sm',function(){if(!confirm('Remove this blocked term?'))return;api('/api/bot/blockterms',{del:true,id:t.id}).then(function(){toast('Removed');loadBt();}).catch(function(){});}); tg.style.flex='0 0 auto';ed.style.flex='0 0 auto';dl.style.flex='0 0 auto'; row.append(tg,ed,dl); btList.appendChild(row); }); }).catch(function(){}); }
+  function loadBt(){ fetch(API+'/api/bot/blockterms',{cache:'no-store'}).then(function(r){return r.json();}).then(function(j){ btList.innerHTML=''; var ts=j.terms||[]; if(!ts.length){btList.innerHTML='<div class="muted" style="font-size:12px">No blocked terms yet.</div>';return;} btList.innerHTML='<div class="muted" style="font-size:11px;margin-bottom:4px">'+ts.length+' term'+(ts.length===1?'':'s')+' active</div>'; ts.forEach(function(t){ var row=document.createElement('div'); row.style.cssText='display:flex;align-items:center;gap:6px;padding:7px 0;border-bottom:1px solid #ffffff14'; var on=t.enabled!==false; row.innerHTML='<div style="flex:1;min-width:0"><code style="font-size:11.5px;color:#ffd97a;word-break:break-all">'+_besc(t.pattern)+'</code> <span class="muted" style="font-size:10.5px">'+(t.action==='ban'?'ban':t.action==='timeout'?('timeout '+t.duration+'s'):'delete')+'</span></div>'; var tg=_bbtn(on?'On':'Off',(on?'sm':'sec sm'),function(){api('/api/bot/blockterms',{id:t.id,pattern:t.pattern,flags:t.flags,action:t.action,duration:t.duration,enabled:!on}).then(loadBt).catch(function(){});}); var ed=_bbtn('Edit','sec sm',function(){btEditId=t.id;btPat.value=t.pattern;btAct.value=t.action||'delete';btDur.value=t.duration||600;btAdd.textContent='Update term';btCancel.style.display='';btPat.scrollIntoView({block:'center'});}); var dl=_bbtn('Del','sec sm',function(){if(!confirm('Remove this blocked term?'))return;api('/api/bot/blockterms',{del:true,id:t.id}).then(function(){toast('Removed');loadBt();}).catch(function(){});}); tg.style.flex='0 0 auto';ed.style.flex='0 0 auto';dl.style.flex='0 0 auto'; row.append(tg,ed,dl); btList.appendChild(row); }); }).catch(function(){}); }
   loadBt();
 
   /* AutoMod filters */
@@ -804,7 +804,7 @@ function rBot(m){ pageHead(m,'her voice in chat','THE <span class="r">BOT</span>
     var thr;
     if(fc.sel){ thr=_bsel([['0','everyone'],['1','subs+'],['2','VIPs+'],['3','mods only']],String(cur.exemptLevel!=null?cur.exemptLevel:1)); thr.style.width='110px'; thr.style.marginBottom='0'; }
     else { thr=document.createElement('input'); thr.type='number'; thr.value=(cur[fc.thr]!=null?cur[fc.thr]:fc.def); thr.style.cssText='width:78px;padding:6px;border-radius:6px;border:1px solid #3a332d;background:#1d1815;color:#ece8dd'; }
-    var act=_bsel([['delete','delete'],['timeout','timeout']],cur.action||'delete'); act.style.width='96px'; act.style.marginBottom='0';
+    var act=_bsel([['delete','delete'],['timeout','timeout'],['ban','ban']],cur.action||'delete'); act.style.width='96px'; act.style.marginBottom='0';
     amInputs[fc.k]={on:on,thr:thr,act:act,sel:fc.sel,thrKey:fc.thr};
     row.append(on,lb,thrL,thr,act); amWrap.appendChild(row); }); }
   am.appendChild(_bbtn('Save AutoMod','sm',function(){ var out={}; FCONF.forEach(function(fc){ var i=amInputs[fc.k]; var o={on:i.on.checked,action:i.act.value}; if(i.sel){o.exemptLevel=parseInt(i.thr.value,10);}else{o[i.thrKey]=parseInt(i.thr.value,10);} out[fc.k]=o; }); api('/api/bot/filters',{filters:out}).then(function(){toast('AutoMod saved');}).catch(function(e){if(e.message!=='Session expired')toast(e.message,true);}); }));
@@ -989,24 +989,10 @@ function rChat(m){ pageHead(m,'live chat control','CHAT <span class="r">STYLE</s
   var pbl=_binp('e.g. ! ? (prefixes)', val('prefixBL')); pbl.style.cssText='width:210px;margin:0'; pbl.oninput=function(){ us.prefixBL=pbl.value; applyDebounced(); }; field('Hide prefixes', pbl);
   m.appendChild(st);
 
-  // position & size on the canvas (move/resize the chat box like other overlays)
-  var ps=_bcard('Position & size on canvas','Move and resize the chat box anywhere. Full frame lets UChat place it; shrink it into a column and drag it where you want. Watch your stream or canvas to see it move.');
-  var posAcc={}, posT=null;
-  function posDeb(o){ Object.assign(posAcc,o); if(posT)clearTimeout(posT); posT=setTimeout(function(){ var send=posAcc; posAcc={}; api('/api/overlay',{name:'chat',cfg:send}).then(function(){}).catch(ferr); },400); }
-  function posF(label,k,min,max,dflt,unit){
-    var wrap=document.createElement('div'); wrap.style.cssText='padding:9px 0;border-top:1px solid #ffffff12';
-    var top=document.createElement('div'); top.style.cssText='display:flex;justify-content:space-between;font-size:13px;font-weight:600;margin-bottom:5px';
-    var cur=(cfg[k]!=null?cfg[k]:dflt); var vs=document.createElement('span'); vs.className='muted'; vs.textContent=cur+(unit||'');
-    top.innerHTML='<span>'+label+'</span>'; top.appendChild(vs);
-    var r=document.createElement('input'); r.type='range'; r.min=min; r.max=max; r.value=cur; r.style.width='100%';
-    r.oninput=function(){ vs.textContent=r.value+(unit||''); var o={}; o[k]=parseInt(r.value,10); posDeb(o); };
-    wrap.append(top,r); ps.appendChild(wrap);
-  }
-  posF('X position','px',0,100,0,'%');
-  posF('Y position','py',0,100,0,'%');
-  posF('Width','w',200,1920,1920,'px');
-  posF('Height','h',200,1080,1080,'px');
-  ps.appendChild(_bbtn('↺ Full frame','sm sec',function(){ api('/api/overlay',{name:'chat',cfg:{px:null,py:null,w:null,h:null}}).then(function(){toast('Chat set to full frame');refresh(true);}).catch(ferr); }));
+  // position & size — visual drag editor on the canvas, like the other overlays
+  var ps=_bcard('Position & size','Move and resize the chat on the canvas with the visual editor, just like the other overlays. Drag it, grab the corner to resize, hit Save.');
+  var mv=document.createElement('a'); mv.className='btn sm'; mv.textContent='✥ Move & resize'; mv.href=location.pathname.replace(/[^/]*$/,'')+'chatedit.html'; mv.target='_blank'; ps.appendChild(mv);
+  var fr=_bbtn('↺ Full frame','sm sec',function(){ api('/api/overlay',{name:'chat',cfg:{px:null,py:null,w:null,h:null}}).then(function(){toast('Chat set to full frame');refresh(true);}).catch(ferr); }); fr.style.marginLeft='8px'; ps.appendChild(fr);
   m.appendChild(ps);
 
   var note=document.createElement('div'); note.className='muted'; note.style.cssText='font-size:12px;margin-top:4px'; note.textContent='Everything here drives the self-hosted UChat overlay in your canvas. Style changes reload the chat within a few seconds; position changes are instant. No config page needed.';
@@ -1055,7 +1041,7 @@ function rOverlays(m){ pageHead(m,'one canvas, endless overlays','STREAM <span c
     mk(hidden?'👁 Show':'👁 Hide',()=>api('/api/overlay',{name:o.id,cfg:{hidden:!hidden}})
       .then(()=>{toast(o.t+(hidden?' shown':' hidden')+' on stream');refresh(true);}).catch(e=>{if(e.message!=='Session expired')toast(e.message,true);}));
     const ed=document.createElement('a'); ed.className='btn sec sm'; ed.textContent='✥ Move & resize';
-    ed.href=o.u+'?edit=1'; ed.target='_blank'; rr.appendChild(ed);
+    ed.href=(o.id==='chat'?'chatedit.html':o.u+'?edit=1'); ed.target='_blank'; rr.appendChild(ed);
     const pv=document.createElement('a'); pv.className='btn sec sm'; pv.textContent='Preview';
     pv.href=o.u+(o.al?'?test=1':''); pv.target='_blank'; rr.appendChild(pv);
     mk('Reset pos',()=>api('/api/overlay',{name:o.id,cfg:{px:null,py:null,scale:null,w:null,h:null}})
