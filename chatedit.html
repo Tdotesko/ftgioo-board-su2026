@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Move & resize chat</title>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@700;800&family=Inter:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{--rust:#c23a1f;--cream:#ece8dd;--line:#3a332d;--gold:#f2c53d}
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%;background:#0c0d12;color:var(--cream);font-family:Inter,sans-serif;overflow:hidden;touch-action:none}
+  #tb{position:fixed;top:10px;left:50%;transform:translateX(-50%);z-index:10;display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:center;
+    background:#1b1016;border:2px solid var(--rust);border-radius:12px;padding:9px 13px;max-width:96vw;box-shadow:4px 4px 0 #000}
+  #tb b{font-family:'Baloo 2',sans-serif;text-transform:uppercase;font-size:13px;color:var(--gold);letter-spacing:.03em}
+  #coord{font-family:ui-monospace,monospace;font-size:12px;color:#ffd6a0;min-width:190px;text-align:center}
+  .btn{font-family:'Baloo 2',sans-serif;font-weight:800;text-transform:uppercase;font-size:12.5px;border:2px solid var(--rust);
+    background:var(--rust);color:#fff;border-radius:20px;padding:8px 14px;cursor:pointer;box-shadow:2px 2px 0 #000}
+  .btn.sec{background:transparent;color:var(--cream);border-color:var(--cream);box-shadow:2px 2px 0 var(--rust)}
+  #stage{position:fixed;inset:0;display:flex;align-items:center;justify-content:center}
+  #frame{position:relative;aspect-ratio:16/9;width:min(100vw - 20px,(100vh - 120px)*16/9);
+    background:#161a22;background-image:repeating-linear-gradient(0deg,transparent 0 59px,#ffffff0d 59px 60px),repeating-linear-gradient(90deg,transparent 0 59px,#ffffff0d 59px 60px);
+    border:1px solid #3a3f4c;border-radius:6px;box-shadow:0 20px 60px -20px #000;overflow:hidden}
+  #ftag{position:absolute;bottom:6px;right:10px;color:#5b6270;font:700 11px Inter;letter-spacing:1px;pointer-events:none}
+  #box{position:absolute;border:2px dashed var(--gold);cursor:move;overflow:hidden;box-shadow:0 0 0 9999px rgba(0,0,0,.28)}
+  #box iframe{width:100%;height:100%;border:0;pointer-events:none;background:transparent}
+  #grip{position:absolute;right:-9px;bottom:-9px;width:20px;height:20px;background:var(--gold);border:2px solid #000;border-radius:4px;cursor:nwse-resize}
+  #hint{position:absolute;top:-26px;left:0;font-family:'Baloo 2',sans-serif;font-weight:700;font-size:12px;color:var(--gold);white-space:nowrap;pointer-events:none}
+</style>
+</head>
+<body>
+<div id="tb">
+  <b>Chat</b>
+  <span id="coord">-</span>
+  <button class="btn" id="save">💾 Save</button>
+  <button class="btn sec" id="full">Full frame</button>
+  <button class="btn sec" id="close">Close</button>
+</div>
+<div id="stage"><div id="frame">
+  <div id="box"><div id="hint">drag to move · corner to resize</div><iframe id="cf" src="/uchat/?channel=ftgioo&demo=1"></iframe><div id="grip"></div></div>
+  <div id="ftag">STREAM FRAME · 1920 × 1080</div>
+</div></div>
+<script>
+const API=location.origin;
+const frame=document.getElementById('frame'), box=document.getElementById('box'), grip=document.getElementById('grip'), coord=document.getElementById('coord');
+// state in 1920x1080 space
+let S={px:0,py:0,w:1920,h:1080};
+function fw(){ return frame.getBoundingClientRect(); }
+function draw(){
+  const f=fw();
+  box.style.left=(S.px/100*f.width)+'px';
+  box.style.top=(S.py/100*f.height)+'px';
+  box.style.width=(S.w/1920*f.width)+'px';
+  box.style.height=(S.h/1080*f.height)+'px';
+  coord.textContent='X '+S.px.toFixed(1)+'%  Y '+S.py.toFixed(1)+'%  ·  '+Math.round(S.w)+'×'+Math.round(S.h);
+}
+addEventListener('resize',draw);
+// load current cfg
+fetch(API+'/api/overlay',{cache:'no-store'}).then(r=>r.json()).then(j=>{
+  const c=(j.overlays&&j.overlays.chat)||{};
+  if(typeof c.px==='number')S.px=c.px; if(typeof c.py==='number')S.py=c.py;
+  if(typeof c.w==='number')S.w=c.w; if(typeof c.h==='number')S.h=c.h;
+  draw();
+}).catch(draw);
+draw();
+// drag move
+let drag=null;
+box.addEventListener('pointerdown',e=>{ if(e.target===grip)return; drag={x:e.clientX,y:e.clientY,px:S.px,py:S.py}; box.setPointerCapture(e.pointerId); e.preventDefault(); });
+box.addEventListener('pointermove',e=>{ if(!drag)return; const f=fw();
+  S.px=Math.max(0,Math.min(100-S.w/1920*100, drag.px+(e.clientX-drag.x)/f.width*100));
+  S.py=Math.max(0,Math.min(100-S.h/1080*100, drag.py+(e.clientY-drag.y)/f.height*100));
+  draw(); });
+box.addEventListener('pointerup',()=>drag=null);
+// resize
+let rz=null;
+grip.addEventListener('pointerdown',e=>{ rz={x:e.clientX,y:e.clientY,w:S.w,h:S.h}; grip.setPointerCapture(e.pointerId); e.stopPropagation(); e.preventDefault(); });
+grip.addEventListener('pointermove',e=>{ if(!rz)return; const f=fw();
+  S.w=Math.max(200,Math.min(1920, rz.w+(e.clientX-rz.x)/f.width*1920));
+  S.h=Math.max(150,Math.min(1080, rz.h+(e.clientY-rz.y)/f.height*1080));
+  draw(); });
+grip.addEventListener('pointerup',()=>rz=null);
+// toolbar
+function token(){ try{ return (JSON.parse(localStorage.getItem('su_hub_sess')||'{}').token)||''; }catch(e){ return ''; } }
+document.getElementById('save').onclick=function(){
+  const t=token(); if(!t){ alert('Log in at the hub first, then reopen this.'); return; }
+  fetch(API+'/api/overlay',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({token:t,name:'chat',cfg:{px:+S.px.toFixed(2),py:+S.py.toFixed(2),w:Math.round(S.w),h:Math.round(S.h)}})})
+    .then(r=>r.json()).then(j=>{ this.textContent=j.ok?'Saved ✓':'Error'; setTimeout(()=>this.textContent='💾 Save',1400); })
+    .catch(()=>{ this.textContent='Error'; });
+};
+document.getElementById('full').onclick=function(){ S={px:0,py:0,w:1920,h:1080}; draw(); };
+document.getElementById('close').onclick=function(){ window.close(); location.href='/hub'; };
+</script>
+</body>
+</html>
