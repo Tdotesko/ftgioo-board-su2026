@@ -140,6 +140,12 @@ function reconcile(ov){
     }
     var z=(typeof c.z==='number')?c.z:(BUILTINS[name]?BUILTINS[name].z:50);
     f.style.zIndex=z;
+    // the chat widget can be moved/resized as a box on the canvas (UChat fills it)
+    if(name==='chat'){
+      var px=(typeof c.px==='number')?c.px:0, py=(typeof c.py==='number')?c.py:0;
+      var w=(typeof c.w==='number')?c.w:1920, h=(typeof c.h==='number')?c.h:1080;
+      f.style.left=(px/100*1920)+'px'; f.style.top=(py/100*1080)+'px'; f.style.width=w+'px'; f.style.height=h+'px';
+    }
   });
 }
 
