@@ -950,13 +950,13 @@ function rChat(m){ pageHead(m,'live chat control','CHAT <span class="r">STYLE</s
     return u;
   }
   var prev=null;
-  function apply(){ var url=buildURL(); if(prev) prev.src=url; api('/api/overlay',{name:'chat',cfg:{uset:us,src:url}}).then(function(){}).catch(ferr); }
+  function apply(){ var url=buildURL(); if(prev) prev.src=url+'&demo=1'; api('/api/overlay',{name:'chat',cfg:{uset:us,src:url}}).then(function(){}).catch(ferr); }
   var t=null; function applyDebounced(){ if(t)clearTimeout(t); t=setTimeout(apply,450); }
 
   // live preview
   var pc=_bcard('Live preview','This is exactly what shows on stream, using her real chat. Changes below apply live.');
   var pbox=document.createElement('div'); pbox.style.cssText='background:#0b0f14;border:2px solid var(--line2);border-radius:14px;height:250px;overflow:hidden;background-image:linear-gradient(45deg,#12161c 25%,transparent 25%,transparent 75%,#12161c 75%),linear-gradient(45deg,#12161c 25%,#0b0f14 25%,#0b0f14 75%,#12161c 75%);background-size:24px 24px;background-position:0 0,12px 12px';
-  prev=document.createElement('iframe'); prev.style.cssText='width:100%;height:100%;border:0'; prev.src=buildURL(); pbox.appendChild(prev); pc.appendChild(pbox);
+  prev=document.createElement('iframe'); prev.style.cssText='width:100%;height:100%;border:0'; prev.src=buildURL()+'&demo=1'; pbox.appendChild(prev); pc.appendChild(pbox);
   var pr=_brow(); pr.style.marginTop='8px';
   pr.appendChild(_bbtn(cfg.hidden?'▶ Show chat on stream':'⏸ Hide chat on stream',cfg.hidden?'sm':'sm sec',function(){ api('/api/overlay',{name:'chat',cfg:{hidden:!cfg.hidden}}).then(function(){toast(cfg.hidden?'Chat shown':'Chat hidden');refresh(true);}).catch(ferr); }));
   pr.appendChild(_bbtn('↺ Reset to defaults','sm sec',function(){ if(!confirm('Reset all chat styling to defaults?'))return; us={}; apply(); toast('Chat reset');render(); }));
