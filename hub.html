@@ -362,8 +362,17 @@ async function refresh(force){
     ]);
     if(s.ok) ST=s; if(o.ok) OV=o.overlays||{};
     if(!day&&ST) day=ST.effective.day;
-    if(force||!editing()) render();
+    // Only rebuild the whole view on an explicit refresh (tab switch, after an action).
+    // Auto-polls just update the dashboard's live values in place, so control panels
+    // (chat sliders, overlay editors, forms) never flash or reset.
+    if(force) render(); else updateDash();
   }catch(e){/* keep last view */}
+}
+function updateDash(){
+  if(tab!=='dash'||!ST) return;
+  var c=document.getElementById('d_clock'); if(c&&ST.serverCT) c.textContent=ST.serverCT.clock;
+  var sn=document.getElementById('d_subnum'); if(sn&&ST.subs) sn.textContent=(ST.subs.count==null?'-':ST.subs.count.toLocaleString());
+  var bar=document.getElementById('d_bar'); if(bar&&ST.subs&&ST.subs.goal) bar.style.width=Math.min(100,Math.round((ST.subs.count||0)/ST.subs.goal*100))+'%';
 }
 
 /* ---------- shell ---------- */
@@ -580,7 +589,7 @@ function rDash(m){ pageHead(m,'mission control','COMMAND <span class="r">CENTER<
      (inCls?'<span class="chip live"><span class="d"></span>In class</span>':'<span class="chip off"><span class="d"></span>'+(eff.sec?TAGS[eff.sec.tag][0]:'-')+'</span>')+
    '</div><div class="big" style="margin-top:6px">'+(eff.sec?eff.sec.label:'-')+'</div>'+
    '<div class="muted">'+(eff.sec?eff.sec.time:'')+'</div></div>'+
-   '<div class="card"><h3>Central Time</h3><div class="big">'+ST.serverCT.clock+'</div>'+
+   '<div class="card"><h3>Central Time</h3><div class="big" id="d_clock">'+ST.serverCT.clock+'</div>'+
    '<div class="row" style="margin-top:8px">'+
      (ST.control.mode==='auto'?'<span class="chip on"><span class="d"></span>Auto by time</span>'
        :'<span class="chip man"><span class="d"></span>Manual'+(ST.control.updated_by?(' · '+ST.control.updated_by):'')+'</span>')+
@@ -589,9 +598,9 @@ function rDash(m){ pageHead(m,'mission control','COMMAND <span class="r">CENTER<
      (ST.commands.next.value||'')+' <b style="color:var(--gold-soft)">'+(ST.commands.next.suffix||'')+'</b></div></div>'+
    '<div class="card feat"><h3>Sub goal</h3>'+
    '<div style="display:flex;align-items:flex-end;gap:14px;flex-wrap:wrap">'+
-     '<div class="hero-num">'+(ST.subs.count==null?'-':ST.subs.count.toLocaleString())+'</div>'+
+     '<div class="hero-num" id="d_subnum">'+(ST.subs.count==null?'-':ST.subs.count.toLocaleString())+'</div>'+
      (ST.subs.goal?('<div style="font-family:\'Baloo 2\',sans-serif;font-weight:800;color:var(--dim);font-size:28px;padding-bottom:12px">/ '+ST.subs.goal.toLocaleString()+'</div>'):'')+'</div>'+
-   (ST.subs.goal?('<div class="pbar"><i style="width:'+Math.min(100,Math.round((ST.subs.count||0)/ST.subs.goal*100))+'%"></i></div>'):'')+
+   (ST.subs.goal?('<div class="pbar"><i id="d_bar" style="width:'+Math.min(100,Math.round((ST.subs.count||0)/ST.subs.goal*100))+'%"></i></div>'):'')+
    '<div class="muted" style="margin-top:6px">'+(ST.subs.source==='twitch'?'🟢 auto from Twitch':'via '+(ST.subs.by||'chat / manual'))+(ST.subs.at?(' · '+ST.subs.at):'')+'</div></div>';
   m.appendChild(g);
   $('qauto').onclick=()=>api('/api/auto',{}).then(()=>{toast('Everything back to auto');refresh(true);})
@@ -733,7 +742,7 @@ function rBot(m){ pageHead(m,'her voice in chat','THE <span class="r">BOT</span>
   var cR=_brow();
   cR.appendChild(_bbtn('Save command','sm',function(){ var n=cName.value.trim(); if(!n){toast('Enter a name',true);return;} if(!cResp.value.trim()){toast('Enter a response',true);return;} api('/api/bot/commands',{name:n,response:cResp.value,level:cLevel.value,cooldown:parseInt(cCd.value,10)||5}).then(function(){toast('Command saved');cName.value='';cResp.value='';cCd.value='';loadCmds();}).catch(function(e){if(e.message!=='Session expired')toast(e.message,true);}); }));
   cR.appendChild(_bbtn('Clear','sec sm',function(){cName.value='';cResp.value='';cCd.value='';})); cc.appendChild(cR); m.appendChild(cc);
-  function loadCmds(){ fetch(API+'/api/bot/commands',{cache:'no-store'}).then(function(r){return r.json();}).then(function(j){ cList.innerHTML=''; var cs=j.commands||[]; if(!cs.length){cList.innerHTML='<div class="muted" style="font-size:12px">No custom commands yet.</div>';return;} cs.forEach(function(c){ var row=document.createElement('div'); row.style.cssText='display:flex;align-items:flex-start;gap:6px;padding:7px 0;border-bottom:1px solid #ffffff14'; row.innerHTML='<div style="flex:1;min-width:0"><b style="color:#f2c53d">!'+_besc(c.name)+'</b> <span class="muted" style="font-size:11px">'+_besc(c.level)+' · '+c.cooldown+'s</span><br><span style="font-size:12px;word-break:break-word">'+_besc(c.response)+'</span></div>'; var ed=_bbtn('Edit','sec sm',function(){cName.value=c.name;cResp.value=c.response;cLevel.value=c.level;cCd.value=c.cooldown;cName.scrollIntoView({block:'center'});}); var dl=_bbtn('Del','sec sm',function(){if(!confirm('Delete !'+c.name+'?'))return;api('/api/bot/commands',{action:'delete',name:c.name}).then(function(){toast('Deleted');loadCmds();});}); ed.style.flex='0 0 auto';dl.style.flex='0 0 auto'; row.append(ed,dl); cList.appendChild(row); }); }).catch(function(){}); }
+  function loadCmds(){ fetch(API+'/api/bot/commands',{cache:'no-store'}).then(function(r){return r.json();}).then(function(j){ cList.innerHTML=''; var cs=j.commands||[]; if(!cs.length){cList.innerHTML='<div class="muted" style="font-size:12px">No custom commands yet.</div>';return;} cs.forEach(function(c){ var row=document.createElement('div'); row.style.cssText='display:flex;align-items:flex-start;gap:6px;padding:7px 0;border-bottom:1px solid #ffffff14'; row.innerHTML='<div style="flex:1;min-width:0"><b style="color:#f2c53d">!'+_besc(c.name)+'</b> <span class="muted" style="font-size:11px">'+_besc(c.level)+' · '+c.cooldown+'s</span><br><span style="font-size:12px;word-break:break-word">'+_besc(c.response)+'</span></div>'; var on=c.enabled!==false; row.style.opacity=on?'1':'.5'; var tg=_bbtn(on?'On':'Off',(on?'sm':'sec sm'),function(){api('/api/bot/commands',{action:'toggle',name:c.name,enabled:!on}).then(function(){toast('!'+c.name+(on?' disabled':' enabled'));loadCmds();}).catch(function(){});}); var ed=_bbtn('Edit','sec sm',function(){cName.value=c.name;cResp.value=c.response;cLevel.value=c.level;cCd.value=c.cooldown;cName.scrollIntoView({block:'center'});}); var dl=_bbtn('Del','sec sm',function(){if(!confirm('Delete !'+c.name+'?'))return;api('/api/bot/commands',{action:'delete',name:c.name}).then(function(){toast('Deleted');loadCmds();});}); tg.style.flex='0 0 auto';ed.style.flex='0 0 auto';dl.style.flex='0 0 auto'; row.append(tg,ed,dl); cList.appendChild(row); }); }).catch(function(){}); }
   loadCmds();
 
   /* timers */
@@ -766,10 +775,13 @@ function rBot(m){ pageHead(m,'her voice in chat','THE <span class="r">BOT</span>
   var btAct=_bsel([['delete','Delete message'],['timeout','Delete + timeout user']],'delete');
   var btDur=_binp('Timeout seconds (default 600)');
   bt.append(btPat,btAct,btDur);
+  var btEditId=null;
   var btR=_brow();
-  btR.appendChild(_bbtn('Add blocked term','sm',function(){ var p=btPat.value.trim(); if(!p){toast('Enter a pattern',true);return;} api('/api/bot/blockterms',{pattern:p,action:btAct.value,duration:parseInt(btDur.value,10)||600}).then(function(){toast('Blocked term added');btPat.value='';btDur.value='';loadBt();}).catch(function(e){if(e.message!=='Session expired')toast(e.message,true);}); }));
+  var btAdd=_bbtn('Add blocked term','sm',function(){ var p=btPat.value.trim(); if(!p){toast('Enter a pattern',true);return;} var body={pattern:p,action:btAct.value,duration:parseInt(btDur.value,10)||600}; if(btEditId!=null) body.id=btEditId; api('/api/bot/blockterms',body).then(function(){toast(btEditId!=null?'Term updated':'Blocked term added');btPat.value='';btDur.value='';btEditId=null;btAdd.textContent='Add blocked term';btCancel.style.display='none';loadBt();}).catch(function(e){if(e.message!=='Session expired')toast(e.message,true);}); });
+  var btCancel=_bbtn('Cancel','sec sm',function(){btEditId=null;btPat.value='';btDur.value='';btAct.value='delete';btAdd.textContent='Add blocked term';btCancel.style.display='none';}); btCancel.style.display='none';
+  btR.appendChild(btAdd); btR.appendChild(btCancel);
   bt.appendChild(btR); m.appendChild(bt);
-  function loadBt(){ fetch(API+'/api/bot/blockterms',{cache:'no-store'}).then(function(r){return r.json();}).then(function(j){ btList.innerHTML=''; var ts=j.terms||[]; if(!ts.length){btList.innerHTML='<div class="muted" style="font-size:12px">No blocked terms yet.</div>';return;} btList.innerHTML='<div class="muted" style="font-size:11px;margin-bottom:4px">'+ts.length+' term'+(ts.length===1?'':'s')+' active</div>'; ts.forEach(function(t){ var row=document.createElement('div'); row.style.cssText='display:flex;align-items:center;gap:6px;padding:7px 0;border-bottom:1px solid #ffffff14'; var on=t.enabled!==false; row.innerHTML='<div style="flex:1;min-width:0"><code style="font-size:11.5px;color:#ffd97a;word-break:break-all">'+_besc(t.pattern)+'</code> <span class="muted" style="font-size:10.5px">'+(t.action==='timeout'?('timeout '+t.duration+'s'):'delete')+'</span></div>'; var tg=_bbtn(on?'On':'Off',(on?'sm':'sec sm'),function(){api('/api/bot/blockterms',{id:t.id,pattern:t.pattern,flags:t.flags,action:t.action,duration:t.duration,enabled:!on}).then(loadBt).catch(function(){});}); var dl=_bbtn('Del','sec sm',function(){if(!confirm('Remove this blocked term?'))return;api('/api/bot/blockterms',{del:true,id:t.id}).then(function(){toast('Removed');loadBt();}).catch(function(){});}); tg.style.flex='0 0 auto';dl.style.flex='0 0 auto'; row.append(tg,dl); btList.appendChild(row); }); }).catch(function(){}); }
+  function loadBt(){ fetch(API+'/api/bot/blockterms',{cache:'no-store'}).then(function(r){return r.json();}).then(function(j){ btList.innerHTML=''; var ts=j.terms||[]; if(!ts.length){btList.innerHTML='<div class="muted" style="font-size:12px">No blocked terms yet.</div>';return;} btList.innerHTML='<div class="muted" style="font-size:11px;margin-bottom:4px">'+ts.length+' term'+(ts.length===1?'':'s')+' active</div>'; ts.forEach(function(t){ var row=document.createElement('div'); row.style.cssText='display:flex;align-items:center;gap:6px;padding:7px 0;border-bottom:1px solid #ffffff14'; var on=t.enabled!==false; row.innerHTML='<div style="flex:1;min-width:0"><code style="font-size:11.5px;color:#ffd97a;word-break:break-all">'+_besc(t.pattern)+'</code> <span class="muted" style="font-size:10.5px">'+(t.action==='timeout'?('timeout '+t.duration+'s'):'delete')+'</span></div>'; var tg=_bbtn(on?'On':'Off',(on?'sm':'sec sm'),function(){api('/api/bot/blockterms',{id:t.id,pattern:t.pattern,flags:t.flags,action:t.action,duration:t.duration,enabled:!on}).then(loadBt).catch(function(){});}); var ed=_bbtn('Edit','sec sm',function(){btEditId=t.id;btPat.value=t.pattern;btAct.value=t.action||'delete';btDur.value=t.duration||600;btAdd.textContent='Update term';btCancel.style.display='';btPat.scrollIntoView({block:'center'});}); var dl=_bbtn('Del','sec sm',function(){if(!confirm('Remove this blocked term?'))return;api('/api/bot/blockterms',{del:true,id:t.id}).then(function(){toast('Removed');loadBt();}).catch(function(){});}); tg.style.flex='0 0 auto';ed.style.flex='0 0 auto';dl.style.flex='0 0 auto'; row.append(tg,ed,dl); btList.appendChild(row); }); }).catch(function(){}); }
   loadBt();
 
   /* AutoMod filters */
@@ -808,7 +820,10 @@ function rBot(m){ pageHead(m,'her voice in chat','THE <span class="r">BOT</span>
   cmR.appendChild(_bbtn('Sub-only ON','sm',function(){mode({sub:true},'Sub-only on');}));
   cmR.appendChild(_bbtn('Sub OFF','sec sm',function(){mode({sub:false},'Sub-only off');}));
   cmR.appendChild(_bbtn('Followers-only','sm',function(){mode({follower:true,followerMin:10},'Followers-only on');}));
-  cmR.appendChild(_bbtn('Slow 30s','sm',function(){mode({slow:true,slowSec:30},'Slow mode on');}));
+  var slowSel=_bsel([['3','3s'],['5','5s'],['10','10s'],['20','20s'],['30','30s'],['60','60s'],['120','120s']],'30'); slowSel.style.cssText='width:auto;margin:0;padding:8px 10px';
+  cmR.appendChild(slowSel);
+  cmR.appendChild(_bbtn('Slow ON','sm',function(){mode({slow:true,slowSec:parseInt(slowSel.value,10)},'Slow mode '+slowSel.value+'s on');}));
+  cmR.appendChild(_bbtn('Slow OFF','sec sm',function(){mode({slow:false},'Slow mode off');}));
   cmR.appendChild(_bbtn('All modes OFF','sec sm',function(){mode({emote:false,sub:false,follower:false,slow:false},'All chat modes off');}));
   cm.appendChild(cmR);
   var nk=_binp('Nuke: phrase to purge from recent chat'); cm.appendChild(nk);
